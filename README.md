@@ -42,7 +42,20 @@ internet bağlantısı gerekmez.
 - `work/` — otomatik pilot WorkManager işleri
 - `ui/` — ekranlar (albümler, tarama, sonuçlar, grup detayı, ayarlar, geçmiş)
 
-## Derleme
+## Hazır APK (kurulabilir)
+
+`releases/BestPhotoSelect-v1.0.0.apk` — imzalı, doğrudan telefona kurulabilir
+(Android 11+, arm64/arm32). İndirip açın; "bilinmeyen kaynaklara izin ver"
+onayı istenebilir.
+
+Bu APK, `applite/` altındaki **lite sürümden** derlenir: aynı algoritma çekirdeğini
+kullanır, arayüzü Android'in yerleşik bileşenleriyle yazılmıştır ve yüz analizi
+ML Kit yerine **TFLite + MediaPipe Face Mesh** (468 nokta) ile yapılır — gözlerin
+açıklığı (EAR), yüzün dönüklüğü (yaw/roll) ve gülümseme noktalardan hesaplanır.
+`applite/build-apk.sh`, AGP gerektirmeden aapt2 + kotlinc + dx + apksigner ile
+APK üretir (betikteki açıklamalara bakın).
+
+## Derleme (tam sürüm, Android Studio)
 
 ```bash
 # Android Studio (önerilen): projeyi açın, çalıştırın.
