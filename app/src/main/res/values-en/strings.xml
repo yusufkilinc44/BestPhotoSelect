@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BestPhotoSelect</string>
+
+    <string name="back">Back</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="delete">Delete</string>
+    <string name="settings">Settings</string>
+    <string name="history">History</string>
+    <string name="photos_count">%1$d photos</string>
+
+    <string name="permission_title">Gallery access required</string>
+    <string name="permission_message">To find and clean up similar photos, the app needs access to your gallery. Your photos never leave your device; all analysis happens on your phone.</string>
+    <string name="permission_grant">Grant access</string>
+
+    <string name="albums_title">Albums</string>
+    <string name="albums_select_hint">Select albums to scan</string>
+    <string name="albums_select_all">Select all</string>
+    <string name="albums_clear">Clear</string>
+    <string name="albums_scan">Start scan</string>
+    <string name="albums_empty">No albums found in gallery</string>
+    <string name="albums_selected_count">%1$d albums selected</string>
+
+    <string name="scan_title">Scanning</string>
+    <string name="scan_phase_reading">Reading photos…</string>
+    <string name="scan_phase_hashing">Similarity analysis: %1$d / %2$d</string>
+    <string name="scan_phase_grouping">Building groups…</string>
+    <string name="scan_phase_scoring">AI is picking the best shots: %1$d / %2$d</string>
+    <string name="scan_cancel">Cancel scan</string>
+
+    <string name="results_title">Similar groups</string>
+    <string name="results_empty">No similar photo groups found 🎉</string>
+    <string name="results_summary">%2$d photos to delete in %1$d groups — %3$s to be freed</string>
+    <string name="results_delete_selected">Delete selected (%1$d)</string>
+    <string name="results_best_badge">BEST</string>
+    <string name="results_group_title">%1$d similar photos</string>
+    <string name="results_rescan">Rescan</string>
+
+    <string name="group_title">Group review</string>
+    <string name="group_keep">Keep</string>
+    <string name="group_delete_marked">Delete</string>
+    <string name="group_set_best">Mark as best</string>
+    <string name="group_skip">Skip this group</string>
+    <string name="group_score">Score: %1$d/100</string>
+    <string name="group_sharpness">Sharpness</string>
+    <string name="group_eyes">Eyes open</string>
+    <string name="group_face">Face</string>
+
+    <string name="confirm_delete_title">Delete confirmation</string>
+    <string name="confirm_delete_message">%1$d photos will be deleted (%2$s will be freed). The system will ask for confirmation.</string>
+    <string name="confirm_delete_trash_note">Photos are kept in the trash for 30 days and can be restored.</string>
+    <string name="confirm_delete_permanent_note">Photos will be permanently deleted!</string>
+    <string name="delete_success">%1$d photos cleaned up</string>
+    <string name="delete_failed">Deletion could not be completed</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_similarity">Similarity sensitivity</string>
+    <string name="settings_similarity_desc">High sensitivity only groups nearly identical shots; low sensitivity builds broader groups.</string>
+    <string name="settings_similarity_high">High</string>
+    <string name="settings_similarity_low">Low</string>
+    <string name="settings_time_window">Time window</string>
+    <string name="settings_time_window_desc">Only photos taken within this interval are considered for the same group.</string>
+    <string name="settings_time_window_value">%1$d seconds</string>
+    <string name="settings_trash_mode">Move to trash</string>
+    <string name="settings_trash_mode_desc">When enabled, photos are kept in the trash for 30 days instead of being permanently deleted (recommended).</string>
+    <string name="settings_autopilot">Autopilot</string>
+    <string name="settings_autopilot_desc">Selected albums are scanned periodically and everything except the best shots is cleaned up automatically without confirmation.</string>
+    <string name="settings_autopilot_warning">Autopilot deletes photos without your confirmation. With trash mode on, deletions can be undone for 30 days.</string>
+    <string name="settings_autopilot_schedule">Scan frequency</string>
+    <string name="settings_schedule_daily">Daily</string>
+    <string name="settings_schedule_weekly">Weekly</string>
+    <string name="settings_manage_media_title">Media management permission required</string>
+    <string name="settings_manage_media_desc">For autopilot to delete without a system dialog, grant Media management under Settings &gt; Special app access.</string>
+    <string name="settings_manage_media_open">Open permission setting</string>
+    <string name="settings_notification_permission">Notification permission is needed to see autopilot results.</string>
+
+    <string name="history_title">History</string>
+    <string name="history_empty">No deleted photos yet</string>
+    <string name="history_auto_badge">Auto</string>
+    <string name="history_manual_badge">Approved</string>
+    <string name="history_trashed">Moved to trash</string>
+    <string name="history_deleted">Permanently deleted</string>
+    <string name="history_clear">Clear history</string>
+
+    <string name="notif_channel_autopilot">Autopilot</string>
+    <string name="notif_autopilot_done_title">Automatic cleanup finished</string>
+    <string name="notif_autopilot_done_text">%1$d photos cleaned, %2$s freed</string>
+    <string name="notif_autopilot_pending_title">Your approval is needed</string>
+    <string name="notif_autopilot_pending_text">%1$d photos are ready to delete. Tap to confirm.</string>
+</resources>
