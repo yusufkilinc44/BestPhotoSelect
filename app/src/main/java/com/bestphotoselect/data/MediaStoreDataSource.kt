@@ -113,10 +113,23 @@ class MediaStoreDataSource @Inject constructor(
 
     /**
      * MediaStore'un kendi küçük resim üreticisi: hızlıdır ve EXIF yönünü uygular.
+     * Android 11+ HARDWARE bitmap döndürebilir; piksel erişimi (getPixels, ML Kit)
+     * için ARGB_8888 yazılım kopyasına çevrilir.
      */
     suspend fun loadThumbnail(uri: Uri, size: Int): Bitmap? = withContext(Dispatchers.IO) {
         try {
-            context.contentResolver.loadThumbnail(uri, Size(size, size), null)
+            val bmp = context.contentResolver.loadThumbnail(uri, Size(size, size), null)
+            if (bmp.config == Bitmap.Config.HARDWARE) {
+                val copy = bmp.copy(Bitmap.Config.ARGB_8888, false)
+                if (copy != null) {
+                    bmp.recycle()
+                    copy
+                } else {
+                    bmp
+                }
+            } else {
+                bmp
+            }
         } catch (e: Exception) {
             null
         }

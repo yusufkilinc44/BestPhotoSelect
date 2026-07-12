@@ -186,6 +186,7 @@ class MainActivity : Activity() {
         val buckets = selected.toSet()
         val settings = prefs.toAppSettings()
         executor.execute {
+            var failure: Throwable? = null
             val groups = try {
                 LiteScanEngine(this).scan(buckets, settings, scanCancelled) { phase, done, total ->
                     main.post {
@@ -204,11 +205,19 @@ class MainActivity : Activity() {
                     }
                 }
             } catch (t: Throwable) {
+                failure = t
                 emptyList()
             }
             main.post {
                 dialog.dismiss()
-                if (!scanCancelled.get()) {
+                failure?.let { t ->
+                    android.widget.Toast.makeText(
+                        this,
+                        getString(R.string.scan_failed, t.javaClass.simpleName),
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+                if (!scanCancelled.get() && failure == null) {
                     ScanSession.groups = groups
                     startActivity(Intent(this, ResultsActivity::class.java))
                 }

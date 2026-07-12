@@ -28,6 +28,7 @@
     <string name="scan_phase_grouping">Building groups…</string>
     <string name="scan_phase_scoring">AI is picking the best shots: %1$d / %2$d</string>
     <string name="scan_cancel">Cancel scan</string>
+    <string name="scan_failed">An error occurred while scanning (%1$s). Please try again.</string>
 
     <string name="results_title">Similar groups</string>
     <string name="results_empty">No similar photo groups found 🎉</string>

@@ -33,6 +33,7 @@
     <string name="scan_phase_grouping">Gruplar oluşturuluyor…</string>
     <string name="scan_phase_scoring">Yapay zeka en iyileri seçiyor: %1$d / %2$d</string>
     <string name="scan_cancel">Taramayı iptal et</string>
+    <string name="scan_failed">Tarama sırasında hata oluştu (%1$s). Lütfen tekrar deneyin.</string>
 
     <!-- Sonuçlar -->
     <string name="results_title">Benzer gruplar</string>

@@ -68,8 +68,9 @@ class ScanEngine @Inject constructor(
                             cached.hash
                         } else {
                             val bmp = mediaStore.loadThumbnail(photo.uri, HASH_THUMB_SIZE)
+                            // Tek fotoğrafın hatası taramayı düşürmemeli
                             val h = bmp?.let { b ->
-                                try { DHash.compute(b) } finally { b.recycle() }
+                                try { DHash.compute(b) } catch (t: Throwable) { null } finally { b.recycle() }
                             }
                             if (h != null) {
                                 synchronized(newCacheEntries) {
@@ -119,7 +120,12 @@ class ScanEngine @Inject constructor(
                     semaphore.withPermit {
                         val photo = photoById.getValue(id)
                         val hash = hashes.getValue(id)
-                        val analysis = analyzeQuality(photo, hash, scoreCache[id])
+                        // Tek fotoğrafın hatası taramayı düşürmemeli
+                        val analysis = try {
+                            analyzeQuality(photo, hash, scoreCache[id])
+                        } catch (t: Throwable) {
+                            null
+                        }
                         if (analysis != null) {
                             synchronized(analyses) { analyses[id] = analysis }
                             synchronized(scoredCacheEntries) {

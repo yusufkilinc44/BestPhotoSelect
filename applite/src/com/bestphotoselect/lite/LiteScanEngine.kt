@@ -38,23 +38,28 @@ class LiteScanEngine(context: Context) {
 
         val pool = Executors.newFixedThreadPool(THREADS)
         try {
-            // 1) Hash
+            // 1) Hash — tek fotoğrafın hatası taramayı düşürmemeli
             val hashes = ConcurrentHashMap<Long, Long>()
             val hashDone = AtomicInteger(0)
             photos.map { photo ->
                 pool.submit {
-                    if (!cancelled.get()) {
-                        media.loadThumb(photo.uri, HASH_THUMB)?.let { bmp ->
-                            try {
-                                hashes[photo.id] = DHash.compute(bmp)
-                            } finally {
-                                bmp.recycle()
+                    try {
+                        if (!cancelled.get()) {
+                            media.loadThumb(photo.uri, HASH_THUMB)?.let { bmp ->
+                                try {
+                                    hashes[photo.id] = DHash.compute(bmp)
+                                } finally {
+                                    bmp.recycle()
+                                }
                             }
                         }
+                    } catch (t: Throwable) {
+                        // bozuk/erişilemeyen fotoğraf: atla
+                    } finally {
+                        listener.onProgress(ScanPhase.HASHING, hashDone.incrementAndGet(), photos.size)
                     }
-                    listener.onProgress(ScanPhase.HASHING, hashDone.incrementAndGet(), photos.size)
                 }
-            }.forEach { it.get() }
+            }.forEach { awaitQuietly(it) }
             if (cancelled.get()) return emptyList()
 
             // 2) Gruplama
@@ -76,29 +81,34 @@ class LiteScanEngine(context: Context) {
             val scoreDone = AtomicInteger(0)
             memberIds.map { id ->
                 pool.submit {
-                    if (!cancelled.get()) {
-                        val photo = photoById.getValue(id)
-                        media.loadThumb(photo.uri, SCORE_THUMB)?.let { bmp ->
-                            try {
-                                analyses[id] = PhotoAnalysis(
-                                    photo = photo,
-                                    hash = hashes.getValue(id),
-                                    sharpness = QualityScorer.sharpness(bmp),
-                                    exposure = QualityScorer.exposure(bmp),
-                                    face = try {
-                                        faces.analyze(bmp)
-                                    } catch (t: Throwable) {
-                                        null
-                                    }
-                                )
-                            } finally {
-                                bmp.recycle()
+                    try {
+                        if (!cancelled.get()) {
+                            val photo = photoById.getValue(id)
+                            media.loadThumb(photo.uri, SCORE_THUMB)?.let { bmp ->
+                                try {
+                                    analyses[id] = PhotoAnalysis(
+                                        photo = photo,
+                                        hash = hashes.getValue(id),
+                                        sharpness = QualityScorer.sharpness(bmp),
+                                        exposure = QualityScorer.exposure(bmp),
+                                        face = try {
+                                            faces.analyze(bmp)
+                                        } catch (t: Throwable) {
+                                            null
+                                        }
+                                    )
+                                } finally {
+                                    bmp.recycle()
+                                }
                             }
                         }
+                    } catch (t: Throwable) {
+                        // bozuk/erişilemeyen fotoğraf: atla
+                    } finally {
+                        listener.onProgress(ScanPhase.SCORING, scoreDone.incrementAndGet(), memberIds.size)
                     }
-                    listener.onProgress(ScanPhase.SCORING, scoreDone.incrementAndGet(), memberIds.size)
                 }
-            }.forEach { it.get() }
+            }.forEach { awaitQuietly(it) }
             if (cancelled.get()) return emptyList()
 
             // 4) En iyiyi seç
@@ -109,6 +119,14 @@ class LiteScanEngine(context: Context) {
             }.sortedByDescending { it.bytesToFree }
         } finally {
             pool.shutdown()
+        }
+    }
+
+    private fun awaitQuietly(future: java.util.concurrent.Future<*>) {
+        try {
+            future.get()
+        } catch (e: Exception) {
+            // görev içi hatalar zaten görev bazında yutuluyor; bekleme hatası taramayı bozmasın
         }
     }
 

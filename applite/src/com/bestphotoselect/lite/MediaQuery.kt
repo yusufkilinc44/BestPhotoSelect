@@ -105,9 +105,25 @@ class MediaQuery(context: Context) {
     }
 
     fun loadThumb(uri: Uri, size: Int): Bitmap? = try {
-        resolver.loadThumbnail(uri, Size(size, size), null)
+        toSoftware(resolver.loadThumbnail(uri, Size(size, size), null))
     } catch (e: Exception) {
         null
+    }
+
+    /**
+     * Android 11+ cihazlarda loadThumbnail çoğunlukla HARDWARE tipi bitmap döndürür;
+     * bu bitmaplerde getPixels() ve yazılım Canvas'ına çizim desteklenmez (analiz
+     * kodunun tamamı buna dayanır). Piksel erişimi için ARGB_8888 kopyaya çevrilir.
+     */
+    private fun toSoftware(bmp: Bitmap): Bitmap {
+        if (bmp.config != Bitmap.Config.HARDWARE) return bmp
+        val copy = bmp.copy(Bitmap.Config.ARGB_8888, false)
+        return if (copy != null) {
+            bmp.recycle()
+            copy
+        } else {
+            bmp
+        }
     }
 
     fun countStillVisible(ids: List<Long>): Int {
