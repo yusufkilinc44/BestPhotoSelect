@@ -88,6 +88,21 @@ class SettingsActivity : Activity() {
         content.addView(autoCard)
         renderAutopilotSection()
 
+        // --- Şeffaflık kartı: yapay zeka modeli + benzerlik algoritması detayları ---
+        val aboutCard = card()
+        aboutCard.addView(Ui.sectionTitle(this, "🧠 Yapay Zeka ve Algoritma"))
+        aboutCard.addView(Ui.body(this, "Hangi model kullanılıyor, benzerlik ve \"en iyi\" seçimi nasıl hesaplanıyor?", dim = true))
+        aboutCard.addView(
+            Ui.smallButton(this, "Nasıl çalışır? →", Ui.Screens.SETTINGS.main) {
+                startActivity(Intent(this, AboutAlgorithmActivity::class.java))
+            }.apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(this@SettingsActivity, 8) }
+            }
+        )
+        content.addView(aboutCard)
+
         val scroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false }
         scroll.addView(content)
         root.addView(scroll)
