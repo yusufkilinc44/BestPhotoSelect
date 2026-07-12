@@ -28,27 +28,45 @@ object Ui {
     const val TEAL_DARK = 0xFF0F766E.toInt()
     const val TEAL_DEEP = 0xFF0B4F4A.toInt()
 
-    // Anlamlı (semantik) renkler — hangi ekranda olursa olsun HER ZAMAN aynı anlamı taşır:
+    // Anlamlı (semantik) renkler — hangi ekranda olursa olsun HER ZAMAN aynı anlamı taşır.
+    // Kendileri CANLI/AÇIK tonlar olduğundan üzerlerine BEYAZ değil, TEXT_ON_BRIGHT
+    // (koyu, neredeyse siyah) yazı rengi kullanılır — WCAG kontrast oranı doğrulanmıştır
+    // (CORAL 5.75:1, AMBER 10.61:1, GREEN 7.00:1; beyazla sırasıyla yalnızca 2.78/1.58/2.28 idi).
     const val CORAL = 0xFFFF6B6B.toInt()      // sil / tehlike
     const val CORAL_DARK = 0xFFE05252.toInt()
     const val AMBER = 0xFFFFC53D.toInt()      // en iyi / yıldız
     const val GREEN = 0xFF22C55E.toInt()      // korunacak / başarılı
     const val WHITE = 0xFFFFFFFF.toInt()
+    const val TEXT_ON_BRIGHT = 0xFF1A2420.toInt()
 
-    /** Bir ekranın "markası": başlık gradyanı ve o ekrana özgü birincil buton rengi. */
-    data class Accent(val main: Int, val dark: Int)
+    /** Açık/koyu temaya göre iyi kontrastlı uyarı metni rengi (bkz. [warningText]). */
+    fun warningText(context: Context): Int =
+        if (isDark(context)) 0xFFF87171.toInt() else 0xFF991B1B.toInt()
+
+    /**
+     * Bir ekranın "markası". [main]/[dark] gradyan ve dolgulu (beyaz yazılı) butonlar
+     * için kullanılır — ikisi de beyaz yazıyla >=3.3:1 (kalın/büyük metin için yeterli)
+     * kontrast verecek şekilde seçilmiştir. Nötr bir kart/yüzey üzerinde RENKLİ YAZI
+     * gerektiğinde [onSurface] kullanılmalıdır — ham [main]/[dark] asla küçük metin
+     * rengi olarak kullanılmamalıdır (koyu temada okunaksız hâle gelir).
+     */
+    data class Accent(val main: Int, val dark: Int, val onDark: Int) {
+        /** Kart/yüzey üzerinde renkli etiket yazısı için: koyu temada açık ton, açık temada koyu ton. */
+        fun onSurface(context: Context): Int = if (isDark(context)) onDark else dark
+    }
 
     /**
      * "Rengarenk" tema: her ekranın kendine özgü canlı bir rengi vardır —
      * marka tutarlılığı yerine oyunbaz/eğlenceli bir çeşitlilik hedeflenir.
      * Anlamlı renkler (AMBER=en iyi, CORAL=sil, GREEN=koru) bundan bağımsızdır.
+     * Tüm main/dark/onDark değerleri WCAG kontrast hesabıyla doğrulanmıştır.
      */
     object Screens {
-        val ALBUMS = Accent(0xFF3B82F6.toInt(), 0xFF2563EB.toInt())   // mavi
-        val RESULTS = Accent(0xFFF97316.toInt(), 0xFFEA580C.toInt())  // turuncu
-        val GROUP = Accent(0xFF8B5CF6.toInt(), 0xFF7C3AED.toInt())    // mor
-        val SETTINGS = Accent(0xFF22C55E.toInt(), 0xFF16A34A.toInt()) // yeşil
-        val HISTORY = Accent(0xFFEC4899.toInt(), 0xFFDB2777.toInt())  // pembe
+        val ALBUMS = Accent(0xFF2563EB.toInt(), 0xFF1D4ED8.toInt(), 0xFF93C5FD.toInt())   // mavi
+        val RESULTS = Accent(0xFFEA580C.toInt(), 0xFFC2410C.toInt(), 0xFFFDBA74.toInt())  // turuncu
+        val GROUP = Accent(0xFF7C3AED.toInt(), 0xFF6D28D9.toInt(), 0xFFC4B5FD.toInt())    // mor
+        val SETTINGS = Accent(0xFF15803D.toInt(), 0xFF166534.toInt(), 0xFF86EFAC.toInt()) // yeşil
+        val HISTORY = Accent(0xFFDB2777.toInt(), 0xFFBE185D.toInt(), 0xFFF9A8D4.toInt())  // pembe
     }
 
     fun isDark(context: Context): Boolean =
@@ -96,7 +114,7 @@ object Ui {
         context: Context,
         title: String,
         subtitle: String? = null,
-        accent: Accent = Accent(TEAL, TEAL_DARK)
+        accent: Accent = Accent(TEAL, TEAL_DEEP, TEAL)
     ): LinearLayout {
         val header = vbox(context).apply {
             background = GradientDrawable(

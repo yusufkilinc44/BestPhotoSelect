@@ -71,7 +71,7 @@ class AboutAlgorithmActivity : Activity() {
             })
             addView(Ui.body(this@AboutAlgorithmActivity, "⚙️ Yukarıdaki tüm oranlar Ayarlar > \"En İyi Seçim Ağırlıkları\" bölümünden değiştirilebilir.", dim = true).apply {
                 setPadding(0, dp(this@AboutAlgorithmActivity, 10), 0, 0)
-                setTextColor(Ui.Screens.SETTINGS.dark)
+                setTextColor(Ui.Screens.SETTINGS.onSurface(this@AboutAlgorithmActivity))
             })
         })
 

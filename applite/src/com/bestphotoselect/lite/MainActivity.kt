@@ -173,11 +173,11 @@ class MainActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        val selectAllButton = Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
+        val selectAllButton = Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.Screens.ALBUMS.onSurface(this)) {
             selected = albums.map { it.bucketId }.toMutableSet()
             persistSelection(); renderGrid(); refreshInfo()
         }
-        val clearButton = Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
+        val clearButton = Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.Screens.ALBUMS.onSurface(this)) {
             selected.clear(); persistSelection(); renderGrid(); refreshInfo()
         }
         selectRow.addView(selectAllButton, LinearLayout.LayoutParams(

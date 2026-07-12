@@ -40,7 +40,7 @@ class HistoryActivity : Activity() {
             setTextColor(Ui.WHITE)
             typeface = Typeface.DEFAULT_BOLD
         }, 1f))
-        header.addView(Ui.smallButton(this, getString(R.string.history_clear), 0x33FFFFFF, Ui.WHITE) {
+        header.addView(Ui.smallButton(this, getString(R.string.history_clear), Ui.WHITE, Ui.Screens.HISTORY.dark) {
             HistoryStore.clear(this)
             refresh()
         })
@@ -100,7 +100,8 @@ class HistoryActivity : Activity() {
                 Ui.chip(
                     ctx,
                     getString(if (e.auto) R.string.history_auto_badge else R.string.history_manual_badge),
-                    if (e.auto) Ui.AMBER else Ui.Screens.HISTORY.main
+                    if (e.auto) Ui.AMBER else Ui.Screens.HISTORY.dark,
+                    if (e.auto) Ui.TEXT_ON_BRIGHT else Ui.WHITE
                 )
             )
 

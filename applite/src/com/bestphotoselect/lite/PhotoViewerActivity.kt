@@ -107,7 +107,7 @@ class PhotoViewerActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(0, dp(this@PhotoViewerActivity, 10), 0, 0)
         }
-        bestButton = Ui.smallButton(this, getString(R.string.viewer_make_best), Ui.AMBER) {
+        bestButton = Ui.smallButton(this, getString(R.string.viewer_make_best), Ui.AMBER, Ui.TEXT_ON_BRIGHT) {
             currentGroup()?.let { g ->
                 g.photos.getOrNull(index)?.let { sp ->
                     ScanSession.setBest(groupId, sp.photo.id)
@@ -115,7 +115,7 @@ class PhotoViewerActivity : Activity() {
                 }
             }
         }
-        deleteButton = Ui.smallButton(this, getString(R.string.viewer_mark_delete), Ui.CORAL) {
+        deleteButton = Ui.smallButton(this, getString(R.string.viewer_mark_delete), Ui.CORAL, Ui.TEXT_ON_BRIGHT) {
             currentGroup()?.let { g ->
                 g.photos.getOrNull(index)?.let { sp ->
                     ScanSession.toggleDeletion(groupId, sp.photo.id)
@@ -183,11 +183,11 @@ class PhotoViewerActivity : Activity() {
         // Silinecek işareti her zaman öncelikli gösterilir — "en iyi" fotoğraf da
         // silinmeye işaretlenebilir (kullanıcı yapay zekanın seçimine katılmayabilir).
         if (scored.markedForDeletion) {
-            badgeRow.addView(Ui.chip(this, getString(R.string.viewer_will_delete), Ui.CORAL))
+            badgeRow.addView(Ui.chip(this, getString(R.string.viewer_will_delete), Ui.CORAL, Ui.TEXT_ON_BRIGHT))
         } else if (isBest) {
-            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.AMBER))
+            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.AMBER, Ui.TEXT_ON_BRIGHT))
         } else {
-            badgeRow.addView(Ui.chip(this, getString(R.string.group_keep), Ui.GREEN))
+            badgeRow.addView(Ui.chip(this, getString(R.string.group_keep), Ui.GREEN, Ui.TEXT_ON_BRIGHT))
         }
         scored.analysis.face?.let { face ->
             badgeRow.addView(View(this).apply {

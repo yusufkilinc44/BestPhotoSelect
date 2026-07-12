@@ -62,7 +62,7 @@ class GroupDetailActivity : Activity() {
             setTextColor(0xE6FFFFFF.toInt())
         })
         header.addView(Ui.weight(titles, 1f))
-        header.addView(Ui.smallButton(this, getString(R.string.group_skip), 0x33FFFFFF, Ui.WHITE) {
+        header.addView(Ui.smallButton(this, getString(R.string.group_skip), Ui.WHITE, Ui.Screens.GROUP.dark) {
             ScanSession.skipGroup(groupId)
             finish()
         })
@@ -78,7 +78,7 @@ class GroupDetailActivity : Activity() {
 
         // Grup içi temizlik: bu grupta işaretlenenleri hemen sil, sonra
         // (grup biterse otomatik, bitmezse geri tuşuyla) diğer gruba geçilebilir.
-        deleteButton = Ui.pillButton(this, "", Ui.CORAL) { confirmDelete() }
+        deleteButton = Ui.pillButton(this, "", Ui.CORAL, Ui.TEXT_ON_BRIGHT) { confirmDelete() }
         root.addView(deleteButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
@@ -190,11 +190,11 @@ class GroupDetailActivity : Activity() {
             // Rozet: sol üst — silinecek işareti her zaman öncelikli gösterilir,
             // "en iyi" fotoğraf da silinmeye işaretlenmiş olabilir.
             val badge = if (marked) {
-                Ui.chip(ctx, getString(R.string.viewer_will_delete), Ui.CORAL)
+                Ui.chip(ctx, getString(R.string.viewer_will_delete), Ui.CORAL, Ui.TEXT_ON_BRIGHT)
             } else if (isBest) {
-                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER)
+                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER, Ui.TEXT_ON_BRIGHT)
             } else {
-                Ui.chip(ctx, getString(R.string.group_keep), Ui.GREEN)
+                Ui.chip(ctx, getString(R.string.group_keep), Ui.GREEN, Ui.TEXT_ON_BRIGHT)
             }
             imageFrame.addView(badge.apply {
                 layoutParams = FrameLayout.LayoutParams(
@@ -223,11 +223,12 @@ class GroupDetailActivity : Activity() {
                 setPadding(p, dp(ctx, 10), p, dp(ctx, 12))
             }
             val chips = Ui.hbox(ctx)
+            val groupTextColor = Ui.Screens.GROUP.onSurface(ctx)
             chips.addView(
                 Ui.chip(
                     ctx,
                     getString(R.string.group_score, (scored.score * 100).roundToInt()),
-                    Ui.cardAlt(ctx), Ui.Screens.GROUP.dark
+                    Ui.cardAlt(ctx), groupTextColor
                 )
             )
             scored.analysis.face?.let { face ->
@@ -235,13 +236,13 @@ class GroupDetailActivity : Activity() {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
                 })
                 chips.addView(
-                    Ui.chip(ctx, "👁 %" + (face.eyesOpen * 100).roundToInt(), Ui.cardAlt(ctx), Ui.Screens.GROUP.dark)
+                    Ui.chip(ctx, "👁 %" + (face.eyesOpen * 100).roundToInt(), Ui.cardAlt(ctx), groupTextColor)
                 )
                 chips.addView(View(ctx).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
                 })
                 chips.addView(
-                    Ui.chip(ctx, "🙂 %" + (face.frontal * 100).roundToInt(), Ui.cardAlt(ctx), Ui.Screens.GROUP.dark)
+                    Ui.chip(ctx, "🙂 %" + (face.frontal * 100).roundToInt(), Ui.cardAlt(ctx), groupTextColor)
                 )
             }
             info.addView(Ui.weight(chips, 1f))
@@ -252,7 +253,7 @@ class GroupDetailActivity : Activity() {
                 ctx,
                 if (marked) getString(R.string.viewer_unmark_delete) else getString(R.string.viewer_mark_delete),
                 if (marked) Ui.cardAlt(ctx) else Ui.CORAL,
-                if (marked) Ui.Screens.GROUP.dark else Ui.WHITE
+                if (marked) groupTextColor else Ui.TEXT_ON_BRIGHT
             ) {
                 ScanSession.toggleDeletion(groupId, scored.photo.id)
                 refresh()
@@ -261,7 +262,7 @@ class GroupDetailActivity : Activity() {
                 info.addView(View(ctx).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 8), 1)
                 })
-                info.addView(Ui.smallButton(ctx, "⭐", Ui.AMBER, Ui.WHITE) {
+                info.addView(Ui.smallButton(ctx, "⭐", Ui.AMBER, Ui.TEXT_ON_BRIGHT) {
                     ScanSession.setBest(groupId, scored.photo.id)
                     refresh()
                 })

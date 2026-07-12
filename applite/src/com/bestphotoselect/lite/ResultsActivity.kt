@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -40,11 +39,11 @@ class ResultsActivity : Activity() {
         root.addView(Ui.gradientHeader(this, "🖼 " + getString(R.string.results_title),
             getString(R.string.group_tap_hint), Ui.Screens.RESULTS))
 
-        // Kazanım "hero" kartı: turuncu -> amber gradyan
+        // Kazanım "hero" kartı: düz koyu turuncu dolgu (beyaz yazıyla >=5:1 kontrast
+        // garantili; önceki mercan->amber gradyanının amber ucunda kontrast yalnızca
+        // 1.58:1 idi ve yazı okunmuyordu).
         heroCard = Ui.vbox(this).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.Screens.RESULTS.main, Ui.AMBER)
-            ).apply { cornerRadius = dp(this@ResultsActivity, 18).toFloat() }
+            background = Ui.roundedRect(Ui.Screens.RESULTS.dark, 18f, this@ResultsActivity)
             elevation = dp(this@ResultsActivity, 3).toFloat()
             val p = dp(this@ResultsActivity, 14)
             setPadding(p, p, p, p)
@@ -75,7 +74,7 @@ class ResultsActivity : Activity() {
         list.adapter = adapter
         root.addView(list, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
-        deleteButton = Ui.pillButton(this, "", Ui.CORAL) { confirmDelete() }
+        deleteButton = Ui.pillButton(this, "", Ui.CORAL, Ui.TEXT_ON_BRIGHT) { confirmDelete() }
         root.addView(deleteButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply {
@@ -172,7 +171,7 @@ class ResultsActivity : Activity() {
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Ui.text(ctx))
             }, 1f))
-            titleRow.addView(Ui.chip(ctx, formatBytes(group.bytesToFree), Ui.cardAlt(ctx), Ui.Screens.RESULTS.dark))
+            titleRow.addView(Ui.chip(ctx, formatBytes(group.bytesToFree), Ui.cardAlt(ctx), Ui.Screens.RESULTS.onSurface(ctx)))
             card.addView(titleRow)
 
             val scroll = HorizontalScrollView(ctx).apply {
@@ -202,7 +201,7 @@ class ResultsActivity : Activity() {
                 Thumbs.load(ctx, img, scored.photo.uri, 208)
                 cell.addView(img)
                 if (isBest) {
-                    cell.addView(Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER).apply {
+                    cell.addView(Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER, Ui.TEXT_ON_BRIGHT).apply {
                         layoutParams = FrameLayout.LayoutParams(
                             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
@@ -215,7 +214,7 @@ class ResultsActivity : Activity() {
                             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
                         )
                     })
-                    cell.addView(Ui.chip(ctx, "🗑", Ui.CORAL).apply {
+                    cell.addView(Ui.chip(ctx, "🗑", Ui.CORAL, Ui.TEXT_ON_BRIGHT).apply {
                         layoutParams = FrameLayout.LayoutParams(
                             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL

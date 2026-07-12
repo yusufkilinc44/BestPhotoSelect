@@ -196,7 +196,7 @@ class SettingsActivity : Activity() {
         refreshFace()
 
         weightsCard.addView(
-            Ui.smallButton(this, "↺ Varsayılanlara dön", Ui.cardAlt(this), Ui.Screens.SETTINGS.dark) {
+            Ui.smallButton(this, "↺ Varsayılanlara dön", Ui.cardAlt(this), Ui.Screens.SETTINGS.onSurface(this)) {
                 prefs.resetScoringWeights()
                 val d = ScoringWeights()
                 topBars[0].progress = d.faceQuality
@@ -234,7 +234,7 @@ class SettingsActivity : Activity() {
         val label = TextView(this).apply {
             textSize = 13f
             typeface = android.graphics.Typeface.DEFAULT_BOLD
-            setTextColor(Ui.Screens.SETTINGS.dark)
+            setTextColor(Ui.Screens.SETTINGS.onSurface(this@SettingsActivity))
             gravity = Gravity.END
             layoutParams = LinearLayout.LayoutParams(dp(this@SettingsActivity, 42), LinearLayout.LayoutParams.WRAP_CONTENT)
         }
@@ -256,7 +256,7 @@ class SettingsActivity : Activity() {
         if (!prefs.autopilotEnabled) return
 
         autopilotSection.addView(Ui.body(this, "⚠️ " + getString(R.string.settings_autopilot_warning)).apply {
-            setTextColor(Ui.CORAL_DARK)
+            setTextColor(Ui.warningText(this@SettingsActivity))
             setPadding(0, dp(this@SettingsActivity, 8), 0, 0)
         })
 
