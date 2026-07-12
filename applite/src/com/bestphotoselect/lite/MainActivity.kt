@@ -28,6 +28,13 @@ import com.bestphotoselect.util.formatBytes
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Bilerek EN BASİT mümkün yapı: TEK bir dikey LinearLayout, TEK bir ScrollView
+ * içinde, hiçbir yerde "weight" (ağırlıklı alan paylaşımı) kullanılmadan.
+ * Her çocuk WRAP_CONTENT'tir ve doğal boyutuyla alt alta dizilir; tarama butonu
+ * da bu sütunun EN ALTINDA, kaydırmayla birlikte gelir. Bu, ekranın herhangi
+ * bir kısmının "kaybolması" ihtimalini ortadan kaldırır.
+ */
 class MainActivity : Activity() {
 
     private lateinit var prefs: Prefs
@@ -39,6 +46,7 @@ class MainActivity : Activity() {
     private var selected: MutableSet<Long> = mutableSetOf()
 
     private lateinit var infoText: TextView
+    private lateinit var statusText: TextView
     private lateinit var gridContainer: LinearLayout
     private lateinit var scanButton: TextView
 
@@ -58,11 +66,24 @@ class MainActivity : Activity() {
         if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES
         else Manifest.permission.READ_EXTERNAL_STORAGE
 
-    private fun hasPermission(): Boolean =
-        checkSelfPermission(permissionName()) == PackageManager.PERMISSION_GRANTED
+    private fun hasPermission(): Boolean {
+        if (checkSelfPermission(permissionName()) == PackageManager.PERMISSION_GRANTED) return true
+        // Android 14+ "sınırlı erişim" (yalnızca seçili fotoğraflar) verildiyse de
+        // MediaStore sorguları o fotoğraflar için çalışır; bunu da izin say.
+        if (Build.VERSION.SDK_INT >= 34) {
+            return checkSelfPermission(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED) ==
+                PackageManager.PERMISSION_GRANTED
+        }
+        return false
+    }
 
     private fun requestPermission() {
-        requestPermissions(arrayOf(permissionName()), 100)
+        val perms = if (Build.VERSION.SDK_INT >= 33) {
+            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+        } else {
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        requestPermissions(perms, 100)
     }
 
     override fun onRequestPermissionsResult(
@@ -76,14 +97,20 @@ class MainActivity : Activity() {
         }
     }
 
-    // ---------- Arayüz iskeleti ----------
+    // ---------- Arayüz iskeleti (tek sütun, weight yok) ----------
 
     private fun buildUi() {
-        val root = Ui.screenRoot(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
-            )
+        // setContentView'e verilen kök, MATCH_PARENT/MATCH_PARENT olarak
+        // Activity tarafından otomatik sarılır; kendi layoutParams'ını
+        // belirtmemize gerek yok.
+        val scroll = ScrollView(this).apply {
+            isVerticalScrollBarEnabled = false
+            setBackgroundColor(Ui.bg(this@MainActivity))
         }
+        val column = Ui.vbox(this)
+        scroll.addView(column, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        ))
 
         // Başlık
         val header = Ui.hbox(this).apply {
@@ -92,9 +119,6 @@ class MainActivity : Activity() {
             )
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 12), p, dp(this@MainActivity, 12))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            )
         }
         val titles = Ui.vbox(this)
         titles.addView(TextView(this).apply {
@@ -109,58 +133,59 @@ class MainActivity : Activity() {
             setTextColor(0xE6FFFFFF.toInt())
         }
         titles.addView(infoText)
-        header.addView(Ui.weight(titles, 1f))
+        header.addView(titles, LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        ))
         header.addView(headerIcon("🕘") { startActivity(Intent(this, HistoryActivity::class.java)) })
         header.addView(headerIcon("⚙️") { startActivity(Intent(this, SettingsActivity::class.java)) })
-        root.addView(header)
+        column.addView(header)
+
+        // Teşhis satırı: her zaman görünür, sorun anında ekran görüntüsünden anlaşılsın
+        statusText = TextView(this).apply {
+            textSize = 11f
+            setTextColor(Ui.textDim(this@MainActivity))
+            val p = dp(this@MainActivity, 16)
+            setPadding(p, dp(this@MainActivity, 4), p, 0)
+        }
+        column.addView(statusText)
 
         // Seçim araç çubuğu
         val selectRow = Ui.hbox(this).apply {
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 4))
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            )
+            gravity = Gravity.END
         }
-        selectRow.addView(Ui.weight(View(this), 1f))
         selectRow.addView(Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.TEAL_DARK) {
             selected = albums.map { it.bucketId }.toMutableSet()
             persistSelection(); renderGrid(); refreshInfo()
         })
         selectRow.addView(View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(this@MainActivity, 8), 1)
+            layoutParams = LinearLayout.LayoutParams(dp(this@MainActivity, 8), dp(this@MainActivity, 1))
         })
         selectRow.addView(Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.TEAL_DARK) {
             selected.clear(); persistSelection(); renderGrid(); refreshInfo()
         })
-        root.addView(selectRow)
+        column.addView(selectRow)
 
-        // İçerik: kaydırılabilir, elle kurulan 2 sütunlu grid (ağırlık 1 ile orta alanı doldurur)
-        val scroll = ScrollView(this).apply {
-            isFillViewport = true
-            isVerticalScrollBarEnabled = false
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
-            )
-        }
+        // Albüm ızgarası (içerik kadar yer kaplar, sütun onu doğal olarak kaydırır)
         gridContainer = Ui.vbox(this).apply {
             val p = dp(this@MainActivity, 12)
             setPadding(p, dp(this@MainActivity, 6), p, dp(this@MainActivity, 6))
         }
-        scroll.addView(gridContainer)
-        root.addView(scroll)
+        column.addView(gridContainer)
 
-        // Alt: tarama butonu
+        // Tarama butonu — sütunun EN ALTINDA, her zaman içerikle birlikte görünür
         scanButton = Ui.pillButton(this, "✨ " + getString(R.string.albums_scan), Ui.TEAL) {
             if (selected.isNotEmpty()) startScan()
         }
-        root.addView(scanButton, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply {
-            setMargins(dp(this@MainActivity, 16), dp(this@MainActivity, 6), dp(this@MainActivity, 16), dp(this@MainActivity, 16))
-        })
+        val buttonWrap = FrameLayout(this).apply {
+            val p = dp(this@MainActivity, 16)
+            setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 28))
+        }
+        buttonWrap.addView(scanButton)
+        column.addView(buttonWrap)
 
-        setContentView(root)
+        setContentView(scroll)
         renderGrid()
         refreshInfo()
     }
@@ -183,7 +208,11 @@ class MainActivity : Activity() {
         loading = true
         renderGrid()
         executor.execute {
-            val list = MediaQuery(this).queryAlbums()
+            val list = try {
+                MediaQuery(this).queryAlbums()
+            } catch (t: Throwable) {
+                emptyList()
+            }
             main.post {
                 albums = list
                 loading = false
@@ -202,15 +231,15 @@ class MainActivity : Activity() {
         infoText.text = if (selected.isEmpty()) getString(R.string.albums_select_hint)
         else getString(R.string.albums_selected_count, selected.size)
         scanButton.alpha = if (selected.isEmpty()) 0.45f else 1f
+        statusText.text = "v${BuildInfo.VERSION_NAME} · ${albums.size} albüm bulundu · izin: ${if (hasPermission()) "var" else "yok"}"
     }
 
-    // ---------- Grid oluşturma (elle, öngörülebilir) ----------
+    // ---------- Grid oluşturma (elle, öngörülebilir, weight yok) ----------
 
     private fun renderGrid() {
         if (!::gridContainer.isInitialized) return
         gridContainer.removeAllViews()
 
-        // Yükleniyor / boş / izin yok durumları görünür olsun (asla boş siyah ekran değil)
         if (loading) {
             gridContainer.addView(centerNotice(loadingView()))
             return
@@ -232,19 +261,14 @@ class MainActivity : Activity() {
             return
         }
 
-        // 2 sütunlu satırlar
         var i = 0
         while (i < albums.size) {
-            val rowLayout = Ui.hbox(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-                )
-            }
+            val rowLayout = Ui.hbox(this)
             for (col in 0 until 2) {
                 if (i < albums.size) {
                     rowLayout.addView(albumCard(albums[i]), columnParams())
                 } else {
-                    rowLayout.addView(View(this), columnParams()) // boş hücre dengeleyici
+                    rowLayout.addView(View(this), columnParams())
                 }
                 i++
             }
@@ -263,16 +287,19 @@ class MainActivity : Activity() {
         box.addView(ProgressBar(this).apply {
             indeterminateTintList = ColorStateList.valueOf(Ui.TEAL)
         })
+        box.addView(TextView(this).apply {
+            text = "Albümler yükleniyor…"
+            setTextColor(Ui.textDim(this@MainActivity))
+            gravity = Gravity.CENTER
+            setPadding(0, dp(this@MainActivity, 8), 0, 0)
+        })
         return box
     }
 
     private fun centerNotice(child: View): View {
         val frame = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(this@MainActivity, 320)
-            )
             val p = dp(this@MainActivity, 24)
-            setPadding(p, p, p, p)
+            setPadding(p, dp(this@MainActivity, 60), p, dp(this@MainActivity, 60))
         }
         child.layoutParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER

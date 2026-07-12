@@ -50,6 +50,16 @@ echo "[3/7] javac: R sınıfı"
 javac -source 8 -target 8 -nowarn -d "$BUILD/classes" \
   "$BUILD/gen/com/bestphotoselect/R.java" 2>/dev/null
 
+echo "[3.5/7] BuildInfo.kt: sürüm etiketi gömülüyor"
+cat > "$LITE/src/com/bestphotoselect/lite/BuildInfo.kt" <<EOF
+package com.bestphotoselect.lite
+
+/** build-apk.sh tarafından her derlemede üretilir; ekranda görünür sürüm etiketi. */
+object BuildInfo {
+    const val VERSION_NAME = "${VERSION_NAME:-1.0.0} (${VERSION_CODE:-1})"
+}
+EOF
+
 echo "[4/7] kotlinc: uygulama kaynakları"
 SHARED=(
   "$ROOT/app/src/main/java/com/bestphotoselect/data/model/Models.kt"
