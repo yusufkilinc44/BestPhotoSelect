@@ -31,6 +31,7 @@
         </activity>
         <activity android:name=".lite.ResultsActivity" android:exported="false" />
         <activity android:name=".lite.GroupDetailActivity" android:exported="false" />
+        <activity android:name=".lite.PhotoViewerActivity" android:exported="false" />
         <activity android:name=".lite.SettingsActivity" android:exported="false" />
         <activity android:name=".lite.HistoryActivity" android:exported="false" />
 

@@ -1,11 +1,12 @@
 package com.bestphotoselect.lite
 
 import android.app.Activity
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
@@ -23,25 +24,37 @@ class HistoryActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val root = Ui.vbox(this)
-        val header = Ui.hbox(this)
-        header.addView(Ui.weight(Ui.title(this, getString(R.string.history_title)), 1f))
-        header.addView(Button(this).apply {
-            text = getString(R.string.history_clear)
-            setOnClickListener {
-                HistoryStore.clear(this@HistoryActivity)
-                refresh()
-            }
+        val root = Ui.screenRoot(this)
+
+        val header = Ui.hbox(this).apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Ui.TEAL, Ui.TEAL_DARK)
+            )
+            val p = dp(this@HistoryActivity, 16)
+            setPadding(p, dp(this@HistoryActivity, 12), p, dp(this@HistoryActivity, 12))
+        }
+        header.addView(Ui.weight(TextView(this).apply {
+            text = "🕘 " + getString(R.string.history_title)
+            textSize = 20f
+            setTextColor(Ui.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        }, 1f))
+        header.addView(Ui.smallButton(this, getString(R.string.history_clear), 0x33FFFFFF, Ui.WHITE) {
+            HistoryStore.clear(this)
+            refresh()
         })
         root.addView(header)
 
-        empty = TextView(this).apply {
-            text = getString(R.string.history_empty)
+        empty = Ui.body(this, getString(R.string.history_empty), dim = true).apply {
             setPadding(dp(this@HistoryActivity, 16), dp(this@HistoryActivity, 16), 0, 0)
         }
         root.addView(empty)
 
-        val list = ListView(this)
+        val list = ListView(this).apply {
+            divider = null
+            setSelector(android.R.color.transparent)
+        }
         adapter = HistoryAdapter()
         list.adapter = adapter
         root.addView(list, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
@@ -63,23 +76,38 @@ class HistoryActivity : Activity() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val ctx = this@HistoryActivity
             val e = entries[position]
-            val row = Ui.vbox(ctx).apply {
-                val p = dp(ctx, 12)
-                setPadding(p, dp(ctx, 8), p, dp(ctx, 8))
-            }
-            row.addView(TextView(ctx).apply {
+
+            val card = Ui.hbox(ctx)
+            Ui.cardify(card, Ui.card(ctx), radiusDp = 14, elevationDp = 1)
+            val p = dp(ctx, 12)
+            card.setPadding(p, dp(ctx, 10), p, dp(ctx, 10))
+
+            val texts = Ui.vbox(ctx)
+            texts.addView(TextView(ctx).apply {
                 text = e.name
+                textSize = 14f
+                setTextColor(Ui.text(ctx))
                 maxLines = 1
             })
-            row.addView(TextView(ctx).apply {
-                textSize = 12f
-                val df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
-                text = df.format(Date(e.atMs)) +
-                    " · " + formatBytes(e.sizeBytes) +
-                    " · " + getString(if (e.trashed) R.string.history_trashed else R.string.history_deleted) +
-                    " · " + getString(if (e.auto) R.string.history_auto_badge else R.string.history_manual_badge)
-            })
-            return row
+            val df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+            texts.addView(Ui.body(ctx,
+                df.format(Date(e.atMs)) + " · " + formatBytes(e.sizeBytes) + " · " +
+                    getString(if (e.trashed) R.string.history_trashed else R.string.history_deleted),
+                dim = true
+            ))
+            card.addView(Ui.weight(texts, 1f))
+            card.addView(
+                Ui.chip(
+                    ctx,
+                    getString(if (e.auto) R.string.history_auto_badge else R.string.history_manual_badge),
+                    if (e.auto) Ui.AMBER else Ui.TEAL
+                )
+            )
+
+            val wrapper = FrameLayout(ctx)
+            wrapper.setPadding(dp(ctx, 16), dp(ctx, 4), dp(ctx, 16), dp(ctx, 4))
+            wrapper.addView(card)
+            return wrapper
         }
     }
 }

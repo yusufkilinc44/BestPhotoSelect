@@ -1,13 +1,14 @@
 package com.bestphotoselect.lite
 
 import android.app.Activity
-import android.graphics.Color
+import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
-import android.widget.CheckBox
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListView
@@ -25,19 +26,39 @@ class GroupDetailActivity : Activity() {
         super.onCreate(savedInstanceState)
         groupId = intent.getIntExtra("groupId", -1)
 
-        val root = Ui.vbox(this)
-        val header = Ui.hbox(this)
-        header.addView(Ui.weight(Ui.title(this, getString(R.string.group_title)), 1f))
-        header.addView(Button(this).apply {
-            text = getString(R.string.group_skip)
-            setOnClickListener {
-                ScanSession.skipGroup(groupId)
-                finish()
-            }
+        val root = Ui.screenRoot(this)
+
+        val header = Ui.hbox(this).apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Ui.TEAL, Ui.TEAL_DARK)
+            )
+            val p = dp(this@GroupDetailActivity, 16)
+            setPadding(p, dp(this@GroupDetailActivity, 12), p, dp(this@GroupDetailActivity, 12))
+        }
+        val titles = Ui.vbox(this)
+        titles.addView(TextView(this).apply {
+            text = "🔍 " + getString(R.string.group_title)
+            textSize = 20f
+            setTextColor(Ui.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+        })
+        titles.addView(TextView(this).apply {
+            text = getString(R.string.group_tap_hint)
+            textSize = 12f
+            setTextColor(0xE6FFFFFF.toInt())
+        })
+        header.addView(Ui.weight(titles, 1f))
+        header.addView(Ui.smallButton(this, getString(R.string.group_skip), 0x33FFFFFF, Ui.WHITE) {
+            ScanSession.skipGroup(groupId)
+            finish()
         })
         root.addView(header)
 
-        val list = ListView(this).apply { divider = null }
+        val list = ListView(this).apply {
+            divider = null
+            setSelector(android.R.color.transparent)
+        }
         adapter = MemberAdapter()
         list.adapter = adapter
         root.addView(list, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
@@ -53,6 +74,14 @@ class GroupDetailActivity : Activity() {
         }
     }
 
+    private fun openViewer(index: Int) {
+        startActivity(
+            Intent(this, PhotoViewerActivity::class.java)
+                .putExtra("groupId", groupId)
+                .putExtra("index", index)
+        )
+    }
+
     private inner class MemberAdapter : BaseAdapter() {
         private fun members() = ScanSession.group(groupId)?.photos ?: emptyList()
         override fun getCount() = members().size
@@ -65,64 +94,107 @@ class GroupDetailActivity : Activity() {
             val scored = group.photos[position]
             val isBest = scored.photo.id == group.bestPhotoId
 
-            val card = Ui.vbox(ctx).apply {
-                setBackgroundColor(0x14808080)
-                val m = dp(ctx, 8)
-                setPadding(m, m, m, m)
-            }
+            val card = Ui.vbox(ctx)
+            Ui.cardify(
+                card, Ui.card(ctx), radiusDp = 18,
+                strokeColor = if (isBest) Ui.TEAL else 0,
+                strokeDp = if (isBest) 3 else 0,
+                elevationDp = 2
+            )
 
+            // Fotoğraf (dokununca tam ekran inceleme)
+            val imageFrame = FrameLayout(ctx)
             val img = ImageView(ctx).apply {
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, dp(ctx, 260)
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(ctx, 280)
                 )
             }
             Thumbs.load(ctx, img, scored.photo.uri, 640)
-            card.addView(img)
+            imageFrame.addView(img)
 
-            val info = TextView(ctx).apply {
-                setPadding(0, dp(ctx, 6), 0, 0)
-                val parts = mutableListOf(
-                    getString(R.string.group_score, (scored.score * 100).roundToInt())
-                )
-                scored.analysis.face?.let { face ->
-                    parts += getString(R.string.group_eyes) + ": %" + (face.eyesOpen * 100).roundToInt()
-                    parts += getString(R.string.group_face) + ": %" + (face.frontal * 100).roundToInt()
+            // Rozet: sol üst
+            val badge = if (isBest) {
+                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.TEAL)
+            } else if (scored.markedForDeletion) {
+                Ui.chip(ctx, getString(R.string.viewer_will_delete), Ui.CORAL)
+            } else {
+                Ui.chip(ctx, getString(R.string.group_keep), Ui.GREEN)
+            }
+            imageFrame.addView(badge.apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                    Gravity.TOP or Gravity.START
+                ).apply { setMargins(dp(ctx, 10), dp(ctx, 10), 0, 0) }
+            })
+            // Büyüteç ipucu: sağ alt
+            imageFrame.addView(TextView(ctx).apply {
+                text = "🔍"
+                textSize = 16f
+                gravity = Gravity.CENTER
+                val s = dp(ctx, 34)
+                layoutParams = FrameLayout.LayoutParams(s, s, Gravity.BOTTOM or Gravity.END).apply {
+                    setMargins(0, 0, dp(ctx, 10), dp(ctx, 10))
                 }
-                text = parts.joinToString("   ")
+                background = Ui.roundedRect(0x66000000, 17f, ctx)
+            })
+            imageFrame.isClickable = true
+            imageFrame.setOnClickListener { openViewer(position) }
+            card.addView(imageFrame)
+
+            // Bilgi + aksiyon satırı
+            val info = Ui.hbox(ctx).apply {
+                val p = dp(ctx, 12)
+                setPadding(p, dp(ctx, 10), p, dp(ctx, 12))
+            }
+            val chips = Ui.hbox(ctx)
+            chips.addView(
+                Ui.chip(
+                    ctx,
+                    getString(R.string.group_score, (scored.score * 100).roundToInt()),
+                    Ui.cardAlt(ctx), Ui.TEAL_DARK
+                )
+            )
+            scored.analysis.face?.let { face ->
+                chips.addView(View(ctx).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
+                })
+                chips.addView(
+                    Ui.chip(ctx, "👁 %" + (face.eyesOpen * 100).roundToInt(), Ui.cardAlt(ctx), Ui.TEAL_DARK)
+                )
+                chips.addView(View(ctx).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
+                })
+                chips.addView(
+                    Ui.chip(ctx, "🙂 %" + (face.frontal * 100).roundToInt(), Ui.cardAlt(ctx), Ui.TEAL_DARK)
+                )
+            }
+            info.addView(Ui.weight(chips, 1f))
+
+            if (!isBest) {
+                info.addView(Ui.smallButton(
+                    ctx,
+                    if (scored.markedForDeletion) getString(R.string.viewer_unmark_delete)
+                    else getString(R.string.viewer_mark_delete),
+                    if (scored.markedForDeletion) Ui.cardAlt(ctx) else Ui.CORAL,
+                    if (scored.markedForDeletion) Ui.TEAL_DARK else Ui.WHITE
+                ) {
+                    ScanSession.toggleDeletion(groupId, scored.photo.id)
+                    notifyDataSetChanged()
+                })
+                info.addView(View(ctx).apply {
+                    layoutParams = LinearLayout.LayoutParams(dp(ctx, 8), 1)
+                })
+                info.addView(Ui.smallButton(ctx, "⭐", Ui.AMBER, Ui.WHITE) {
+                    ScanSession.setBest(groupId, scored.photo.id)
+                    notifyDataSetChanged()
+                })
             }
             card.addView(info)
 
-            val actions = Ui.hbox(ctx)
-            if (isBest) {
-                actions.addView(TextView(ctx).apply {
-                    text = "★ " + getString(R.string.results_best_badge)
-                    setTextColor(Color.rgb(15, 118, 110))
-                    setTypeface(typeface, android.graphics.Typeface.BOLD)
-                })
-            } else {
-                val check = CheckBox(ctx).apply {
-                    text = getString(R.string.group_delete_marked)
-                    isChecked = scored.markedForDeletion
-                    setOnClickListener {
-                        ScanSession.toggleDeletion(groupId, scored.photo.id)
-                        notifyDataSetChanged()
-                    }
-                }
-                actions.addView(Ui.weight(check, 1f))
-                actions.addView(Button(ctx).apply {
-                    text = getString(R.string.group_set_best)
-                    setOnClickListener {
-                        ScanSession.setBest(groupId, scored.photo.id)
-                        notifyDataSetChanged()
-                    }
-                })
-            }
-            card.addView(actions)
-
-            val wrapper = Ui.vbox(ctx)
-            val m = dp(ctx, 8)
-            wrapper.setPadding(m, m / 2, m, m / 2)
+            val wrapper = FrameLayout(ctx)
+            val m = dp(ctx, 16)
+            wrapper.setPadding(m, dp(ctx, 6), m, dp(ctx, 6))
             wrapper.addView(card)
             return wrapper
         }

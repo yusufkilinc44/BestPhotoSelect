@@ -3,19 +3,19 @@ package com.bestphotoselect.lite
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
-import android.widget.Toast
 import com.bestphotoselect.R
 import com.bestphotoselect.data.model.PhotoGroup
 import com.bestphotoselect.data.model.PhotoItem
@@ -25,8 +25,9 @@ import com.bestphotoselect.util.formatBytes
 class ResultsActivity : Activity() {
 
     private lateinit var prefs: Prefs
-    private lateinit var summary: TextView
-    private lateinit var deleteButton: Button
+    private lateinit var hero: TextView
+    private lateinit var heroCard: LinearLayout
+    private lateinit var deleteButton: TextView
     private lateinit var adapter: GroupAdapter
 
     private var pendingDeletion: List<PhotoItem> = emptyList()
@@ -35,28 +36,51 @@ class ResultsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
-        val root = Ui.vbox(this)
-        root.addView(Ui.title(this, getString(R.string.results_title)))
-        summary = TextView(this).apply {
-            setPadding(dp(this@ResultsActivity, 16), 0, dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 8))
-        }
-        root.addView(summary)
+        val root = Ui.screenRoot(this)
+        root.addView(Ui.gradientHeader(this, "🖼 " + getString(R.string.results_title),
+            getString(R.string.group_tap_hint)))
 
-        val list = ListView(this).apply { divider = null }
+        // Kazanım "hero" kartı: mercan -> amber gradyan
+        heroCard = Ui.vbox(this).apply {
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.CORAL, Ui.AMBER)
+            ).apply { cornerRadius = dp(this@ResultsActivity, 18).toFloat() }
+            elevation = dp(this@ResultsActivity, 3).toFloat()
+            val p = dp(this@ResultsActivity, 14)
+            setPadding(p, p, p, p)
+        }
+        heroCard.addView(TextView(this).apply {
+            text = getString(R.string.results_hero_title)
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(Ui.WHITE)
+        })
+        hero = TextView(this).apply {
+            textSize = 13f
+            setTextColor(Ui.WHITE)
+            setPadding(0, dp(this@ResultsActivity, 2), 0, 0)
+        }
+        heroCard.addView(hero)
+        root.addView(heroCard, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 12), dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 4))
+        })
+
+        val list = ListView(this).apply {
+            divider = null
+            setSelector(android.R.color.transparent)
+        }
         adapter = GroupAdapter()
         list.adapter = adapter
-        list.setOnItemClickListener { _, _, position, _ ->
-            val group = ScanSession.groups.getOrNull(position) ?: return@setOnItemClickListener
-            startActivity(
-                Intent(this, GroupDetailActivity::class.java).putExtra("groupId", group.id)
-            )
-        }
         root.addView(list, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
 
-        deleteButton = Button(this).apply { setOnClickListener { confirmDelete() } }
+        deleteButton = Ui.pillButton(this, "", Ui.CORAL) { confirmDelete() }
         root.addView(deleteButton, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { setMargins(dp(this@ResultsActivity, 16), 0, dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 16)) })
+        ).apply {
+            setMargins(dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 6), dp(this@ResultsActivity, 16), dp(this@ResultsActivity, 16))
+        })
 
         setContentView(root)
     }
@@ -70,11 +94,20 @@ class ResultsActivity : Activity() {
         val groups = ScanSession.groups
         val candidates = groups.sumOf { it.deletionCandidates.size }
         val bytes = groups.sumOf { it.bytesToFree }
-        summary.text = if (groups.isEmpty()) getString(R.string.results_empty)
-        else getString(R.string.results_summary, groups.size, candidates, formatBytes(bytes))
-        deleteButton.text = getString(R.string.results_delete_selected, candidates)
-        deleteButton.isEnabled = candidates > 0
+        if (groups.isEmpty()) {
+            hero.text = getString(R.string.results_empty)
+        } else {
+            hero.text = getString(R.string.results_summary, groups.size, candidates, formatBytes(bytes))
+        }
+        deleteButton.text = "🗑 " + getString(R.string.results_delete_selected, candidates)
+        deleteButton.alpha = if (candidates > 0) 1f else 0.45f
         adapter.notifyDataSetChanged()
+    }
+
+    private fun openGroup(group: PhotoGroup) {
+        startActivity(
+            Intent(this, GroupDetailActivity::class.java).putExtra("groupId", group.id)
+        )
     }
 
     // ---------- Silme akışı ----------
@@ -109,10 +142,10 @@ class ResultsActivity : Activity() {
         if (resultCode == RESULT_OK && photos.isNotEmpty()) {
             HistoryStore.addAll(this, photos, auto = false, trashed = prefs.trashMode)
             ScanSession.onPhotosDeleted(photos.map { it.id }.toSet())
-            Toast.makeText(this, getString(R.string.delete_success, photos.size), Toast.LENGTH_LONG).show()
+            Ui.toast(this, "✅ " + getString(R.string.delete_success, photos.size))
             refresh()
         } else if (resultCode != RESULT_OK) {
-            Toast.makeText(this, R.string.delete_failed, Toast.LENGTH_LONG).show()
+            Ui.toast(this, getString(R.string.delete_failed))
         }
     }
 
@@ -126,57 +159,85 @@ class ResultsActivity : Activity() {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val ctx = this@ResultsActivity
             val group = ScanSession.groups[position]
+            val open = { openGroup(group) }
 
-            val card = Ui.vbox(ctx).apply {
-                setBackgroundColor(0x14808080)
-                val m = dp(ctx, 8)
-                setPadding(m, m, m, m)
-            }
+            val card = Ui.vbox(ctx)
+            Ui.cardify(card, Ui.card(ctx), radiusDp = 18, elevationDp = 2)
+            card.setPadding(dp(ctx, 12), dp(ctx, 12), dp(ctx, 12), dp(ctx, 12))
+
             val titleRow = Ui.hbox(ctx)
             titleRow.addView(Ui.weight(TextView(ctx).apply {
-                text = getString(R.string.results_group_title, group.photos.size)
-                setTypeface(typeface, android.graphics.Typeface.BOLD)
+                text = "🖼 " + getString(R.string.results_group_title, group.photos.size)
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(Ui.text(ctx))
             }, 1f))
-            titleRow.addView(TextView(ctx).apply {
-                text = formatBytes(group.bytesToFree)
-            })
+            titleRow.addView(Ui.chip(ctx, formatBytes(group.bytesToFree), Ui.cardAlt(ctx), Ui.TEAL_DARK))
             card.addView(titleRow)
 
-            val scroll = HorizontalScrollView(ctx)
+            val scroll = HorizontalScrollView(ctx).apply {
+                isHorizontalScrollBarEnabled = false
+            }
             val row = Ui.hbox(ctx)
-            group.photos.take(8).forEach { scored ->
-                val cell = Ui.vbox(ctx).apply {
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    setPadding(0, dp(ctx, 6), dp(ctx, 6), 0)
+            group.photos.take(10).forEach { scored ->
+                val isBest = scored.photo.id == group.bestPhotoId
+                val cell = FrameLayout(ctx).apply {
+                    val s = dp(ctx, 104)
+                    layoutParams = LinearLayout.LayoutParams(s, s).apply {
+                        setMargins(0, dp(ctx, 10), dp(ctx, 8), 0)
+                    }
                 }
+                Ui.cardify(
+                    cell, Ui.cardAlt(ctx), radiusDp = 14,
+                    strokeColor = if (isBest) Ui.TEAL else 0,
+                    strokeDp = if (isBest) 3 else 0,
+                    elevationDp = 0
+                )
                 val img = ImageView(ctx).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
-                    layoutParams = LinearLayout.LayoutParams(dp(ctx, 96), dp(ctx, 96))
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
-                Thumbs.load(ctx, img, scored.photo.uri, 192)
+                Thumbs.load(ctx, img, scored.photo.uri, 208)
                 cell.addView(img)
-                cell.addView(TextView(ctx).apply {
-                    textSize = 11f
-                    gravity = Gravity.CENTER_HORIZONTAL
-                    if (scored.photo.id == group.bestPhotoId) {
-                        text = "★ " + getString(R.string.results_best_badge)
-                        setTextColor(Color.rgb(15, 118, 110))
-                    } else if (scored.markedForDeletion) {
-                        text = getString(R.string.group_delete_marked)
-                        setTextColor(Color.rgb(200, 40, 40))
-                    } else {
-                        text = getString(R.string.group_keep)
-                    }
-                })
+                if (isBest) {
+                    cell.addView(Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.TEAL).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                        ).apply { bottomMargin = dp(ctx, 6) }
+                    })
+                } else if (scored.markedForDeletion) {
+                    cell.addView(View(ctx).apply {
+                        setBackgroundColor(0x40E05252)
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    })
+                    cell.addView(Ui.chip(ctx, "🗑", Ui.CORAL).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                            Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                        ).apply { bottomMargin = dp(ctx, 6) }
+                    })
+                }
+                // Küçük resme dokununca da grup detayına gir
+                cell.isClickable = true
+                cell.setOnClickListener { open() }
                 row.addView(cell)
             }
             scroll.addView(row)
             card.addView(scroll)
 
-            // ListView satır dolgusu
-            val wrapper = Ui.vbox(ctx)
-            val m = dp(ctx, 8)
-            wrapper.setPadding(m, m / 2, m, m / 2)
+            // KÖK NEDEN DÜZELTMESİ: HorizontalScrollView, ListView öğe tıklamasını
+            // engellediğinden kartın kendisine tıklama dinleyicisi bağlanır.
+            card.isClickable = true
+            card.setOnClickListener { open() }
+
+            val wrapper = FrameLayout(ctx)
+            val m = dp(ctx, 16)
+            wrapper.setPadding(m, dp(ctx, 6), m, dp(ctx, 6))
             wrapper.addView(card)
             return wrapper
         }

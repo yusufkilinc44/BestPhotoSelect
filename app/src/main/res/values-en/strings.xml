@@ -48,6 +48,14 @@
     <string name="group_eyes">Eyes open</string>
     <string name="group_face">Face</string>
 
+    <string name="viewer_counter">%1$d / %2$d</string>
+    <string name="viewer_make_best">⭐ Make this the best</string>
+    <string name="viewer_mark_delete">🗑 Mark for deletion</string>
+    <string name="viewer_unmark_delete">↩ Unmark</string>
+    <string name="viewer_will_delete">WILL BE DELETED</string>
+    <string name="results_hero_title">Cleanup opportunity 🎉</string>
+    <string name="group_tap_hint">Tap a photo to inspect it full screen</string>
+
     <string name="confirm_delete_title">Delete confirmation</string>
     <string name="confirm_delete_message">%1$d photos will be deleted (%2$s will be freed). The system will ask for confirmation.</string>
     <string name="confirm_delete_trash_note">Photos are kept in the trash for 30 days and can be restored.</string>

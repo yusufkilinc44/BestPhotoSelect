@@ -3,11 +3,11 @@ package com.bestphotoselect.lite
 import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -27,56 +27,48 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
-        val root = Ui.vbox(this)
-        root.addView(Ui.title(this, getString(R.string.settings_title)))
+        val root = Ui.screenRoot(this)
+        root.addView(Ui.gradientHeader(this, "⚙️ " + getString(R.string.settings_title)))
 
         val content = Ui.vbox(this).apply {
             val p = dp(this@SettingsActivity, 16)
-            setPadding(p, 0, p, p)
+            setPadding(p, dp(this@SettingsActivity, 8), p, p)
         }
 
-        // Benzerlik hassasiyeti (düşük Hamming eşiği = yüksek hassasiyet)
-        content.addView(sectionTitle(getString(R.string.settings_similarity)))
-        content.addView(sectionDesc(getString(R.string.settings_similarity_desc)))
-        val hammingValue = TextView(this)
-        val hammingBar = SeekBar(this).apply {
-            max = 12 // 4..16
-            progress = prefs.hammingThreshold - 4
-            setOnSeekBarChangeListener(onSeek { v ->
-                prefs.hammingThreshold = v + 4
-                hammingValue.text = labelForHamming(v + 4)
-            })
-        }
-        hammingValue.text = labelForHamming(prefs.hammingThreshold)
-        content.addView(hammingBar)
-        content.addView(hammingValue)
+        // --- Tarama ayarları kartı ---
+        val scanCard = card()
+        scanCard.addView(Ui.sectionTitle(this, "🎯 " + getString(R.string.settings_similarity)))
+        scanCard.addView(Ui.body(this, getString(R.string.settings_similarity_desc), dim = true))
+        val hammingValue = Ui.body(this, labelForHamming(prefs.hammingThreshold))
+        scanCard.addView(tintedSeekBar(12, prefs.hammingThreshold - 4) { v ->
+            prefs.hammingThreshold = v + 4
+            hammingValue.text = labelForHamming(v + 4)
+        })
+        scanCard.addView(hammingValue)
 
-        // Zaman penceresi
-        content.addView(sectionTitle(getString(R.string.settings_time_window)))
-        content.addView(sectionDesc(getString(R.string.settings_time_window_desc)))
-        val timeValue = TextView(this)
-        val timeBar = SeekBar(this).apply {
-            max = 590 // 10..600 sn
-            progress = prefs.timeWindowSec - 10
-            setOnSeekBarChangeListener(onSeek { v ->
-                prefs.timeWindowSec = v + 10
-                timeValue.text = getString(R.string.settings_time_window_value, v + 10)
-            })
-        }
-        timeValue.text = getString(R.string.settings_time_window_value, prefs.timeWindowSec)
-        content.addView(timeBar)
-        content.addView(timeValue)
+        scanCard.addView(Ui.sectionTitle(this, "⏱ " + getString(R.string.settings_time_window)))
+        scanCard.addView(Ui.body(this, getString(R.string.settings_time_window_desc), dim = true))
+        val timeValue = Ui.body(this, getString(R.string.settings_time_window_value, prefs.timeWindowSec))
+        scanCard.addView(tintedSeekBar(590, prefs.timeWindowSec - 10) { v ->
+            prefs.timeWindowSec = v + 10
+            timeValue.text = getString(R.string.settings_time_window_value, v + 10)
+        })
+        scanCard.addView(timeValue)
+        content.addView(scanCard)
 
-        // Çöp kutusu modu
-        content.addView(switchRow(
-            getString(R.string.settings_trash_mode),
+        // --- Silme ayarları kartı ---
+        val deleteCard = card()
+        deleteCard.addView(switchRow(
+            "🛟 " + getString(R.string.settings_trash_mode),
             getString(R.string.settings_trash_mode_desc),
             prefs.trashMode
         ) { checked -> prefs.trashMode = checked })
+        content.addView(deleteCard)
 
-        // Otomatik pilot
-        content.addView(switchRow(
-            getString(R.string.settings_autopilot),
+        // --- Otomatik pilot kartı ---
+        val autoCard = card()
+        autoCard.addView(switchRow(
+            "🤖 " + getString(R.string.settings_autopilot),
             getString(R.string.settings_autopilot_desc),
             prefs.autopilotEnabled
         ) { checked ->
@@ -91,12 +83,12 @@ class SettingsActivity : Activity() {
             }
             renderAutopilotSection()
         })
-
         autopilotSection = Ui.vbox(this)
-        content.addView(autopilotSection)
+        autoCard.addView(autopilotSection)
+        content.addView(autoCard)
         renderAutopilotSection()
 
-        val scroll = ScrollView(this)
+        val scroll = ScrollView(this).apply { isVerticalScrollBarEnabled = false }
         scroll.addView(content)
         root.addView(scroll)
         setContentView(root)
@@ -107,6 +99,30 @@ class SettingsActivity : Activity() {
         renderAutopilotSection()
     }
 
+    private fun card(): LinearLayout = Ui.vbox(this).also { c ->
+        Ui.cardify(c, Ui.card(this), radiusDp = 18, elevationDp = 2)
+        val p = dp(this, 14)
+        c.setPadding(p, dp(this, 4), p, p)
+        c.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { setMargins(0, dp(this@SettingsActivity, 10), 0, 0) }
+    }
+
+    private fun tintedSeekBar(max: Int, progress: Int, onValue: (Int) -> Unit): SeekBar =
+        SeekBar(this).apply {
+            this.max = max
+            this.progress = progress
+            progressTintList = ColorStateList.valueOf(Ui.TEAL)
+            thumbTintList = ColorStateList.valueOf(Ui.TEAL)
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
+                    if (fromUser) onValue(p)
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+        }
+
     private fun labelForHamming(v: Int): String =
         "${getString(R.string.settings_similarity_high)} 4 ← $v → 16 ${getString(R.string.settings_similarity_low)}"
 
@@ -114,39 +130,41 @@ class SettingsActivity : Activity() {
         autopilotSection.removeAllViews()
         if (!prefs.autopilotEnabled) return
 
-        autopilotSection.addView(sectionDesc(getString(R.string.settings_autopilot_warning)).apply {
-            setTextColor(0xFFC82828.toInt())
+        autopilotSection.addView(Ui.body(this, "⚠️ " + getString(R.string.settings_autopilot_warning)).apply {
+            setTextColor(Ui.CORAL_DARK)
+            setPadding(0, dp(this@SettingsActivity, 8), 0, 0)
         })
 
-        autopilotSection.addView(sectionTitle(getString(R.string.settings_autopilot_schedule)))
+        autopilotSection.addView(Ui.sectionTitle(this, getString(R.string.settings_autopilot_schedule)))
         val radios = RadioGroup(this).apply { orientation = RadioGroup.HORIZONTAL }
-        val daily = RadioButton(this).apply {
+        radios.addView(RadioButton(this).apply {
             text = getString(R.string.settings_schedule_daily)
             isChecked = prefs.autopilotDaily
+            buttonTintList = ColorStateList.valueOf(Ui.TEAL)
+            setTextColor(Ui.text(this@SettingsActivity))
             setOnClickListener {
                 prefs.autopilotDaily = true
                 AutoPilotJobService.schedule(this@SettingsActivity, true)
             }
-        }
-        val weekly = RadioButton(this).apply {
+        })
+        radios.addView(RadioButton(this).apply {
             text = getString(R.string.settings_schedule_weekly)
             isChecked = !prefs.autopilotDaily
+            buttonTintList = ColorStateList.valueOf(Ui.TEAL)
+            setTextColor(Ui.text(this@SettingsActivity))
             setOnClickListener {
                 prefs.autopilotDaily = false
                 AutoPilotJobService.schedule(this@SettingsActivity, false)
             }
-        }
-        radios.addView(daily)
-        radios.addView(weekly)
+        })
         autopilotSection.addView(radios)
 
         val canManage = Build.VERSION.SDK_INT >= 31 && MediaStore.canManageMedia(this)
         if (!canManage) {
-            autopilotSection.addView(sectionTitle(getString(R.string.settings_manage_media_title)))
-            autopilotSection.addView(sectionDesc(getString(R.string.settings_manage_media_desc)))
-            autopilotSection.addView(Button(this).apply {
-                text = getString(R.string.settings_manage_media_open)
-                setOnClickListener {
+            autopilotSection.addView(Ui.sectionTitle(this, "🔑 " + getString(R.string.settings_manage_media_title)))
+            autopilotSection.addView(Ui.body(this, getString(R.string.settings_manage_media_desc), dim = true))
+            autopilotSection.addView(
+                Ui.smallButton(this, getString(R.string.settings_manage_media_open), Ui.TEAL) {
                     try {
                         startActivity(
                             Intent(
@@ -157,22 +175,13 @@ class SettingsActivity : Activity() {
                     } catch (e: Exception) {
                         // Ayar sayfası yoksa (Android 11) sessizce yoksay
                     }
+                }.apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply { topMargin = dp(this@SettingsActivity, 8) }
                 }
-            })
+            )
         }
-    }
-
-    private fun sectionTitle(text: String) = TextView(this).apply {
-        this.text = text
-        textSize = 16f
-        setTypeface(typeface, android.graphics.Typeface.BOLD)
-        setPadding(0, dp(this@SettingsActivity, 20), 0, dp(this@SettingsActivity, 2))
-    }
-
-    private fun sectionDesc(text: String) = TextView(this).apply {
-        this.text = text
-        textSize = 13f
-        setPadding(0, 0, 0, dp(this@SettingsActivity, 6))
     }
 
     private fun switchRow(
@@ -181,32 +190,23 @@ class SettingsActivity : Activity() {
         initial: Boolean,
         onChange: (Boolean) -> Unit
     ): LinearLayout {
-        val row = Ui.hbox(this).apply { setPadding(0, dp(this@SettingsActivity, 20), 0, 0) }
+        val row = Ui.hbox(this).apply { setPadding(0, dp(this@SettingsActivity, 14), 0, 0) }
         val texts = Ui.vbox(this)
         texts.addView(TextView(this).apply {
             text = title
             textSize = 16f
-            setTypeface(typeface, android.graphics.Typeface.BOLD)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setTextColor(Ui.text(this@SettingsActivity))
         })
-        texts.addView(TextView(this).apply {
-            text = desc
-            textSize = 13f
-        })
+        texts.addView(Ui.body(this, desc, dim = true))
         row.addView(Ui.weight(texts, 1f))
         @Suppress("UseSwitchCompatOrMaterialCode")
         val sw = Switch(this).apply {
             isChecked = initial
+            thumbTintList = ColorStateList.valueOf(Ui.TEAL)
             setOnCheckedChangeListener { _, checked -> onChange(checked) }
         }
         row.addView(sw)
         return row
-    }
-
-    private fun onSeek(onValue: (Int) -> Unit) = object : SeekBar.OnSeekBarChangeListener {
-        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            if (fromUser) onValue(progress)
-        }
-        override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-        override fun onStopTrackingTouch(seekBar: SeekBar?) {}
     }
 }

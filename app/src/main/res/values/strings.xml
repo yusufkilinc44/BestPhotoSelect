@@ -55,6 +55,15 @@
     <string name="group_eyes">Gözler açık</string>
     <string name="group_face">Yüz</string>
 
+    <!-- Tam ekran inceleme -->
+    <string name="viewer_counter">%1$d / %2$d</string>
+    <string name="viewer_make_best">⭐ Bunu en iyi yap</string>
+    <string name="viewer_mark_delete">🗑 Sil işaretle</string>
+    <string name="viewer_unmark_delete">↩ İşareti kaldır</string>
+    <string name="viewer_will_delete">SİLİNECEK</string>
+    <string name="results_hero_title">Temizlik fırsatı 🎉</string>
+    <string name="group_tap_hint">Fotoğrafa dokunarak tam ekran inceleyin</string>
+
     <!-- Silme onayı -->
     <string name="confirm_delete_title">Silme onayı</string>
     <string name="confirm_delete_message">%1$d fotoğraf silinecek (%2$s yer açılacak). Bu işlem için sistem onayı istenecek.</string>
