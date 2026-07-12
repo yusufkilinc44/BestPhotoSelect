@@ -182,25 +182,28 @@ private fun PhotoCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    // "En iyi" işaretli fotoğraf dahil, herhangi bir fotoğraf silinmeye
+                    // işaretlenebilir — kullanıcı yapay zekanın seçimine katılmıyorsa
+                    // veya tüm grubu temizlemek istiyorsa buna izin verilir.
+                    Checkbox(
+                        checked = scored.markedForDeletion,
+                        onCheckedChange = { onToggleDeletion() }
+                    )
+                    Text(
+                        text = if (scored.markedForDeletion) {
+                            stringResource(R.string.group_delete_marked)
+                        } else {
+                            stringResource(R.string.group_keep)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (scored.markedForDeletion) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
                     if (!isBest) {
-                        Checkbox(
-                            checked = scored.markedForDeletion,
-                            onCheckedChange = { onToggleDeletion() }
-                        )
-                        Text(
-                            text = if (scored.markedForDeletion) {
-                                stringResource(R.string.group_delete_marked)
-                            } else {
-                                stringResource(R.string.group_keep)
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (scored.markedForDeletion) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
                         TextButton(onClick = onSetBest) {
                             Text(stringResource(R.string.group_set_best))
                         }

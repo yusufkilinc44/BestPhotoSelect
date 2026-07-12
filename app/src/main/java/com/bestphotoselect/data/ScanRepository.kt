@@ -67,14 +67,16 @@ class ScanRepository @Inject constructor(
         cancelScan()
     }
 
+    /**
+     * "En iyi" işaretli fotoğraf dahil, gruptaki HERHANGİ bir fotoğraf silinmeye
+     * işaretlenebilir/işareti kaldırılabilir — kullanıcı yapay zekanın seçimine
+     * katılmıyorsa veya tüm grubu temizlemek istiyorsa buna izin verilir.
+     */
     fun toggleDeletion(groupId: Int, photoId: Long) = mutateGroups { groups ->
         groups.map { group ->
             if (group.id != groupId) group
             else group.copy(photos = group.photos.map { sp ->
-                // "En iyi" işaretli fotoğraf silinmeye işaretlenemez.
-                if (sp.photo.id == photoId && photoId != group.bestPhotoId) {
-                    sp.copy(markedForDeletion = !sp.markedForDeletion)
-                } else sp
+                if (sp.photo.id == photoId) sp.copy(markedForDeletion = !sp.markedForDeletion) else sp
             })
         }
     }

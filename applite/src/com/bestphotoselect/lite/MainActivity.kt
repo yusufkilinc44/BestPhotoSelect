@@ -151,28 +151,41 @@ class MainActivity : Activity() {
         }
         column.addView(statusText)
 
-        // Seçim araç çubuğu: solda "Tara" kısayolu, sağda albüm seçim butonları.
-        // Tarama tuşu hem burada (üstte) hem sütunun en altında bulunur.
+        // Satır 1: Taramayı başlat — TAM genişlikte, alttaki butonla birebir aynı
+        // (aynı metin/renk/davranış); tarama tuşu hem burada hem sütunun en altında.
+        topScanButton = buildScanButton()
+        val topScanWrap = FrameLayout(this).apply {
+            val p = dp(this@MainActivity, 16)
+            setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 6))
+        }
+        topScanWrap.addView(topScanButton, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        ))
+        column.addView(topScanWrap, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+        ))
+
+        // Satır 2: Tümünü seç / Temizle — satırı tam olarak yarı yarıya paylaşır.
         val selectRow = Ui.hbox(this).apply {
             val p = dp(this@MainActivity, 16)
-            setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 4))
+            setPadding(p, 0, p, dp(this@MainActivity, 6))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            )
         }
-        topScanButton = Ui.smallButton(this, "🔍 " + getString(R.string.albums_scan_short), Ui.Screens.ALBUMS.main, Ui.WHITE) {
-            if (selected.isNotEmpty()) startScan()
-            else Ui.toast(this, getString(R.string.albums_select_hint))
-        }
-        selectRow.addView(topScanButton)
-        selectRow.addView(Ui.weight(View(this), 1f))
-        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
+        val selectAllButton = Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
             selected = albums.map { it.bucketId }.toMutableSet()
             persistSelection(); renderGrid(); refreshInfo()
-        })
-        selectRow.addView(View(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(this@MainActivity, 8), dp(this@MainActivity, 1))
-        })
-        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
+        }
+        val clearButton = Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
             selected.clear(); persistSelection(); renderGrid(); refreshInfo()
-        })
+        }
+        selectRow.addView(selectAllButton, LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        ).apply { marginEnd = dp(this@MainActivity, 6) })
+        selectRow.addView(clearButton, LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+        ).apply { marginStart = dp(this@MainActivity, 6) })
         column.addView(selectRow)
 
         // Albüm ızgarası (içerik kadar yer kaplar, sütun onu doğal olarak kaydırır)
@@ -182,10 +195,9 @@ class MainActivity : Activity() {
         }
         column.addView(gridContainer)
 
-        // Tarama butonu — sütunun EN ALTINDA, her zaman içerikle birlikte görünür
-        scanButton = Ui.pillButton(this, "✨ " + getString(R.string.albums_scan), Ui.Screens.ALBUMS.main) {
-            if (selected.isNotEmpty()) startScan()
-        }
+        // Tarama butonu — sütunun EN ALTINDA, üsttekiyle birebir aynı, her zaman
+        // içerikle birlikte görünür.
+        scanButton = buildScanButton()
         val buttonWrap = FrameLayout(this).apply {
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 28))
@@ -197,6 +209,13 @@ class MainActivity : Activity() {
         renderGrid()
         refreshInfo()
     }
+
+    /** Üstteki ve alttaki tarama butonu bu fonksiyondan üretilir: ikisi birebir aynı. */
+    private fun buildScanButton(): TextView =
+        Ui.pillButton(this, "✨ " + getString(R.string.albums_scan), Ui.Screens.ALBUMS.main) {
+            if (selected.isNotEmpty()) startScan()
+            else Ui.toast(this, getString(R.string.albums_select_hint))
+        }
 
     private fun headerIcon(emoji: String, onClick: () -> Unit): TextView =
         TextView(this).apply {

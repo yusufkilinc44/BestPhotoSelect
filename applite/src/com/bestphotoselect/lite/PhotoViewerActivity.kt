@@ -180,10 +180,12 @@ class PhotoViewerActivity : Activity() {
         badgeRow.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(dp(this@PhotoViewerActivity, 6), 1)
         })
-        if (isBest) {
-            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.AMBER))
-        } else if (scored.markedForDeletion) {
+        // Silinecek işareti her zaman öncelikli gösterilir — "en iyi" fotoğraf da
+        // silinmeye işaretlenebilir (kullanıcı yapay zekanın seçimine katılmayabilir).
+        if (scored.markedForDeletion) {
             badgeRow.addView(Ui.chip(this, getString(R.string.viewer_will_delete), Ui.CORAL))
+        } else if (isBest) {
+            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.AMBER))
         } else {
             badgeRow.addView(Ui.chip(this, getString(R.string.group_keep), Ui.GREEN))
         }
@@ -200,13 +202,14 @@ class PhotoViewerActivity : Activity() {
             )
         }
 
+        // "En iyi"yi tekrar en iyi yapmanın anlamı yok, o buton gizlenir; ama
+        // silme işareti "en iyi" fotoğrafta da her zaman değiştirilebilir olmalı.
         bestButton.visibility = if (isBest) View.GONE else View.VISIBLE
         deleteButton.text = if (scored.markedForDeletion) {
             getString(R.string.viewer_unmark_delete)
         } else {
             getString(R.string.viewer_mark_delete)
         }
-        deleteButton.visibility = if (isBest) View.GONE else View.VISIBLE
     }
 
     private fun loadImage(scored: ScoredPhoto) {

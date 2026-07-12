@@ -1,6 +1,7 @@
 package com.bestphotoselect.lite
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
@@ -14,16 +15,28 @@ import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import com.bestphotoselect.R
+import com.bestphotoselect.data.model.PhotoItem
 import com.bestphotoselect.lite.Ui.dp
+import com.bestphotoselect.util.formatBytes
 import kotlin.math.roundToInt
 
+/**
+ * Grup incelemesi: kullanıcı her fotoğrafı (EN İYİ dahil) silinmeye
+ * işaretleyebilir/işaretini kaldırabilir, "en iyi"yi değiştirebilir ve bu
+ * grubu tek başına temizleyip (sistem onayıyla) sonra bir sonraki gruba
+ * geçebilir — bulk silme için Sonuçlar ekranına dönmek zorunda değildir.
+ */
 class GroupDetailActivity : Activity() {
 
+    private lateinit var prefs: Prefs
     private var groupId = -1
     private lateinit var adapter: MemberAdapter
+    private lateinit var deleteButton: TextView
+    private var pendingDeletion: List<PhotoItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        prefs = Prefs(this)
         groupId = intent.getIntExtra("groupId", -1)
 
         val root = Ui.screenRoot(this, statusBarColor = Ui.Screens.GROUP.dark)
@@ -62,16 +75,34 @@ class GroupDetailActivity : Activity() {
         adapter = MemberAdapter()
         list.adapter = adapter
         root.addView(list, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+
+        // Grup içi temizlik: bu grupta işaretlenenleri hemen sil, sonra
+        // (grup biterse otomatik, bitmezse geri tuşuyla) diğer gruba geçilebilir.
+        deleteButton = Ui.pillButton(this, "", Ui.CORAL) { confirmDelete() }
+        root.addView(deleteButton, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply {
+            setMargins(dp(this@GroupDetailActivity, 16), dp(this@GroupDetailActivity, 6), dp(this@GroupDetailActivity, 16), dp(this@GroupDetailActivity, 16))
+        })
+
         setContentView(root)
     }
 
     override fun onResume() {
         super.onResume()
-        if (ScanSession.group(groupId) == null) {
+        refresh()
+    }
+
+    private fun refresh() {
+        val group = ScanSession.group(groupId)
+        if (group == null) {
             finish()
-        } else {
-            adapter.notifyDataSetChanged()
+            return
         }
+        val count = group.deletionCandidates.size
+        deleteButton.text = "🗑 " + getString(R.string.results_delete_selected, count)
+        deleteButton.alpha = if (count > 0) 1f else 0.45f
+        adapter.notifyDataSetChanged()
     }
 
     private fun openViewer(index: Int) {
@@ -80,6 +111,48 @@ class GroupDetailActivity : Activity() {
                 .putExtra("groupId", groupId)
                 .putExtra("index", index)
         )
+    }
+
+    // ---------- Grup içi silme akışı ----------
+
+    private fun confirmDelete() {
+        val group = ScanSession.group(groupId) ?: return
+        val photos = group.deletionCandidates.map { it.photo }
+        if (photos.isEmpty()) return
+        val bytes = photos.sumOf { it.sizeBytes }
+        val note = if (prefs.trashMode) getString(R.string.confirm_delete_trash_note)
+        else getString(R.string.confirm_delete_permanent_note)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.confirm_delete_title)
+            .setMessage(
+                getString(R.string.confirm_delete_message, photos.size, formatBytes(bytes)) +
+                    "\n\n" + note
+            )
+            .setPositiveButton(R.string.delete) { _, _ -> launchSystemDelete(photos) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun launchSystemDelete(photos: List<PhotoItem>) {
+        pendingDeletion = photos
+        val sender = Deleter.buildRequest(this, photos, prefs.trashMode).intentSender
+        startIntentSenderForResult(sender, REQ_DELETE, null, 0, 0, 0)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode != REQ_DELETE) return
+        val photos = pendingDeletion
+        pendingDeletion = emptyList()
+        if (resultCode == RESULT_OK && photos.isNotEmpty()) {
+            HistoryStore.addAll(this, photos, auto = false, trashed = prefs.trashMode)
+            ScanSession.onPhotosDeleted(photos.map { it.id }.toSet())
+            Ui.toast(this, "✅ " + getString(R.string.delete_success, photos.size))
+            // Grup tamamen bittiyse (< 2 kaldıysa) refresh() otomatik finish() çağırır;
+            // hâlâ 2+ fotoğraf varsa liste güncellenir, kullanıcı incelemeye devam edebilir.
+            refresh()
+        } else if (resultCode != RESULT_OK) {
+            Ui.toast(this, getString(R.string.delete_failed))
+        }
     }
 
     private inner class MemberAdapter : BaseAdapter() {
@@ -93,12 +166,13 @@ class GroupDetailActivity : Activity() {
             val group = ScanSession.group(groupId) ?: return View(ctx)
             val scored = group.photos[position]
             val isBest = scored.photo.id == group.bestPhotoId
+            val marked = scored.markedForDeletion
 
             val card = Ui.vbox(ctx)
             Ui.cardify(
                 card, Ui.card(ctx), radiusDp = 18,
-                strokeColor = if (isBest) Ui.AMBER else 0,
-                strokeDp = if (isBest) 3 else 0,
+                strokeColor = if (marked) Ui.CORAL else if (isBest) Ui.AMBER else 0,
+                strokeDp = if (marked || isBest) 3 else 0,
                 elevationDp = 2
             )
 
@@ -113,11 +187,12 @@ class GroupDetailActivity : Activity() {
             Thumbs.load(ctx, img, scored.photo.uri, 640)
             imageFrame.addView(img)
 
-            // Rozet: sol üst
-            val badge = if (isBest) {
-                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER)
-            } else if (scored.markedForDeletion) {
+            // Rozet: sol üst — silinecek işareti her zaman öncelikli gösterilir,
+            // "en iyi" fotoğraf da silinmeye işaretlenmiş olabilir.
+            val badge = if (marked) {
                 Ui.chip(ctx, getString(R.string.viewer_will_delete), Ui.CORAL)
+            } else if (isBest) {
+                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER)
             } else {
                 Ui.chip(ctx, getString(R.string.group_keep), Ui.GREEN)
             }
@@ -171,23 +246,24 @@ class GroupDetailActivity : Activity() {
             }
             info.addView(Ui.weight(chips, 1f))
 
+            // Silinme durumu HER fotoğrafta değiştirilebilir — "en iyi" işaretli
+            // fotoğraf da dahil (kullanıcı yapay zekanın seçimine katılmayabilir).
+            info.addView(Ui.smallButton(
+                ctx,
+                if (marked) getString(R.string.viewer_unmark_delete) else getString(R.string.viewer_mark_delete),
+                if (marked) Ui.cardAlt(ctx) else Ui.CORAL,
+                if (marked) Ui.Screens.GROUP.dark else Ui.WHITE
+            ) {
+                ScanSession.toggleDeletion(groupId, scored.photo.id)
+                refresh()
+            })
             if (!isBest) {
-                info.addView(Ui.smallButton(
-                    ctx,
-                    if (scored.markedForDeletion) getString(R.string.viewer_unmark_delete)
-                    else getString(R.string.viewer_mark_delete),
-                    if (scored.markedForDeletion) Ui.cardAlt(ctx) else Ui.CORAL,
-                    if (scored.markedForDeletion) Ui.Screens.GROUP.dark else Ui.WHITE
-                ) {
-                    ScanSession.toggleDeletion(groupId, scored.photo.id)
-                    notifyDataSetChanged()
-                })
                 info.addView(View(ctx).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 8), 1)
                 })
                 info.addView(Ui.smallButton(ctx, "⭐", Ui.AMBER, Ui.WHITE) {
                     ScanSession.setBest(groupId, scored.photo.id)
-                    notifyDataSetChanged()
+                    refresh()
                 })
             }
             card.addView(info)
@@ -198,5 +274,9 @@ class GroupDetailActivity : Activity() {
             wrapper.addView(card)
             return wrapper
         }
+    }
+
+    companion object {
+        private const val REQ_DELETE = 210
     }
 }

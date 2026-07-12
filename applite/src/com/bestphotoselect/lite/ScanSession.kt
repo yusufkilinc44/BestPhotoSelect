@@ -9,14 +9,17 @@ object ScanSession {
 
     fun group(groupId: Int): PhotoGroup? = groups.firstOrNull { it.id == groupId }
 
+    /**
+     * "En iyi" işaretli fotoğraf dahil, gruptaki HERHANGİ bir fotoğraf silinmeye
+     * işaretlenebilir/işareti kaldırılabilir — kullanıcı yapay zekanın seçimine
+     * katılmıyorsa veya tüm grubu temizlemek istiyorsa buna izin verilir.
+     */
     @Synchronized
     fun toggleDeletion(groupId: Int, photoId: Long) {
         groups = groups.map { g ->
             if (g.id != groupId) g
             else g.copy(photos = g.photos.map { sp ->
-                if (sp.photo.id == photoId && photoId != g.bestPhotoId) {
-                    sp.copy(markedForDeletion = !sp.markedForDeletion)
-                } else sp
+                if (sp.photo.id == photoId) sp.copy(markedForDeletion = !sp.markedForDeletion) else sp
             })
         }
     }
