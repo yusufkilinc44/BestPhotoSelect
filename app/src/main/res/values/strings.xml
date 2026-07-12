@@ -90,8 +90,9 @@
     <string name="settings_autopilot_schedule">Tarama sıklığı</string>
     <string name="settings_schedule_daily">Günlük</string>
     <string name="settings_schedule_weekly">Haftalık</string>
-    <string name="settings_manage_media_title">Medya yönetimi izni gerekli</string>
-    <string name="settings_manage_media_desc">Otomatik pilotun sistem onay diyaloğu olmadan silme yapabilmesi için Ayarlar &gt; Özel uygulama erişimi &gt; Medya yönetimi izni vermeniz gerekir.</string>
+    <string name="settings_manage_media_title">Sistemin her seferinde sormasını durdur</string>
+    <string name="settings_manage_media_desc">Fotoğraf silerken (hem elle hem otomatik pilotta) Android\'in her seferinde gösterdiği onay diyaloğunu tamamen ortadan kaldırmak için Ayarlar &gt; Özel uygulama erişimi &gt; Medya yönetimi iznini bir kez verin.</string>
+    <string name="settings_manage_media_granted">✅ İzin verildi — artık ne elle ne de otomatik pilotta silerken sistem onay diyaloğu sorulmayacak.</string>
     <string name="settings_manage_media_open">İzin ayarını aç</string>
     <string name="settings_notification_permission">Bildirim izni, otomatik pilot sonuçlarını görebilmeniz için gereklidir.</string>
 

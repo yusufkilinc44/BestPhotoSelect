@@ -135,24 +135,34 @@ class GroupDetailActivity : Activity() {
 
     private fun launchSystemDelete(photos: List<PhotoItem>) {
         pendingDeletion = photos
-        val sender = Deleter.buildRequest(this, photos, prefs.trashMode).intentSender
-        startIntentSenderForResult(sender, REQ_DELETE, null, 0, 0, 0)
+        // MANAGE_MEDIA izni verilmişse sistemin her seferinde sorduğu onay
+        // diyaloğu tamamen atlanır; izin yoksa eski onaylı akışa düşülür.
+        val startedSilently = Deleter.trySilentDelete(this, photos, prefs.trashMode) { success ->
+            onDeleteFinished(photos, success)
+        }
+        if (!startedSilently) {
+            val sender = Deleter.buildRequest(this, photos, prefs.trashMode).intentSender
+            startIntentSenderForResult(sender, REQ_DELETE, null, 0, 0, 0)
+        }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode != REQ_DELETE) return
-        val photos = pendingDeletion
+    private fun onDeleteFinished(photos: List<PhotoItem>, success: Boolean) {
         pendingDeletion = emptyList()
-        if (resultCode == RESULT_OK && photos.isNotEmpty()) {
+        if (success && photos.isNotEmpty()) {
             HistoryStore.addAll(this, photos, auto = false, trashed = prefs.trashMode)
             ScanSession.onPhotosDeleted(photos.map { it.id }.toSet())
             Ui.toast(this, "✅ " + getString(R.string.delete_success, photos.size))
             // Grup tamamen bittiyse (< 2 kaldıysa) refresh() otomatik finish() çağırır;
             // hâlâ 2+ fotoğraf varsa liste güncellenir, kullanıcı incelemeye devam edebilir.
             refresh()
-        } else if (resultCode != RESULT_OK) {
+        } else if (!success) {
             Ui.toast(this, getString(R.string.delete_failed))
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode != REQ_DELETE) return
+        onDeleteFinished(pendingDeletion, resultCode == RESULT_OK)
     }
 
     private inner class MemberAdapter : BaseAdapter() {

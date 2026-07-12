@@ -7,7 +7,6 @@ import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.Gravity
 import com.bestphotoselect.data.model.ScoringWeights
 import android.widget.LinearLayout
@@ -24,6 +23,7 @@ class SettingsActivity : Activity() {
 
     private lateinit var prefs: Prefs
     private lateinit var autopilotSection: LinearLayout
+    private lateinit var manageMediaSection: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +66,14 @@ class SettingsActivity : Activity() {
             prefs.trashMode
         ) { checked -> prefs.trashMode = checked })
         content.addView(deleteCard)
+
+        // --- Medya yönetimi izni kartı (otomatik pilottan bağımsız her zaman görünür:
+        // hem otomatik pilotu hem de elle silmedeki sistem onay diyaloğunu ortadan kaldırır) ---
+        val manageMediaCard = card()
+        manageMediaSection = Ui.vbox(this)
+        manageMediaCard.addView(manageMediaSection)
+        content.addView(manageMediaCard)
+        renderManageMediaSection()
 
         // --- Otomatik pilot kartı ---
         val autoCard = card()
@@ -117,6 +125,7 @@ class SettingsActivity : Activity() {
     override fun onResume() {
         super.onResume()
         renderAutopilotSection()
+        renderManageMediaSection()
     }
 
     private fun card(): LinearLayout = Ui.vbox(this).also { c ->
@@ -283,12 +292,22 @@ class SettingsActivity : Activity() {
             }
         })
         autopilotSection.addView(radios)
+    }
 
-        val canManage = Build.VERSION.SDK_INT >= 31 && MediaStore.canManageMedia(this)
-        if (!canManage) {
-            autopilotSection.addView(Ui.sectionTitle(this, "🔑 " + getString(R.string.settings_manage_media_title)))
-            autopilotSection.addView(Ui.body(this, getString(R.string.settings_manage_media_desc), dim = true))
-            autopilotSection.addView(
+    /**
+     * MANAGE_MEDIA özel izni: verilirse sistem, ne otomatik pilotta ne de elle
+     * silerken onay diyaloğu göstermez. Otomatik pilottan bağımsız olarak her
+     * zaman görünür — kullanıcı otomatik pilotu hiç açmasa bile elle silmedeki
+     * tekrarlayan onay diyaloğunu burada kapatabilir.
+     */
+    private fun renderManageMediaSection() {
+        manageMediaSection.removeAllViews()
+        manageMediaSection.addView(Ui.sectionTitle(this, "🔑 " + getString(R.string.settings_manage_media_title)))
+        if (Deleter.canDeleteSilently(this)) {
+            manageMediaSection.addView(Ui.body(this, getString(R.string.settings_manage_media_granted), dim = true))
+        } else {
+            manageMediaSection.addView(Ui.body(this, getString(R.string.settings_manage_media_desc), dim = true))
+            manageMediaSection.addView(
                 Ui.smallButton(this, getString(R.string.settings_manage_media_open), Ui.Screens.SETTINGS.main) {
                     try {
                         startActivity(

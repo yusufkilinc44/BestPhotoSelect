@@ -80,8 +80,9 @@
     <string name="settings_autopilot_schedule">Scan frequency</string>
     <string name="settings_schedule_daily">Daily</string>
     <string name="settings_schedule_weekly">Weekly</string>
-    <string name="settings_manage_media_title">Media management permission required</string>
-    <string name="settings_manage_media_desc">For autopilot to delete without a system dialog, grant Media management under Settings &gt; Special app access.</string>
+    <string name="settings_manage_media_title">Stop the system from asking every time</string>
+    <string name="settings_manage_media_desc">Grant Media management once under Settings &gt; Special app access to fully remove Android\'s repeated confirmation dialog for both manual and autopilot deletions.</string>
+    <string name="settings_manage_media_granted">✅ Granted — the system will no longer show a confirmation dialog for manual or autopilot deletes.</string>
     <string name="settings_manage_media_open">Open permission setting</string>
     <string name="settings_notification_permission">Notification permission is needed to see autopilot results.</string>
 
