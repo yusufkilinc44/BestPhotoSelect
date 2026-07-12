@@ -5,12 +5,15 @@
 # APK'yı doğrudan araçlarla üretir:
 #   aapt2 (Ubuntu 'aapt' paketi)  -> kaynak/manifest derleme + R.java
 #   kotlinc (Maven Central, kotlin-compiler-embeddable) -> Kotlin derleme
-#   dalvik-exchange (Ubuntu 'dalvik-exchange' paketi, dx) -> classes.dex
+#   D8 (storage.googleapis.com/r8-releases, r8lib.jar) -> classes.dex
+#     (dx KULLANILMAZ: invokedynamic/lambda desugar etmediği için cihazda
+#      BootstrapMethodError üretir — TFLite ve kotlin-stdlib lambda içerir)
 #   zipalign + apksigner (Ubuntu paketleri) -> hizalama + v2/v3 imza
 #
 # Gerekli girdiler (TOOLS dizininde):
 #   kotlin-compiler-embeddable.jar, kotlin-stdlib.jar, annotations.jar,
 #   kotlinx-coroutines-core-jvm.jar (derleyicinin kendisi için), trove4j.jar,
+#   r8lib.jar (https://storage.googleapis.com/r8-releases/raw/8.3.37/r8lib.jar),
 #   tensorflow-lite-{,api-}2.14.0.aar (Maven Central),
 #   face_landmark.tflite (https://storage.googleapis.com/mediapipe-assets/)
 #   android-34/android.jar (SDK Platform 34)
@@ -70,12 +73,15 @@ java -cp "$TOOLS/kotlin-compiler-embeddable.jar:$TOOLS/kotlin-stdlib.jar:$TOOLS/
   "${SHARED[@]}" \
   $(find "$LITE/src" -name '*.kt')
 
-echo "[5/7] dx: classes.dex"
-rm -rf "$BUILD/stdlib" && mkdir -p "$BUILD/stdlib"
-(cd "$BUILD/stdlib" && unzip -oq "$TOOLS/kotlin-stdlib.jar" && rm -rf META-INF/versions module-info.class || true)
-dalvik-exchange --dex --min-sdk-version=30 \
-  --output="$BUILD/apk/classes.dex" \
-  "$BUILD/classes" "$BUILD/stdlib" \
+echo "[5/7] D8: classes.dex (lambda desugaring dahil)"
+(cd "$BUILD/classes" && jar -cf "$BUILD/app-classes.jar" .)
+java -cp "$TOOLS/r8lib.jar" com.android.tools.r8.D8 \
+  --release \
+  --min-api 30 \
+  --lib "$AJ" \
+  --output "$BUILD/apk" \
+  "$BUILD/app-classes.jar" \
+  "$TOOLS/kotlin-stdlib.jar" \
   "$BUILD/tflite-rt/classes.jar" "$BUILD/tflite-api/classes.jar"
 
 echo "[6/7] APK birleştirme (dex + model + jni)"
