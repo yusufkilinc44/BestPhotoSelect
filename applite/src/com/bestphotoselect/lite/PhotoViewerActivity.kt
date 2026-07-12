@@ -107,7 +107,7 @@ class PhotoViewerActivity : Activity() {
             gravity = Gravity.CENTER
             setPadding(0, dp(this@PhotoViewerActivity, 10), 0, 0)
         }
-        bestButton = Ui.smallButton(this, getString(R.string.viewer_make_best), Ui.TEAL) {
+        bestButton = Ui.smallButton(this, getString(R.string.viewer_make_best), Ui.AMBER) {
             currentGroup()?.let { g ->
                 g.photos.getOrNull(index)?.let { sp ->
                     ScanSession.setBest(groupId, sp.photo.id)
@@ -181,7 +181,7 @@ class PhotoViewerActivity : Activity() {
             layoutParams = LinearLayout.LayoutParams(dp(this@PhotoViewerActivity, 6), 1)
         })
         if (isBest) {
-            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.TEAL))
+            badgeRow.addView(Ui.chip(this, "★ " + getString(R.string.results_best_badge), Ui.AMBER))
         } else if (scored.markedForDeletion) {
             badgeRow.addView(Ui.chip(this, getString(R.string.viewer_will_delete), Ui.CORAL))
         } else {

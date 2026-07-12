@@ -104,6 +104,7 @@ class MainActivity : Activity() {
         // setContentView'e verilen kök, MATCH_PARENT/MATCH_PARENT olarak
         // Activity tarafından otomatik sarılır; kendi layoutParams'ını
         // belirtmemize gerek yok.
+        window.statusBarColor = Ui.Screens.ALBUMS.dark
         val scroll = ScrollView(this).apply {
             isVerticalScrollBarEnabled = false
             setBackgroundColor(Ui.bg(this@MainActivity))
@@ -116,7 +117,7 @@ class MainActivity : Activity() {
         // Başlık
         val header = Ui.hbox(this).apply {
             background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.TEAL, Ui.TEAL_DARK)
+                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.Screens.ALBUMS.main, Ui.Screens.ALBUMS.dark)
             )
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 12), p, dp(this@MainActivity, 12))
@@ -156,20 +157,20 @@ class MainActivity : Activity() {
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 4))
         }
-        topScanButton = Ui.smallButton(this, "🔍 " + getString(R.string.albums_scan_short), Ui.TEAL, Ui.WHITE) {
+        topScanButton = Ui.smallButton(this, "🔍 " + getString(R.string.albums_scan_short), Ui.Screens.ALBUMS.main, Ui.WHITE) {
             if (selected.isNotEmpty()) startScan()
             else Ui.toast(this, getString(R.string.albums_select_hint))
         }
         selectRow.addView(topScanButton)
         selectRow.addView(Ui.weight(View(this), 1f))
-        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.TEAL_DARK) {
+        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
             selected = albums.map { it.bucketId }.toMutableSet()
             persistSelection(); renderGrid(); refreshInfo()
         })
         selectRow.addView(View(this).apply {
             layoutParams = LinearLayout.LayoutParams(dp(this@MainActivity, 8), dp(this@MainActivity, 1))
         })
-        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.TEAL_DARK) {
+        selectRow.addView(Ui.smallButton(this, getString(R.string.albums_clear), Ui.cardAlt(this), Ui.Screens.ALBUMS.dark) {
             selected.clear(); persistSelection(); renderGrid(); refreshInfo()
         })
         column.addView(selectRow)
@@ -182,7 +183,7 @@ class MainActivity : Activity() {
         column.addView(gridContainer)
 
         // Tarama butonu — sütunun EN ALTINDA, her zaman içerikle birlikte görünür
-        scanButton = Ui.pillButton(this, "✨ " + getString(R.string.albums_scan), Ui.TEAL) {
+        scanButton = Ui.pillButton(this, "✨ " + getString(R.string.albums_scan), Ui.Screens.ALBUMS.main) {
             if (selected.isNotEmpty()) startScan()
         }
         val buttonWrap = FrameLayout(this).apply {
@@ -293,7 +294,7 @@ class MainActivity : Activity() {
     private fun loadingView(): View {
         val box = Ui.vbox(this).apply { gravity = Gravity.CENTER }
         box.addView(ProgressBar(this).apply {
-            indeterminateTintList = ColorStateList.valueOf(Ui.TEAL)
+            indeterminateTintList = ColorStateList.valueOf(Ui.Screens.ALBUMS.main)
         })
         box.addView(TextView(this).apply {
             text = "Albümler yükleniyor…"
@@ -323,7 +324,7 @@ class MainActivity : Activity() {
         val card = FrameLayout(ctx)
         Ui.cardify(
             card, Ui.card(ctx), radiusDp = 18,
-            strokeColor = if (isSelected) Ui.TEAL else 0,
+            strokeColor = if (isSelected) Ui.Screens.ALBUMS.main else 0,
             strokeDp = if (isSelected) 3 else 0,
             elevationDp = 3
         )
@@ -374,7 +375,7 @@ class MainActivity : Activity() {
             layoutParams = FrameLayout.LayoutParams(s, s, Gravity.TOP or Gravity.END).apply {
                 setMargins(0, dp(ctx, 8), dp(ctx, 8), 0)
             }
-            background = if (isSelected) Ui.roundedRect(Ui.TEAL, 14f, ctx)
+            background = if (isSelected) Ui.roundedRect(Ui.Screens.ALBUMS.main, 14f, ctx)
             else Ui.roundedRect(0x66000000, 14f, ctx, Ui.WHITE, 2)
         })
 
@@ -399,8 +400,8 @@ class MainActivity : Activity() {
         val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
             isIndeterminate = true
             max = 100
-            progressTintList = ColorStateList.valueOf(Ui.TEAL)
-            indeterminateTintList = ColorStateList.valueOf(Ui.TEAL)
+            progressTintList = ColorStateList.valueOf(Ui.Screens.ALBUMS.main)
+            indeterminateTintList = ColorStateList.valueOf(Ui.Screens.ALBUMS.main)
         }
         val msg = TextView(this).apply {
             text = getString(R.string.scan_phase_reading)

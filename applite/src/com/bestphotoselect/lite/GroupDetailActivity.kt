@@ -26,12 +26,12 @@ class GroupDetailActivity : Activity() {
         super.onCreate(savedInstanceState)
         groupId = intent.getIntExtra("groupId", -1)
 
-        val root = Ui.screenRoot(this)
+        val root = Ui.screenRoot(this, statusBarColor = Ui.Screens.GROUP.dark)
 
         val header = Ui.hbox(this).apply {
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Ui.TEAL, Ui.TEAL_DARK)
+                intArrayOf(Ui.Screens.GROUP.main, Ui.Screens.GROUP.dark)
             )
             val p = dp(this@GroupDetailActivity, 16)
             setPadding(p, dp(this@GroupDetailActivity, 12), p, dp(this@GroupDetailActivity, 12))
@@ -97,7 +97,7 @@ class GroupDetailActivity : Activity() {
             val card = Ui.vbox(ctx)
             Ui.cardify(
                 card, Ui.card(ctx), radiusDp = 18,
-                strokeColor = if (isBest) Ui.TEAL else 0,
+                strokeColor = if (isBest) Ui.AMBER else 0,
                 strokeDp = if (isBest) 3 else 0,
                 elevationDp = 2
             )
@@ -115,7 +115,7 @@ class GroupDetailActivity : Activity() {
 
             // Rozet: sol üst
             val badge = if (isBest) {
-                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.TEAL)
+                Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER)
             } else if (scored.markedForDeletion) {
                 Ui.chip(ctx, getString(R.string.viewer_will_delete), Ui.CORAL)
             } else {
@@ -152,7 +152,7 @@ class GroupDetailActivity : Activity() {
                 Ui.chip(
                     ctx,
                     getString(R.string.group_score, (scored.score * 100).roundToInt()),
-                    Ui.cardAlt(ctx), Ui.TEAL_DARK
+                    Ui.cardAlt(ctx), Ui.Screens.GROUP.dark
                 )
             )
             scored.analysis.face?.let { face ->
@@ -160,13 +160,13 @@ class GroupDetailActivity : Activity() {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
                 })
                 chips.addView(
-                    Ui.chip(ctx, "👁 %" + (face.eyesOpen * 100).roundToInt(), Ui.cardAlt(ctx), Ui.TEAL_DARK)
+                    Ui.chip(ctx, "👁 %" + (face.eyesOpen * 100).roundToInt(), Ui.cardAlt(ctx), Ui.Screens.GROUP.dark)
                 )
                 chips.addView(View(ctx).apply {
                     layoutParams = LinearLayout.LayoutParams(dp(ctx, 6), 1)
                 })
                 chips.addView(
-                    Ui.chip(ctx, "🙂 %" + (face.frontal * 100).roundToInt(), Ui.cardAlt(ctx), Ui.TEAL_DARK)
+                    Ui.chip(ctx, "🙂 %" + (face.frontal * 100).roundToInt(), Ui.cardAlt(ctx), Ui.Screens.GROUP.dark)
                 )
             }
             info.addView(Ui.weight(chips, 1f))
@@ -177,7 +177,7 @@ class GroupDetailActivity : Activity() {
                     if (scored.markedForDeletion) getString(R.string.viewer_unmark_delete)
                     else getString(R.string.viewer_mark_delete),
                     if (scored.markedForDeletion) Ui.cardAlt(ctx) else Ui.CORAL,
-                    if (scored.markedForDeletion) Ui.TEAL_DARK else Ui.WHITE
+                    if (scored.markedForDeletion) Ui.Screens.GROUP.dark else Ui.WHITE
                 ) {
                     ScanSession.toggleDeletion(groupId, scored.photo.id)
                     notifyDataSetChanged()

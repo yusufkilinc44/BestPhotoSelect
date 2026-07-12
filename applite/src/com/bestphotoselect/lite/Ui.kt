@@ -22,14 +22,34 @@ import android.widget.TextView
 object Ui {
 
     // ---- Palet ----
+    // TEAL yalnızca geriye dönük varsayılan değer olarak tutulur (ör. pillButton
+    // varsayılan dolgusu); ekranların kendi markası artık Screens nesnesinden gelir.
     const val TEAL = 0xFF14B8A6.toInt()
     const val TEAL_DARK = 0xFF0F766E.toInt()
     const val TEAL_DEEP = 0xFF0B4F4A.toInt()
-    const val CORAL = 0xFFFF6B6B.toInt()
+
+    // Anlamlı (semantik) renkler — hangi ekranda olursa olsun HER ZAMAN aynı anlamı taşır:
+    const val CORAL = 0xFFFF6B6B.toInt()      // sil / tehlike
     const val CORAL_DARK = 0xFFE05252.toInt()
-    const val AMBER = 0xFFFFC53D.toInt()
-    const val GREEN = 0xFF22C55E.toInt()
+    const val AMBER = 0xFFFFC53D.toInt()      // en iyi / yıldız
+    const val GREEN = 0xFF22C55E.toInt()      // korunacak / başarılı
     const val WHITE = 0xFFFFFFFF.toInt()
+
+    /** Bir ekranın "markası": başlık gradyanı ve o ekrana özgü birincil buton rengi. */
+    data class Accent(val main: Int, val dark: Int)
+
+    /**
+     * "Rengarenk" tema: her ekranın kendine özgü canlı bir rengi vardır —
+     * marka tutarlılığı yerine oyunbaz/eğlenceli bir çeşitlilik hedeflenir.
+     * Anlamlı renkler (AMBER=en iyi, CORAL=sil, GREEN=koru) bundan bağımsızdır.
+     */
+    object Screens {
+        val ALBUMS = Accent(0xFF3B82F6.toInt(), 0xFF2563EB.toInt())   // mavi
+        val RESULTS = Accent(0xFFF97316.toInt(), 0xFFEA580C.toInt())  // turuncu
+        val GROUP = Accent(0xFF8B5CF6.toInt(), 0xFF7C3AED.toInt())    // mor
+        val SETTINGS = Accent(0xFF22C55E.toInt(), 0xFF16A34A.toInt()) // yeşil
+        val HISTORY = Accent(0xFFEC4899.toInt(), 0xFFDB2777.toInt())  // pembe
+    }
 
     fun isDark(context: Context): Boolean =
         (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
@@ -65,17 +85,22 @@ object Ui {
     }
 
     // ---- Ekran kökü: arka plan + sistem çubuğu renkleri ----
-    fun screenRoot(activity: Activity): LinearLayout {
-        activity.window.statusBarColor = TEAL_DARK
+    fun screenRoot(activity: Activity, statusBarColor: Int = TEAL_DARK): LinearLayout {
+        activity.window.statusBarColor = statusBarColor
         activity.window.navigationBarColor = bg(activity)
         return vbox(activity).apply { setBackgroundColor(bg(activity)) }
     }
 
     // ---- Gradyan başlık ----
-    fun gradientHeader(context: Context, title: String, subtitle: String? = null): LinearLayout {
+    fun gradientHeader(
+        context: Context,
+        title: String,
+        subtitle: String? = null,
+        accent: Accent = Accent(TEAL, TEAL_DARK)
+    ): LinearLayout {
         val header = vbox(context).apply {
             background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR, intArrayOf(TEAL, TEAL_DARK)
+                GradientDrawable.Orientation.TL_BR, intArrayOf(accent.main, accent.dark)
             )
             val p = dp(context, 16)
             setPadding(p, dp(context, 14), p, dp(context, 14))

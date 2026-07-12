@@ -2,5 +2,5 @@ package com.bestphotoselect.lite
 
 /** build-apk.sh tarafından her derlemede üretilir; ekranda görünür sürüm etiketi. */
 object BuildInfo {
-    const val VERSION_NAME = "1.2.0 (7)"
+    const val VERSION_NAME = "1.3.0 (8)"
 }

@@ -24,12 +24,12 @@ class HistoryActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val root = Ui.screenRoot(this)
+        val root = Ui.screenRoot(this, statusBarColor = Ui.Screens.HISTORY.dark)
 
         val header = Ui.hbox(this).apply {
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Ui.TEAL, Ui.TEAL_DARK)
+                intArrayOf(Ui.Screens.HISTORY.main, Ui.Screens.HISTORY.dark)
             )
             val p = dp(this@HistoryActivity, 16)
             setPadding(p, dp(this@HistoryActivity, 12), p, dp(this@HistoryActivity, 12))
@@ -100,7 +100,7 @@ class HistoryActivity : Activity() {
                 Ui.chip(
                     ctx,
                     getString(if (e.auto) R.string.history_auto_badge else R.string.history_manual_badge),
-                    if (e.auto) Ui.AMBER else Ui.TEAL
+                    if (e.auto) Ui.AMBER else Ui.Screens.HISTORY.main
                 )
             )
 

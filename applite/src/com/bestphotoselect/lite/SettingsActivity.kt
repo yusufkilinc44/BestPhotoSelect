@@ -27,8 +27,8 @@ class SettingsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
-        val root = Ui.screenRoot(this)
-        root.addView(Ui.gradientHeader(this, "⚙️ " + getString(R.string.settings_title)))
+        val root = Ui.screenRoot(this, statusBarColor = Ui.Screens.SETTINGS.dark)
+        root.addView(Ui.gradientHeader(this, "⚙️ " + getString(R.string.settings_title), accent = Ui.Screens.SETTINGS))
 
         val content = Ui.vbox(this).apply {
             val p = dp(this@SettingsActivity, 16)
@@ -112,8 +112,8 @@ class SettingsActivity : Activity() {
         SeekBar(this).apply {
             this.max = max
             this.progress = progress
-            progressTintList = ColorStateList.valueOf(Ui.TEAL)
-            thumbTintList = ColorStateList.valueOf(Ui.TEAL)
+            progressTintList = ColorStateList.valueOf(Ui.Screens.SETTINGS.main)
+            thumbTintList = ColorStateList.valueOf(Ui.Screens.SETTINGS.main)
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
                     if (fromUser) onValue(p)
@@ -140,7 +140,7 @@ class SettingsActivity : Activity() {
         radios.addView(RadioButton(this).apply {
             text = getString(R.string.settings_schedule_daily)
             isChecked = prefs.autopilotDaily
-            buttonTintList = ColorStateList.valueOf(Ui.TEAL)
+            buttonTintList = ColorStateList.valueOf(Ui.Screens.SETTINGS.main)
             setTextColor(Ui.text(this@SettingsActivity))
             setOnClickListener {
                 prefs.autopilotDaily = true
@@ -150,7 +150,7 @@ class SettingsActivity : Activity() {
         radios.addView(RadioButton(this).apply {
             text = getString(R.string.settings_schedule_weekly)
             isChecked = !prefs.autopilotDaily
-            buttonTintList = ColorStateList.valueOf(Ui.TEAL)
+            buttonTintList = ColorStateList.valueOf(Ui.Screens.SETTINGS.main)
             setTextColor(Ui.text(this@SettingsActivity))
             setOnClickListener {
                 prefs.autopilotDaily = false
@@ -164,7 +164,7 @@ class SettingsActivity : Activity() {
             autopilotSection.addView(Ui.sectionTitle(this, "🔑 " + getString(R.string.settings_manage_media_title)))
             autopilotSection.addView(Ui.body(this, getString(R.string.settings_manage_media_desc), dim = true))
             autopilotSection.addView(
-                Ui.smallButton(this, getString(R.string.settings_manage_media_open), Ui.TEAL) {
+                Ui.smallButton(this, getString(R.string.settings_manage_media_open), Ui.Screens.SETTINGS.main) {
                     try {
                         startActivity(
                             Intent(
@@ -203,7 +203,7 @@ class SettingsActivity : Activity() {
         @Suppress("UseSwitchCompatOrMaterialCode")
         val sw = Switch(this).apply {
             isChecked = initial
-            thumbTintList = ColorStateList.valueOf(Ui.TEAL)
+            thumbTintList = ColorStateList.valueOf(Ui.Screens.SETTINGS.main)
             setOnCheckedChangeListener { _, checked -> onChange(checked) }
         }
         row.addView(sw)

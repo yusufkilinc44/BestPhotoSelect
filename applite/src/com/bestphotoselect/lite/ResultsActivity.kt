@@ -36,14 +36,14 @@ class ResultsActivity : Activity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
 
-        val root = Ui.screenRoot(this)
+        val root = Ui.screenRoot(this, statusBarColor = Ui.Screens.RESULTS.dark)
         root.addView(Ui.gradientHeader(this, "🖼 " + getString(R.string.results_title),
-            getString(R.string.group_tap_hint)))
+            getString(R.string.group_tap_hint), Ui.Screens.RESULTS))
 
-        // Kazanım "hero" kartı: mercan -> amber gradyan
+        // Kazanım "hero" kartı: turuncu -> amber gradyan
         heroCard = Ui.vbox(this).apply {
             background = GradientDrawable(
-                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.CORAL, Ui.AMBER)
+                GradientDrawable.Orientation.TL_BR, intArrayOf(Ui.Screens.RESULTS.main, Ui.AMBER)
             ).apply { cornerRadius = dp(this@ResultsActivity, 18).toFloat() }
             elevation = dp(this@ResultsActivity, 3).toFloat()
             val p = dp(this@ResultsActivity, 14)
@@ -172,7 +172,7 @@ class ResultsActivity : Activity() {
                 typeface = Typeface.DEFAULT_BOLD
                 setTextColor(Ui.text(ctx))
             }, 1f))
-            titleRow.addView(Ui.chip(ctx, formatBytes(group.bytesToFree), Ui.cardAlt(ctx), Ui.TEAL_DARK))
+            titleRow.addView(Ui.chip(ctx, formatBytes(group.bytesToFree), Ui.cardAlt(ctx), Ui.Screens.RESULTS.dark))
             card.addView(titleRow)
 
             val scroll = HorizontalScrollView(ctx).apply {
@@ -189,7 +189,7 @@ class ResultsActivity : Activity() {
                 }
                 Ui.cardify(
                     cell, Ui.cardAlt(ctx), radiusDp = 14,
-                    strokeColor = if (isBest) Ui.TEAL else 0,
+                    strokeColor = if (isBest) Ui.AMBER else 0,
                     strokeDp = if (isBest) 3 else 0,
                     elevationDp = 0
                 )
@@ -202,7 +202,7 @@ class ResultsActivity : Activity() {
                 Thumbs.load(ctx, img, scored.photo.uri, 208)
                 cell.addView(img)
                 if (isBest) {
-                    cell.addView(Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.TEAL).apply {
+                    cell.addView(Ui.chip(ctx, "★ " + getString(R.string.results_best_badge), Ui.AMBER).apply {
                         layoutParams = FrameLayout.LayoutParams(
                             ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                             Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
