@@ -14,14 +14,26 @@ android {
         applicationId = "com.bestphotoselect"
         minSdk = 30
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "2.0.0"
+    }
+
+    // Lite sürümle (releases/BestPhotoSelect-v1.0.0.apk) aynı anahtar:
+    // v2, telefonda v1 üzerine güncelleme olarak kurulabilir.
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("applite/keystore/bestphoto.keystore")
+            storePassword = "bestphoto"
+            keyAlias = "bestphotoselect"
+            keyPassword = "bestphoto"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
