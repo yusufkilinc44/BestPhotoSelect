@@ -49,6 +49,7 @@ class MainActivity : Activity() {
     private lateinit var statusText: TextView
     private lateinit var gridContainer: LinearLayout
     private lateinit var scanButton: TextView
+    private lateinit var topScanButton: TextView
 
     private var scanCancelled = AtomicBoolean(false)
 
@@ -149,12 +150,18 @@ class MainActivity : Activity() {
         }
         column.addView(statusText)
 
-        // Seçim araç çubuğu
+        // Seçim araç çubuğu: solda "Tara" kısayolu, sağda albüm seçim butonları.
+        // Tarama tuşu hem burada (üstte) hem sütunun en altında bulunur.
         val selectRow = Ui.hbox(this).apply {
             val p = dp(this@MainActivity, 16)
             setPadding(p, dp(this@MainActivity, 10), p, dp(this@MainActivity, 4))
-            gravity = Gravity.END
         }
+        topScanButton = Ui.smallButton(this, "🔍 " + getString(R.string.albums_scan_short), Ui.TEAL, Ui.WHITE) {
+            if (selected.isNotEmpty()) startScan()
+            else Ui.toast(this, getString(R.string.albums_select_hint))
+        }
+        selectRow.addView(topScanButton)
+        selectRow.addView(Ui.weight(View(this), 1f))
         selectRow.addView(Ui.smallButton(this, getString(R.string.albums_select_all), Ui.cardAlt(this), Ui.TEAL_DARK) {
             selected = albums.map { it.bucketId }.toMutableSet()
             persistSelection(); renderGrid(); refreshInfo()
@@ -231,6 +238,7 @@ class MainActivity : Activity() {
         infoText.text = if (selected.isEmpty()) getString(R.string.albums_select_hint)
         else getString(R.string.albums_selected_count, selected.size)
         scanButton.alpha = if (selected.isEmpty()) 0.45f else 1f
+        topScanButton.alpha = if (selected.isEmpty()) 0.45f else 1f
         statusText.text = "v${BuildInfo.VERSION_NAME} · ${albums.size} albüm bulundu · izin: ${if (hasPermission()) "var" else "yok"}"
     }
 

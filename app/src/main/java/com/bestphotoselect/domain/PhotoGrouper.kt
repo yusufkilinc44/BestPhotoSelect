@@ -6,7 +6,12 @@ package com.bestphotoselect.domain
  */
 object PhotoGrouper {
 
-    data class Input(val id: Long, val timeMs: Long, val hash: Long)
+    /**
+     * @param faceCount o fotoğrafta tespit edilen yüz sayısı; bilinmiyorsa -1.
+     *   Kaba yüz-sayısı ön kontrolü ile "aynı arka plan, farklı kişiler" gibi
+     *   yanlış eşleşmeleri elemek için kullanılır (bkz. [group]).
+     */
+    data class Input(val id: Long, val timeMs: Long, val hash: Long, val faceCount: Int = -1)
 
     /**
      * @param timeWindowMs iki fotoğrafın aynı grupta değerlendirilebilmesi için
@@ -33,7 +38,9 @@ object PhotoGrouper {
                 } else if (scanned >= MAX_NEIGHBOR_SCAN) {
                     break
                 }
-                if (DHash.hammingDistance(sorted[i].hash, sorted[j].hash) <= maxHammingDistance) {
+                if (DHash.hammingDistance(sorted[i].hash, sorted[j].hash) <= maxHammingDistance &&
+                    faceCountsCompatible(sorted[i], sorted[j])
+                ) {
                     uf.union(i, j)
                 }
                 j++
@@ -48,7 +55,22 @@ object PhotoGrouper {
         return clusters.values.filter { it.size >= 2 }
     }
 
+    /**
+     * dHash, arka planı yoğun (deniz, gökyüzü, korkuluk vb.) sabit sahnelerde
+     * kare içindeki kişi sayısını yeterince ayırt edemeyebilir — aynı yerde art
+     * arda çekilmiş ama tamamen farklı kişileri gösteren kareleri yanlışlıkla
+     * "benzer" sayabilir. Yüz sayısı bilgisi varsa ve iki kare arasındaki fark
+     * toleranstan büyükse (ör. 3 kişi vs 1 kişi), görsel hash'e bakılmaksızın
+     * bu çift asla gruplanmaz. Tolerans, tek bir kişinin göz kırpma/arkaya
+     * dönme gibi nedenlerle ara sıra tespit edilememesine izin verir.
+     */
+    private fun faceCountsCompatible(a: Input, b: Input): Boolean {
+        if (a.faceCount < 0 || b.faceCount < 0) return true
+        return kotlin.math.abs(a.faceCount - b.faceCount) <= FACE_COUNT_TOLERANCE
+    }
+
     private const val MAX_NEIGHBOR_SCAN = 25
+    private const val FACE_COUNT_TOLERANCE = 1
 
     private class UnionFind(size: Int) {
         private val parent = IntArray(size) { it }

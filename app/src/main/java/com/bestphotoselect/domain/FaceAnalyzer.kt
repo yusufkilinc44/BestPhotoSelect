@@ -31,6 +31,27 @@ class FaceAnalyzer @Inject constructor() {
         )
     }
 
+    // Yalnızca yüz sayısı için hafif bir dedektör: sınıflandırma/işaret noktası
+    // yok, hızlı mod. Hash aşamasında TÜM fotoğraflarda çalıştırılabilecek kadar
+    // ucuz; gruplamada "aynı arka plan, farklı kişi sayısı" yanlış eşleşmelerini
+    // elemek için kullanılır (bkz. PhotoGrouper.faceCountsCompatible).
+    private val countDetector by lazy {
+        FaceDetection.getClient(
+            FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+                .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
+                .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
+                .setMinFaceSize(0.08f)
+                .build()
+        )
+    }
+
+    suspend fun countFaces(bitmap: Bitmap): Int = try {
+        countDetector.process(InputImage.fromBitmap(bitmap, 0)).await().size
+    } catch (e: Exception) {
+        -1
+    }
+
     suspend fun analyze(bitmap: Bitmap): FaceMetrics? {
         val faces = try {
             detector.process(InputImage.fromBitmap(bitmap, 0)).await()

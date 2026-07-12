@@ -38,8 +38,12 @@ class LiteScanEngine(context: Context) {
 
         val pool = Executors.newFixedThreadPool(THREADS)
         try {
-            // 1) Hash — tek fotoğrafın hatası taramayı düşürmemeli
+            // 1) Hash + kaba yüz sayımı — tek fotoğrafın hatası taramayı düşürmemeli.
+            // İkisi de aynı küçük resimden hesaplanır (tek yükleme): dHash arka plan
+            // hakim sahnelerde farklı kişi sayısını ayırt edemeyebildiğinden, yüz
+            // sayısı gruplama aşamasında ek bir "gerçekten benzer mi" kontrolü sağlar.
             val hashes = ConcurrentHashMap<Long, Long>()
+            val faceCounts = ConcurrentHashMap<Long, Int>()
             val hashDone = AtomicInteger(0)
             photos.map { photo ->
                 pool.submit {
@@ -48,6 +52,11 @@ class LiteScanEngine(context: Context) {
                             media.loadThumb(photo.uri, HASH_THUMB)?.let { bmp ->
                                 try {
                                     hashes[photo.id] = DHash.compute(bmp)
+                                    faceCounts[photo.id] = try {
+                                        faces.countFaces(bmp)
+                                    } catch (t: Throwable) {
+                                        -1
+                                    }
                                 } finally {
                                     bmp.recycle()
                                 }
@@ -65,7 +74,9 @@ class LiteScanEngine(context: Context) {
             // 2) Gruplama
             listener.onProgress(ScanPhase.GROUPING, 0, 0)
             val inputs = photos.mapNotNull { p ->
-                hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it) }
+                hashes[p.id]?.let {
+                    PhotoGrouper.Input(p.id, p.dateTakenMs, it, faceCounts[p.id] ?: -1)
+                }
             }
             val idGroups = PhotoGrouper.group(
                 photos = inputs,
@@ -132,7 +143,10 @@ class LiteScanEngine(context: Context) {
 
     companion object {
         private const val THREADS = 3
-        private const val HASH_THUMB = 256
+        // 256px yüz sayımı için çoğu grup fotoğrafında yetersizdi (yüzler çok
+        // küçük kalıyordu); 384'e çıkarmak dHash'i etkilemez (o zaten kendi
+        // içinde 9x8'e küçültür) ama yüz tespiti güvenilirliğini belirgin artırır.
+        private const val HASH_THUMB = 384
         private const val SCORE_THUMB = 640
     }
 }

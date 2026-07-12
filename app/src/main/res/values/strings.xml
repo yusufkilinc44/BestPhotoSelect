@@ -23,6 +23,7 @@
     <string name="albums_select_all">Tümünü seç</string>
     <string name="albums_clear">Temizle</string>
     <string name="albums_scan">Taramayı başlat</string>
+    <string name="albums_scan_short">Tara</string>
     <string name="albums_empty">Galeride albüm bulunamadı</string>
     <string name="albums_selected_count">%1$d albüm seçildi</string>
 

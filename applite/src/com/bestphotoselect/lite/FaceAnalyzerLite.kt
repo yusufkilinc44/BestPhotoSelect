@@ -56,6 +56,18 @@ class FaceAnalyzerLite(context: Context) {
         }
     }
 
+    /**
+     * Yalnızca yüz sayısını döndüren ucuz kontrol: TFLite yüz-noktası analizini
+     * ÇALIŞTIRMAZ, yalnızca yerleşik [FaceDetector] ile kaba kutu tespiti yapar.
+     * Gruplama aşamasında "aynı arka plan, farklı kişi sayısı" gibi yanlış
+     * eşleşmeleri elemek için tüm fotoğraflarda ucuza çalıştırılabilir.
+     */
+    fun countFaces(src: Bitmap): Int = try {
+        detectFaces(src).size
+    } catch (t: Throwable) {
+        -1
+    }
+
     fun analyze(src: Bitmap): FaceMetrics? {
         val boxes = detectFaces(src)
         if (boxes.isEmpty()) return null

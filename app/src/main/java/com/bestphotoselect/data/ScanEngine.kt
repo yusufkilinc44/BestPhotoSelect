@@ -54,8 +54,13 @@ class ScanEngine @Inject constructor(
 
         val cache = loadCache(photos)
 
-        // 1) Hash aşaması
+        // 1) Hash + kaba yüz sayımı aşaması. dHash arka plan hakim sahnelerde
+        // farklı kişi sayısını ayırt edemeyebildiğinden, yüz sayısı gruplama
+        // aşamasında ek bir "gerçekten benzer mi" kontrolü sağlar (bkz.
+        // PhotoGrouper.faceCountsCompatible). İkisi de aynı küçük resimden
+        // hesaplanır; tek fotoğrafın hatası taramayı düşürmemeli.
         val hashes = HashMap<Long, Long>(photos.size)
+        val faceCounts = HashMap<Long, Int>(photos.size)
         val newCacheEntries = ArrayList<PhotoCacheEntity>()
         val hashDone = AtomicInteger(0)
         coroutineScope {
@@ -68,9 +73,17 @@ class ScanEngine @Inject constructor(
                             cached.hash
                         } else {
                             val bmp = mediaStore.loadThumbnail(photo.uri, HASH_THUMB_SIZE)
-                            // Tek fotoğrafın hatası taramayı düşürmemeli
                             val h = bmp?.let { b ->
-                                try { DHash.compute(b) } catch (t: Throwable) { null } finally { b.recycle() }
+                                try {
+                                    val computed = DHash.compute(b)
+                                    val count = try { faceAnalyzer.countFaces(b) } catch (t: Throwable) { -1 }
+                                    synchronized(faceCounts) { faceCounts[photo.id] = count }
+                                    computed
+                                } catch (t: Throwable) {
+                                    null
+                                } finally {
+                                    b.recycle()
+                                }
                             }
                             if (h != null) {
                                 synchronized(newCacheEntries) {
@@ -97,7 +110,7 @@ class ScanEngine @Inject constructor(
         // 2) Gruplama
         onProgress(Progress.Grouping)
         val inputs = photos.mapNotNull { p ->
-            hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it) }
+            hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it, faceCounts[p.id] ?: -1) }
         }
         val idGroups = PhotoGrouper.group(
             photos = inputs,
@@ -209,7 +222,10 @@ class ScanEngine @Inject constructor(
 
     companion object {
         private const val PARALLELISM = 4
-        private const val HASH_THUMB_SIZE = 256
+        // 256px yüz sayımı için çoğu grup fotoğrafında yetersizdi; 384 dHash'i
+        // etkilemez (o zaten kendi içinde 9x8'e küçültür) ama yüz tespiti
+        // güvenilirliğini belirgin artırır.
+        private const val HASH_THUMB_SIZE = 384
         private const val SCORE_THUMB_SIZE = 640
         private const val SQL_CHUNK = 500
     }

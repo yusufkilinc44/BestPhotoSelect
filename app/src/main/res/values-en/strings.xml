@@ -19,6 +19,7 @@
     <string name="albums_select_all">Select all</string>
     <string name="albums_clear">Clear</string>
     <string name="albums_scan">Start scan</string>
+    <string name="albums_scan_short">Scan</string>
     <string name="albums_empty">No albums found in gallery</string>
     <string name="albums_selected_count">%1$d albums selected</string>
 
