@@ -3,6 +3,7 @@ package com.bestphotoselect.domain
 import com.bestphotoselect.data.model.FaceMetrics
 import com.bestphotoselect.data.model.PhotoAnalysis
 import com.bestphotoselect.data.model.PhotoItem
+import com.bestphotoselect.data.model.ScoringWeights
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -116,5 +117,41 @@ class BestPhotoSelectorTest {
         val large = analysis(2, sharpness = 500.0, width = 4000, height = 3000)
         val group = BestPhotoSelector.buildGroup(0, listOf(small, large))
         assertEquals(2L, group.bestPhotoId)
+    }
+
+    @Test
+    fun `ozel agirliklarla yuze donuklugun etkisi degistirilebilir`() {
+        // A: yuze donuklukte iyi ama gulumsemede zayif. B: tam tersi.
+        val a = analysis(1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.3f, faceAreaRatio = 0.2f))
+        val b = analysis(2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.5f, smile = 0.9f, faceAreaRatio = 0.2f))
+
+        // Varsayilan agirliklarla (goz %55, yuz donuklugu %20, gulumseme %25) B kazanir.
+        val default = BestPhotoSelector.buildGroup(0, listOf(a, b))
+        assertEquals(2L, default.bestPhotoId)
+
+        // Ayarlardan yuz donukluguyu tek belirleyici yapinca A kazanmali.
+        val frontalFocused = ScoringWeights(eyesOpen = 0, frontal = 100, smile = 0)
+        val custom = BestPhotoSelector.buildGroup(0, listOf(a, b), frontalFocused)
+        assertEquals(1L, custom.bestPhotoId)
+    }
+
+    @Test
+    fun `ust duzey agirlik toplami sifir olsa bile cokme olmaz`() {
+        val a = analysis(1, sharpness = 900.0)
+        val b = analysis(2, sharpness = 100.0)
+        val zeroWeights = ScoringWeights(faceQuality = 0, sharpness = 0, exposure = 0, resolution = 0)
+        val group = BestPhotoSelector.buildGroup(0, listOf(a, b), zeroWeights)
+        group.photos.forEach { assertTrue(it.score in 0f..1f) }
+    }
+
+    @Test
+    fun `yuzsuz grupta ust duzey agirliklar yeniden normalize edilir`() {
+        // Yuz kalitesi agirligi cok yuksek olsa da grupta yuz yoksa etkisi olmamali;
+        // netlik/pozlama/cozunurluk kendi aralarinda normalize edilip kullanilir.
+        val sharp = analysis(1, sharpness = 900.0, face = null)
+        val blurry = analysis(2, sharpness = 50.0, face = null)
+        val weights = ScoringWeights(faceQuality = 1000, sharpness = 35, exposure = 15, resolution = 10)
+        val group = BestPhotoSelector.buildGroup(0, listOf(blurry, sharp), weights)
+        assertEquals(1L, group.bestPhotoId)
     }
 }

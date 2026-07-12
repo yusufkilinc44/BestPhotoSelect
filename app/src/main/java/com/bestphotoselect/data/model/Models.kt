@@ -75,11 +75,31 @@ sealed interface ScanState {
 
 enum class AutopilotSchedule { DAILY, WEEKLY }
 
+/**
+ * "En iyi" seçim puanlamasındaki GÖRECELİ ağırlıklar (bkz. BestPhotoSelector).
+ * Sabit toplamı 100 olmak ZORUNDA değildir — her grup kendi içinde toplamına
+ * bölünerek normalize edilir; böylece Ayarlar'daki kaydırıcılar birbirinden
+ * bağımsız hareket edebilir. Varsayılanlar mevcut davranışı yansıtır.
+ */
+data class ScoringWeights(
+    // Üst düzey: yüzlü fotoğraflarda dördü birden, yüzsüz sahnelerde
+    // faceQuality hariç kalan üçü yeniden normalize edilerek kullanılır.
+    val faceQuality: Int = 40,
+    val sharpness: Int = 35,
+    val exposure: Int = 15,
+    val resolution: Int = 10,
+    // Yüz kalitesi içindeki alt ağırlıklar:
+    val eyesOpen: Int = 55,
+    val frontal: Int = 20,
+    val smile: Int = 25
+)
+
 data class AppSettings(
     val hammingThreshold: Int,
     val timeWindowSec: Int,
     val trashMode: Boolean,
     val autopilotEnabled: Boolean,
     val autopilotSchedule: AutopilotSchedule,
-    val selectedBucketIds: Set<Long>
+    val selectedBucketIds: Set<Long>,
+    val scoringWeights: ScoringWeights = ScoringWeights()
 )

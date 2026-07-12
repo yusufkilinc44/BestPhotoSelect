@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bestphotoselect.data.model.AppSettings
 import com.bestphotoselect.data.model.AutopilotSchedule
+import com.bestphotoselect.data.model.ScoringWeights
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -29,7 +30,18 @@ class SettingsRepository @Inject constructor(
         val autopilot = booleanPreferencesKey("autopilot_enabled")
         val schedule = stringPreferencesKey("autopilot_schedule")
         val buckets = stringSetPreferencesKey("selected_buckets")
+
+        // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
+        val wFaceQuality = intPreferencesKey("w_face_quality")
+        val wSharpness = intPreferencesKey("w_sharpness")
+        val wExposure = intPreferencesKey("w_exposure")
+        val wResolution = intPreferencesKey("w_resolution")
+        val wEyesOpen = intPreferencesKey("w_eyes_open")
+        val wFrontal = intPreferencesKey("w_frontal")
+        val wSmile = intPreferencesKey("w_smile")
     }
+
+    private val defaultWeights = ScoringWeights()
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
         AppSettings(
@@ -40,7 +52,16 @@ class SettingsRepository @Inject constructor(
             autopilotSchedule = p[Keys.schedule]
                 ?.let { runCatching { AutopilotSchedule.valueOf(it) }.getOrNull() }
                 ?: AutopilotSchedule.DAILY,
-            selectedBucketIds = p[Keys.buckets]?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet()
+            selectedBucketIds = p[Keys.buckets]?.mapNotNull { it.toLongOrNull() }?.toSet() ?: emptySet(),
+            scoringWeights = ScoringWeights(
+                faceQuality = p[Keys.wFaceQuality] ?: defaultWeights.faceQuality,
+                sharpness = p[Keys.wSharpness] ?: defaultWeights.sharpness,
+                exposure = p[Keys.wExposure] ?: defaultWeights.exposure,
+                resolution = p[Keys.wResolution] ?: defaultWeights.resolution,
+                eyesOpen = p[Keys.wEyesOpen] ?: defaultWeights.eyesOpen,
+                frontal = p[Keys.wFrontal] ?: defaultWeights.frontal,
+                smile = p[Keys.wSmile] ?: defaultWeights.smile
+            )
         )
     }
 
@@ -63,6 +84,17 @@ class SettingsRepository @Inject constructor(
 
     suspend fun setSelectedBuckets(bucketIds: Set<Long>) =
         context.dataStore.edit { it[Keys.buckets] = bucketIds.map(Long::toString).toSet() }
+
+    suspend fun setScoringWeights(weights: ScoringWeights) =
+        context.dataStore.edit { p ->
+            p[Keys.wFaceQuality] = weights.faceQuality.coerceIn(0, 100)
+            p[Keys.wSharpness] = weights.sharpness.coerceIn(0, 100)
+            p[Keys.wExposure] = weights.exposure.coerceIn(0, 100)
+            p[Keys.wResolution] = weights.resolution.coerceIn(0, 100)
+            p[Keys.wEyesOpen] = weights.eyesOpen.coerceIn(0, 100)
+            p[Keys.wFrontal] = weights.frontal.coerceIn(0, 100)
+            p[Keys.wSmile] = weights.smile.coerceIn(0, 100)
+        }
 
     companion object {
         const val DEFAULT_HAMMING = 10

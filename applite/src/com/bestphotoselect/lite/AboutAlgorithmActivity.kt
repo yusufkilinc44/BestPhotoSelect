@@ -59,19 +59,20 @@ class AboutAlgorithmActivity : Activity() {
         content.addView(card {
             addView(Ui.sectionTitle(this@AboutAlgorithmActivity, "🏆 \"En İyi\" Nasıl Seçiliyor?"))
             addView(Ui.body(this@AboutAlgorithmActivity, "Bir grupta en az bir yüz tespit edildiyse:", dim = true))
-            addView(weightRow("%40", "Yüz kalitesi", "İçinde: gözler açık %45 · yüze dönüklük %35 · gülümseme %20"))
+            addView(weightRow("%40", "Yüz kalitesi", "İçinde: gözler açık %55 · gülümseme %25 · yüze dönüklük %20"))
             addView(weightRow("%35", "Netlik", "Laplacian varyansı, grup içindeki en netine oranla"))
             addView(weightRow("%15", "Pozlama", "Aşırı karanlık/patlamış piksel oranı + ortalama parlaklık"))
             addView(weightRow("%10", "Çözünürlük", "Grup içindeki en yükseğe oranla"))
             addView(Ui.body(this@AboutAlgorithmActivity, "(Bu karede yüz tespit edilemediyse ama grupta başka karelerde yüz varsa, yüz kalitesi yerine sabit düşük bir taban puan olan %15 kullanılır.)", dim = true).apply {
                 setPadding(0, dp(this@AboutAlgorithmActivity, 6), 0, 0)
             })
-            addView(Ui.body(this@AboutAlgorithmActivity, "Grupta hiç yüz yoksa (manzara, nesne vb.):", dim = true).apply {
+            addView(Ui.body(this@AboutAlgorithmActivity, "Grupta hiç yüz yoksa (manzara, nesne vb.), yüz kalitesi ölçütü devre dışı kalır; netlik, pozlama ve çözünürlük kendi aralarındaki oranla yeniden hesaplanır (ör. varsayılan ağırlıklarla ≈ %58 netlik, %25 pozlama, %17 çözünürlük).", dim = true).apply {
                 setPadding(0, dp(this@AboutAlgorithmActivity, 12), 0, 0)
             })
-            addView(weightRow("%55", "Netlik", null))
-            addView(weightRow("%30", "Pozlama", null))
-            addView(weightRow("%15", "Çözünürlük", null))
+            addView(Ui.body(this@AboutAlgorithmActivity, "⚙️ Yukarıdaki tüm oranlar Ayarlar > \"En İyi Seçim Ağırlıkları\" bölümünden değiştirilebilir.", dim = true).apply {
+                setPadding(0, dp(this@AboutAlgorithmActivity, 10), 0, 0)
+                setTextColor(Ui.Screens.SETTINGS.dark)
+            })
         })
 
         // ---- 4) Gizlilik ----

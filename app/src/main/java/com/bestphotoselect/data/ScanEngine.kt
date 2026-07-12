@@ -156,7 +156,7 @@ class ScanEngine @Inject constructor(
         return idGroups.mapIndexedNotNull { index, ids ->
             val members = ids.mapNotNull { analyses[it] }
             if (members.size < 2) null
-            else BestPhotoSelector.buildGroup(groupId = index, members = members)
+            else BestPhotoSelector.buildGroup(groupId = index, members = members, weights = settings.scoringWeights)
         }.sortedByDescending { it.bytesToFree }
     }
 

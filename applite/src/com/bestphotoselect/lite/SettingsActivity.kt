@@ -8,6 +8,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.Gravity
+import com.bestphotoselect.data.model.ScoringWeights
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -88,6 +90,9 @@ class SettingsActivity : Activity() {
         content.addView(autoCard)
         renderAutopilotSection()
 
+        // --- "En iyi" seçim ağırlıkları kartı ---
+        content.addView(buildWeightsCard())
+
         // --- Şeffaflık kartı: yapay zeka modeli + benzerlik algoritması detayları ---
         val aboutCard = card()
         aboutCard.addView(Ui.sectionTitle(this, "🧠 Yapay Zeka ve Algoritma"))
@@ -137,6 +142,111 @@ class SettingsActivity : Activity() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
         }
+
+    /**
+     * "En iyi" seçim ağırlıkları kartı: 7 kaydırıcı (4 üst düzey + 3 yüz
+     * alt-ağırlığı). Kaydırıcılar birbirinden bağımsız 0-100 arası hareket
+     * eder; her grubun yüzde etiketleri o grubun toplamına göre CANLI
+     * yeniden hesaplanır (BestPhotoSelector'daki normalize mantığıyla aynı).
+     */
+    private fun buildWeightsCard(): LinearLayout {
+        val weightsCard = card()
+        weightsCard.addView(Ui.sectionTitle(this, "⚖️ En İyi Seçim Ağırlıkları"))
+        weightsCard.addView(Ui.body(this, "Kaydırıcılar göreli önemi belirler; yüzdeler otomatik yeniden hesaplanır.", dim = true))
+
+        weightsCard.addView(Ui.body(this, "Üst düzey ölçütler:", dim = true).apply {
+            setPadding(0, dp(this@SettingsActivity, 12), 0, 0)
+        })
+        val topRows = listOf(
+            Triple("Yüz kalitesi", prefs.scoreFaceQuality) { v: Int -> prefs.scoreFaceQuality = v },
+            Triple("Netlik", prefs.scoreSharpness) { v: Int -> prefs.scoreSharpness = v },
+            Triple("Pozlama", prefs.scoreExposure) { v: Int -> prefs.scoreExposure = v },
+            Triple("Çözünürlük", prefs.scoreResolution) { v: Int -> prefs.scoreResolution = v }
+        )
+        val topBars = mutableListOf<SeekBar>()
+        val topLabels = mutableListOf<TextView>()
+        fun refreshTop() {
+            val sum = topBars.sumOf { it.progress }.coerceAtLeast(1)
+            topBars.forEachIndexed { i, bar -> topLabels[i].text = "%${bar.progress * 100 / sum}" }
+        }
+        topRows.forEach { (name, initial, setter) ->
+            val (bar, label) = weightSliderRow(weightsCard, name, initial, setter) { refreshTop() }
+            topBars += bar; topLabels += label
+        }
+        refreshTop()
+
+        weightsCard.addView(Ui.body(this, "Yüz kalitesi içinde:", dim = true).apply {
+            setPadding(0, dp(this@SettingsActivity, 14), 0, 0)
+        })
+        val faceRows = listOf(
+            Triple("Gözler açık", prefs.scoreEyesOpen) { v: Int -> prefs.scoreEyesOpen = v },
+            Triple("Yüze dönüklük", prefs.scoreFrontal) { v: Int -> prefs.scoreFrontal = v },
+            Triple("Gülümseme", prefs.scoreSmile) { v: Int -> prefs.scoreSmile = v }
+        )
+        val faceBars = mutableListOf<SeekBar>()
+        val faceLabels = mutableListOf<TextView>()
+        fun refreshFace() {
+            val sum = faceBars.sumOf { it.progress }.coerceAtLeast(1)
+            faceBars.forEachIndexed { i, bar -> faceLabels[i].text = "%${bar.progress * 100 / sum}" }
+        }
+        faceRows.forEach { (name, initial, setter) ->
+            val (bar, label) = weightSliderRow(weightsCard, name, initial, setter) { refreshFace() }
+            faceBars += bar; faceLabels += label
+        }
+        refreshFace()
+
+        weightsCard.addView(
+            Ui.smallButton(this, "↺ Varsayılanlara dön", Ui.cardAlt(this), Ui.Screens.SETTINGS.dark) {
+                prefs.resetScoringWeights()
+                val d = ScoringWeights()
+                topBars[0].progress = d.faceQuality
+                topBars[1].progress = d.sharpness
+                topBars[2].progress = d.exposure
+                topBars[3].progress = d.resolution
+                faceBars[0].progress = d.eyesOpen
+                faceBars[1].progress = d.frontal
+                faceBars[2].progress = d.smile
+                refreshTop(); refreshFace()
+            }.apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { topMargin = dp(this@SettingsActivity, 12) }
+            }
+        )
+
+        return weightsCard
+    }
+
+    /** Tek bir ağırlık satırı: isim + kaydırıcı + canlı yüzde etiketi. */
+    private fun weightSliderRow(
+        parent: LinearLayout,
+        name: String,
+        initial: Int,
+        onValue: (Int) -> Unit,
+        onAnyChange: () -> Unit
+    ): Pair<SeekBar, TextView> {
+        val row = Ui.hbox(this).apply { setPadding(0, dp(this@SettingsActivity, 8), 0, 0) }
+        row.addView(Ui.body(this, name).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { marginEnd = dp(this@SettingsActivity, 8) }
+        })
+        val label = TextView(this).apply {
+            textSize = 13f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setTextColor(Ui.Screens.SETTINGS.dark)
+            gravity = Gravity.END
+            layoutParams = LinearLayout.LayoutParams(dp(this@SettingsActivity, 42), LinearLayout.LayoutParams.WRAP_CONTENT)
+        }
+        val bar = tintedSeekBar(100, initial) { v ->
+            onValue(v)
+            onAnyChange()
+        }
+        row.addView(Ui.weight(bar, 1f))
+        row.addView(label)
+        parent.addView(row)
+        return bar to label
+    }
 
     private fun labelForHamming(v: Int): String =
         "${getString(R.string.settings_similarity_high)} 4 ← $v → 16 ${getString(R.string.settings_similarity_low)}"
