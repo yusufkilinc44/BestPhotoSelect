@@ -24,6 +24,7 @@ class SettingsActivity : Activity() {
     private lateinit var prefs: Prefs
     private lateinit var autopilotSection: LinearLayout
     private lateinit var manageMediaSection: LinearLayout
+    private lateinit var ignoredGroupsSection: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,6 +67,14 @@ class SettingsActivity : Activity() {
             prefs.trashMode
         ) { checked -> prefs.trashMode = checked })
         content.addView(deleteCard)
+
+        // --- Yoksayılan gruplar kartı: grup incelemesinde "bir daha gösterme"
+        // denen gruplar burada sayılır, gerekirse sıfırlanabilir ---
+        val ignoredCard = card()
+        ignoredGroupsSection = Ui.vbox(this)
+        ignoredCard.addView(ignoredGroupsSection)
+        content.addView(ignoredCard)
+        renderIgnoredGroupsSection()
 
         // --- Medya yönetimi izni kartı (otomatik pilottan bağımsız her zaman görünür:
         // hem otomatik pilotu hem de elle silmedeki sistem onay diyaloğunu ortadan kaldırır) ---
@@ -126,6 +135,26 @@ class SettingsActivity : Activity() {
         super.onResume()
         renderAutopilotSection()
         renderManageMediaSection()
+        renderIgnoredGroupsSection()
+    }
+
+    /** Grup incelemesinde "🙈 Bir daha gösterme" denen grupların sayısı + sıfırlama. */
+    private fun renderIgnoredGroupsSection() {
+        ignoredGroupsSection.removeAllViews()
+        ignoredGroupsSection.addView(Ui.sectionTitle(this, getString(R.string.settings_ignored_groups_title)))
+        ignoredGroupsSection.addView(Ui.body(this, getString(R.string.settings_ignored_groups_desc), dim = true))
+        val row = Ui.hbox(this).apply { setPadding(0, dp(this@SettingsActivity, 10), 0, 0) }
+        row.addView(Ui.weight(
+            Ui.body(this, getString(R.string.settings_ignored_groups_count, IgnoredGroupsStore.count(this))), 1f
+        ))
+        row.addView(Ui.smallButton(
+            this, getString(R.string.settings_ignored_groups_reset), Ui.cardAlt(this), Ui.Screens.SETTINGS.onSurface(this)
+        ) {
+            IgnoredGroupsStore.clearAll(this)
+            Ui.toast(this, getString(R.string.settings_ignored_groups_reset_done))
+            renderIgnoredGroupsSection()
+        })
+        ignoredGroupsSection.addView(row)
     }
 
     private fun card(): LinearLayout = Ui.vbox(this).also { c ->

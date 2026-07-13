@@ -43,7 +43,10 @@
     <string name="group_keep">Keep</string>
     <string name="group_delete_marked">Delete</string>
     <string name="group_set_best">Mark as best</string>
-    <string name="group_skip">Skip this group</string>
+    <string name="group_skip">🙈 Never show again</string>
+    <string name="group_ignore_confirm_title">Stop showing this group?</string>
+    <string name="group_ignore_confirm_message">These %1$d photos will never again be suggested as a group to delete, in any scan — you\'re telling the app this group is fine as-is. You can undo this anytime under Settings &gt; \"Ignored groups\".</string>
+    <string name="group_ignore_confirm_positive">Never show again</string>
     <string name="group_score">Score: %1$d/100</string>
     <string name="group_sharpness">Sharpness</string>
     <string name="group_eyes">Eyes open</string>
@@ -83,6 +86,11 @@
     <string name="settings_manage_media_title">Stop the system from asking every time</string>
     <string name="settings_manage_media_desc">Grant Media management once under Settings &gt; Special app access to fully remove Android\'s repeated confirmation dialog for both manual and autopilot deletions.</string>
     <string name="settings_manage_media_granted">✅ Granted — the system will no longer show a confirmation dialog for manual or autopilot deletes.</string>
+    <string name="settings_ignored_groups_title">🙈 Ignored groups</string>
+    <string name="settings_ignored_groups_desc">Groups you marked \"Never show again\" during group review will never again be suggested as a group to delete, in any scan.</string>
+    <string name="settings_ignored_groups_count">%1$d groups ignored</string>
+    <string name="settings_ignored_groups_reset">Reset</string>
+    <string name="settings_ignored_groups_reset_done">Ignored groups cleared — they\'ll be re-evaluated on the next scan.</string>
     <string name="settings_manage_media_open">Open permission setting</string>
     <string name="settings_notification_permission">Notification permission is needed to see autopilot results.</string>
 

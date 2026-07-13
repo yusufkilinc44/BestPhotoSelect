@@ -63,8 +63,7 @@ class GroupDetailActivity : Activity() {
         })
         header.addView(Ui.weight(titles, 1f))
         header.addView(Ui.smallButton(this, getString(R.string.group_skip), Ui.WHITE, Ui.Screens.GROUP.dark) {
-            ScanSession.skipGroup(groupId)
-            finish()
+            confirmIgnoreGroup()
         })
         root.addView(header)
 
@@ -111,6 +110,28 @@ class GroupDetailActivity : Activity() {
                 .putExtra("groupId", groupId)
                 .putExtra("index", index)
         )
+    }
+
+    // ---------- Kalıcı yoksayma ----------
+
+    /**
+     * "Bir daha gösterme": grup üyesi fotoğrafların ID kümesi kalıcı olarak
+     * kaydedilir (bkz. IgnoredGroupsStore) — bir sonraki tarama dahil,
+     * ARTIK HİÇBİR taramada bu tam fotoğraf kümesi grup olarak önerilmez.
+     */
+    private fun confirmIgnoreGroup() {
+        val group = ScanSession.group(groupId) ?: return
+        val memberIds = group.photos.map { it.photo.id }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.group_ignore_confirm_title)
+            .setMessage(getString(R.string.group_ignore_confirm_message, memberIds.size))
+            .setPositiveButton(R.string.group_ignore_confirm_positive) { _, _ ->
+                IgnoredGroupsStore.ignore(this, memberIds)
+                ScanSession.skipGroup(groupId)
+                finish()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     // ---------- Grup içi silme akışı ----------

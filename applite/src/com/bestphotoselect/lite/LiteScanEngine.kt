@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * Arka plan iş parçacığından çağrılır; ilerleme geri çağrılarla bildirilir.
  */
 class LiteScanEngine(context: Context) {
+    private val appContext = context.applicationContext
     private val media = MediaQuery(context)
     private val faces = FaceAnalyzerLite(context)
 
@@ -78,11 +79,14 @@ class LiteScanEngine(context: Context) {
                     PhotoGrouper.Input(p.id, p.dateTakenMs, it, faceCounts[p.id] ?: -1)
                 }
             }
-            val idGroups = PhotoGrouper.group(
+            val rawGroups = PhotoGrouper.group(
                 photos = inputs,
                 timeWindowMs = settings.timeWindowSec * 1000L,
                 maxHammingDistance = settings.hammingThreshold
             )
+            // Kullanıcının daha önce "bir daha gösterme" dediği gruplar (aynı
+            // fotoğraf kümesi) sonuçlardan tamamen çıkarılır.
+            val idGroups = rawGroups.filterNot { ids -> IgnoredGroupsStore.isIgnored(appContext, ids) }
             if (idGroups.isEmpty() || cancelled.get()) return emptyList()
 
             // 3) Puanlama (yalnızca grup üyeleri)

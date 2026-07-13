@@ -50,7 +50,10 @@
     <string name="group_keep">Korunacak</string>
     <string name="group_delete_marked">Silinecek</string>
     <string name="group_set_best">En iyi olarak işaretle</string>
-    <string name="group_skip">Bu grubu atla</string>
+    <string name="group_skip">🙈 Bir daha gösterme</string>
+    <string name="group_ignore_confirm_title">Bu grup bir daha gösterilmesin mi?</string>
+    <string name="group_ignore_confirm_message">Bu %1$d fotoğraf artık HİÇBİR taramada silinmesi önerilen grup olarak gösterilmeyecek — bu grubu normal kabul etmiş olursunuz. Ayarlar &gt; \"Yoksayılan gruplar\" bölümünden bu kararı istediğiniz zaman geri alabilirsiniz.</string>
+    <string name="group_ignore_confirm_positive">Bir daha gösterme</string>
     <string name="group_score">Puan: %1$d/100</string>
     <string name="group_sharpness">Netlik</string>
     <string name="group_eyes">Gözler açık</string>
@@ -93,6 +96,11 @@
     <string name="settings_manage_media_title">Sistemin her seferinde sormasını durdur</string>
     <string name="settings_manage_media_desc">Fotoğraf silerken (hem elle hem otomatik pilotta) Android\'in her seferinde gösterdiği onay diyaloğunu tamamen ortadan kaldırmak için Ayarlar &gt; Özel uygulama erişimi &gt; Medya yönetimi iznini bir kez verin.</string>
     <string name="settings_manage_media_granted">✅ İzin verildi — artık ne elle ne de otomatik pilotta silerken sistem onay diyaloğu sorulmayacak.</string>
+    <string name="settings_ignored_groups_title">🙈 Yoksayılan gruplar</string>
+    <string name="settings_ignored_groups_desc">Grup incelemesinde \"Bir daha gösterme\" dediğiniz gruplar bir daha hiçbir taramada silinmesi gereken grup olarak gösterilmez.</string>
+    <string name="settings_ignored_groups_count">%1$d grup yoksayılıyor</string>
+    <string name="settings_ignored_groups_reset">Sıfırla</string>
+    <string name="settings_ignored_groups_reset_done">Yoksayılan gruplar temizlendi — bir sonraki taramada tekrar değerlendirilecekler.</string>
     <string name="settings_manage_media_open">İzin ayarını aç</string>
     <string name="settings_notification_permission">Bildirim izni, otomatik pilot sonuçlarını görebilmeniz için gereklidir.</string>
 
