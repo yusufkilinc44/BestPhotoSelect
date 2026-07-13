@@ -39,6 +39,7 @@ class SettingsRepository @Inject constructor(
         val wEyesOpen = intPreferencesKey("w_eyes_open")
         val wFrontal = intPreferencesKey("w_frontal")
         val wSmile = intPreferencesKey("w_smile")
+        val wMouthClosed = intPreferencesKey("w_mouth_closed")
     }
 
     private val defaultWeights = ScoringWeights()
@@ -60,7 +61,8 @@ class SettingsRepository @Inject constructor(
                 resolution = p[Keys.wResolution] ?: defaultWeights.resolution,
                 eyesOpen = p[Keys.wEyesOpen] ?: defaultWeights.eyesOpen,
                 frontal = p[Keys.wFrontal] ?: defaultWeights.frontal,
-                smile = p[Keys.wSmile] ?: defaultWeights.smile
+                smile = p[Keys.wSmile] ?: defaultWeights.smile,
+                mouthClosed = p[Keys.wMouthClosed] ?: defaultWeights.mouthClosed
             )
         )
     }
@@ -94,6 +96,7 @@ class SettingsRepository @Inject constructor(
             p[Keys.wEyesOpen] = weights.eyesOpen.coerceIn(0, 100)
             p[Keys.wFrontal] = weights.frontal.coerceIn(0, 100)
             p[Keys.wSmile] = weights.smile.coerceIn(0, 100)
+            p[Keys.wMouthClosed] = weights.mouthClosed.coerceIn(0, 100)
         }
 
     companion object {

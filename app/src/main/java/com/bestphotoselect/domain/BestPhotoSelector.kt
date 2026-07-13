@@ -48,10 +48,11 @@ object BestPhotoSelector {
         val anyFace = members.any { it.face != null }
 
         // Yüz kalitesi alt-ağırlıkları kendi içinde normalize edilir.
-        val faceSubSum = (weights.eyesOpen + weights.frontal + weights.smile).coerceAtLeast(1)
+        val faceSubSum = (weights.eyesOpen + weights.frontal + weights.smile + weights.mouthClosed).coerceAtLeast(1)
         val wEyes = weights.eyesOpen.toFloat() / faceSubSum
         val wFrontal = weights.frontal.toFloat() / faceSubSum
         val wSmile = weights.smile.toFloat() / faceSubSum
+        val wMouth = weights.mouthClosed.toFloat() / faceSubSum
 
         // Üst düzey ağırlıklar: yüzlü grupta dördü birden, yüzsüz grupta yüz
         // kalitesi hariç kalan üçü yeniden normalize edilerek kullanılır.
@@ -70,7 +71,7 @@ object BestPhotoSelector {
             val relResolution = (m.photo.width.toLong() * m.photo.height).toFloat() / maxPixels
             val score = if (anyFace) {
                 val faceScore = m.face?.let {
-                    wEyes * it.eyesOpen + wFrontal * it.frontal + wSmile * it.smile
+                    wEyes * it.eyesOpen + wFrontal * it.frontal + wSmile * it.smile + wMouth * it.mouthClosed
                 } ?: MISSING_FACE_SCORE
                 wFace * faceScore + wSharp * relSharpness + wExposure * m.exposure + wRes * relResolution
             } else {

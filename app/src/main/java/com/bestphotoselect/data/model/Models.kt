@@ -33,6 +33,8 @@ data class FaceMetrics(
     val eyesOpen: Float,
     val frontal: Float,
     val smile: Float,
+    /** 1 = ağız doğal/kapalı duruyor, 0 = konuşma anı gibi tuhaf/geniş açık. */
+    val mouthClosed: Float,
     val faceAreaRatio: Float
 )
 
@@ -89,9 +91,10 @@ data class ScoringWeights(
     val exposure: Int = 15,
     val resolution: Int = 10,
     // Yüz kalitesi içindeki alt ağırlıklar:
-    val eyesOpen: Int = 55,
-    val frontal: Int = 20,
-    val smile: Int = 25
+    val eyesOpen: Int = 45,
+    val frontal: Int = 15,
+    val smile: Int = 15,
+    val mouthClosed: Int = 25
 )
 
 data class AppSettings(

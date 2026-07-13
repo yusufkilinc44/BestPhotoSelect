@@ -25,6 +25,7 @@ data class PhotoCacheEntity(
     val eyesOpen: Float?,
     val frontal: Float?,
     val smile: Float?,
+    val mouthClosed: Float?,
     val faceAreaRatio: Float?
 )
 

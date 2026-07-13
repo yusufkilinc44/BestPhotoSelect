@@ -93,7 +93,8 @@ class ScanEngine @Inject constructor(
                                         hash = h,
                                         sharpness = null, exposure = null,
                                         faceCount = null, eyesOpen = null,
-                                        frontal = null, smile = null, faceAreaRatio = null
+                                        frontal = null, smile = null, mouthClosed = null,
+                                        faceAreaRatio = null
                                     )
                                 }
                             }
@@ -175,6 +176,7 @@ class ScanEngine @Inject constructor(
                     eyesOpen = cached.eyesOpen ?: 0.7f,
                     frontal = cached.frontal ?: 0.7f,
                     smile = cached.smile ?: 0.5f,
+                    mouthClosed = cached.mouthClosed ?: 0.7f,
                     faceAreaRatio = cached.faceAreaRatio ?: 0f
                 )
             }
@@ -202,6 +204,7 @@ class ScanEngine @Inject constructor(
         eyesOpen = face?.eyesOpen,
         frontal = face?.frontal,
         smile = face?.smile,
+        mouthClosed = face?.mouthClosed,
         faceAreaRatio = face?.faceAreaRatio
     )
 

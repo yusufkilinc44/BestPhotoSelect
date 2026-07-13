@@ -41,6 +41,7 @@ class AboutAlgorithmActivity : Activity() {
             addView(bullet("Model: Google MediaPipe Face Mesh — 468 noktalı yüz ağı (face_landmark.tflite)"))
             addView(bullet("Çalıştırma motoru: TensorFlow Lite 2.14.0"))
             addView(bullet("Ön adım: Android'in yerleşik yüz dedektörü (android.media.FaceDetector) ile önce kaba yüz kutusu ve sayısı bulunur, sonra her yüz kırpılıp MediaPipe modeline verilir"))
+            addView(bullet("468 noktadan türetilen ölçütler: göz açıklığı (EAR), yüz dönüklüğü (yaw/roll), gülümseme (ağız köşesi yüksekliği) ve ağız doğallığı (üst-alt dudak arası açıklığın ağız genişliğine oranı — konuşma anı gibi geniş açık ağızları yakalar)"))
             addView(bullet("Tamamı cihaz içinde çalışır: internet bağlantısı gerekmez, hiçbir fotoğraf cihazdan dışarı çıkmaz"))
         })
 
@@ -59,7 +60,7 @@ class AboutAlgorithmActivity : Activity() {
         content.addView(card {
             addView(Ui.sectionTitle(this@AboutAlgorithmActivity, "🏆 \"En İyi\" Nasıl Seçiliyor?"))
             addView(Ui.body(this@AboutAlgorithmActivity, "Bir grupta en az bir yüz tespit edildiyse:", dim = true))
-            addView(weightRow("%40", "Yüz kalitesi", "İçinde: gözler açık %55 · gülümseme %25 · yüze dönüklük %20"))
+            addView(weightRow("%40", "Yüz kalitesi", "İçinde: gözler açık %45 · ağız doğallığı %25 · gülümseme %15 · yüze dönüklük %15"))
             addView(weightRow("%35", "Netlik", "Laplacian varyansı, grup içindeki en netine oranla"))
             addView(weightRow("%15", "Pozlama", "Aşırı karanlık/patlamış piksel oranı + ortalama parlaklık"))
             addView(weightRow("%10", "Çözünürlük", "Grup içindeki en yükseğe oranla"))

@@ -76,6 +76,7 @@ class FaceAnalyzerLite(context: Context) {
         var eyesOpen = 0f
         var frontal = 0f
         var smile = 0f
+        var mouthClosed = 0f
         var areaSum = 0f
         var scoredFaces = 0
 
@@ -88,6 +89,7 @@ class FaceAnalyzerLite(context: Context) {
                 eyesOpen += scores.eyesOpen * w
                 frontal += scores.frontal * w
                 smile += scores.smile * w
+                mouthClosed += scores.mouthClosed * w
                 totalWeight += w
                 scoredFaces++
             }
@@ -100,6 +102,7 @@ class FaceAnalyzerLite(context: Context) {
                 eyesOpen = 0.7f,
                 frontal = 0.7f,
                 smile = 0.5f,
+                mouthClosed = 0.7f,
                 faceAreaRatio = min(1f, areaSum / (src.width * src.height))
             )
         }
@@ -109,6 +112,7 @@ class FaceAnalyzerLite(context: Context) {
             eyesOpen = (eyesOpen / totalWeight).coerceIn(0f, 1f),
             frontal = (frontal / totalWeight).coerceIn(0f, 1f),
             smile = (smile / totalWeight).coerceIn(0f, 1f),
+            mouthClosed = (mouthClosed / totalWeight).coerceIn(0f, 1f),
             faceAreaRatio = min(1f, areaSum / (src.width * src.height))
         )
     }
@@ -151,7 +155,7 @@ class FaceAnalyzerLite(context: Context) {
         return boxes
     }
 
-    private class Scores(val eyesOpen: Float, val frontal: Float, val smile: Float)
+    private class Scores(val eyesOpen: Float, val frontal: Float, val smile: Float, val mouthClosed: Float)
 
     private fun landmarkScores(src: Bitmap, box: RectF): Scores? {
         val itp = tflite() ?: return null
@@ -250,7 +254,16 @@ class FaceAnalyzerLite(context: Context) {
             (0.5f + (centerY - cornersY) / mouthWidth * 3f).coerceIn(0f, 1f)
         }
 
-        return Scores(eyesOpen, frontal, smile)
+        // Ağız doğallığı: üst/alt dudak iç kenarları (13, 14) arasındaki açıklık,
+        // ağız genişliğine oranlanır (MAR benzeri). Konuşma anı/esneme gibi geniş
+        // açık ağızlarda oran yükselir; doğal kapalı/hafif gülümseyen ağızda düşük
+        // kalır. 61/291 zaten mouthWidth için hesaplandı, tekrar kullanılır.
+        val mouthGap = dist(13, 14)
+        val mouthOpenRatio = if (mouthWidth < 1e-3f) 0f else mouthGap / mouthWidth
+        val mouthClosed = (1f - (mouthOpenRatio - MOUTH_RATIO_CLOSED) /
+            (MOUTH_RATIO_OPEN - MOUTH_RATIO_CLOSED)).coerceIn(0f, 1f)
+
+        return Scores(eyesOpen, frontal, smile, mouthClosed)
     }
 
     companion object {
@@ -261,5 +274,7 @@ class FaceAnalyzerLite(context: Context) {
         private const val LANDMARK_FLOATS = 468 * 3
         private const val EAR_CLOSED = 0.10f
         private const val EAR_OPEN = 0.26f
+        private const val MOUTH_RATIO_CLOSED = 0.03f
+        private const val MOUTH_RATIO_OPEN = 0.35f
     }
 }

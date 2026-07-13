@@ -68,6 +68,10 @@ class Prefs(context: Context) {
         get() = sp.getInt("w_smile", defaults.smile)
         set(v) = sp.edit().putInt("w_smile", v.coerceIn(0, 100)).apply()
 
+    var scoreMouthClosed: Int
+        get() = sp.getInt("w_mouth", defaults.mouthClosed)
+        set(v) = sp.edit().putInt("w_mouth", v.coerceIn(0, 100)).apply()
+
     fun resetScoringWeights() {
         scoreFaceQuality = defaults.faceQuality
         scoreSharpness = defaults.sharpness
@@ -76,6 +80,7 @@ class Prefs(context: Context) {
         scoreEyesOpen = defaults.eyesOpen
         scoreFrontal = defaults.frontal
         scoreSmile = defaults.smile
+        scoreMouthClosed = defaults.mouthClosed
     }
 
     fun toAppSettings() = AppSettings(
@@ -92,7 +97,8 @@ class Prefs(context: Context) {
             resolution = scoreResolution,
             eyesOpen = scoreEyesOpen,
             frontal = scoreFrontal,
-            smile = scoreSmile
+            smile = scoreSmile,
+            mouthClosed = scoreMouthClosed
         )
     )
 }

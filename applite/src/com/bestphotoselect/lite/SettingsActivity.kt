@@ -190,7 +190,8 @@ class SettingsActivity : Activity() {
         val faceRows = listOf(
             Triple("Gözler açık", prefs.scoreEyesOpen) { v: Int -> prefs.scoreEyesOpen = v },
             Triple("Yüze dönüklük", prefs.scoreFrontal) { v: Int -> prefs.scoreFrontal = v },
-            Triple("Gülümseme", prefs.scoreSmile) { v: Int -> prefs.scoreSmile = v }
+            Triple("Gülümseme", prefs.scoreSmile) { v: Int -> prefs.scoreSmile = v },
+            Triple("Ağız doğallığı", prefs.scoreMouthClosed) { v: Int -> prefs.scoreMouthClosed = v }
         )
         val faceBars = mutableListOf<SeekBar>()
         val faceLabels = mutableListOf<TextView>()
@@ -215,6 +216,7 @@ class SettingsActivity : Activity() {
                 faceBars[0].progress = d.eyesOpen
                 faceBars[1].progress = d.frontal
                 faceBars[2].progress = d.smile
+                faceBars[3].progress = d.mouthClosed
                 refreshTop(); refreshFace()
             }.apply {
                 layoutParams = LinearLayout.LayoutParams(

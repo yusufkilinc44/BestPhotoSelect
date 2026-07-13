@@ -4,12 +4,15 @@ import android.graphics.Bitmap
 import com.bestphotoselect.data.model.FaceMetrics
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.face.Face
+import com.google.mlkit.vision.face.FaceContour
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
+import com.google.mlkit.vision.face.FaceLandmark
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
+import kotlin.math.hypot
 import kotlin.math.min
 
 /**
@@ -24,8 +27,8 @@ class FaceAnalyzer @Inject constructor() {
             FaceDetectorOptions.Builder()
                 .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
                 .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
-                .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                .setContourMode(FaceDetectorOptions.CONTOUR_MODE_NONE)
+                .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_ALL)
+                .setContourMode(FaceDetectorOptions.CONTOUR_MODE_ALL)
                 .setMinFaceSize(0.08f)
                 .build()
         )
@@ -65,6 +68,7 @@ class FaceAnalyzer @Inject constructor() {
         var eyesOpen = 0f
         var frontal = 0f
         var smile = 0f
+        var mouthClosed = 0f
         var areaSum = 0f
 
         for (face in faces) {
@@ -74,6 +78,7 @@ class FaceAnalyzer @Inject constructor() {
             eyesOpen += eyesOpenScore(face) * weight
             frontal += frontalScore(face) * weight
             smile += (face.smilingProbability ?: 0.5f) * weight
+            mouthClosed += mouthClosedScore(face) * weight
             totalWeight += weight
         }
 
@@ -82,6 +87,7 @@ class FaceAnalyzer @Inject constructor() {
             eyesOpen = (eyesOpen / totalWeight).coerceIn(0f, 1f),
             frontal = (frontal / totalWeight).coerceIn(0f, 1f),
             smile = (smile / totalWeight).coerceIn(0f, 1f),
+            mouthClosed = (mouthClosed / totalWeight).coerceIn(0f, 1f),
             faceAreaRatio = min(1f, areaSum / imageArea)
         )
     }
@@ -100,5 +106,32 @@ class FaceAnalyzer @Inject constructor() {
         val yawPenalty = min(1f, yaw / 45f)
         val rollPenalty = min(1f, roll / 45f)
         return (1f - (yawPenalty * 0.75f + rollPenalty * 0.25f)).coerceIn(0f, 1f)
+    }
+
+    /**
+     * Ağız doğallığı: iç dudak hatlarının (üst dudak altı / alt dudak üstü)
+     * dikey açıklığı ağız genişliğine oranlanır. Konuşma anı/esneme gibi geniş
+     * açık ağızlarda oran yükselir (düşük skor); doğal kapalı ağızda düşük
+     * kalır (yüksek skor). Kontur/işaret noktası bulunamazsa nötr değer döner.
+     */
+    private fun mouthClosedScore(face: Face): Float {
+        val upperLipBottom = face.getContour(FaceContour.UPPER_LIP_BOTTOM)?.points
+        val lowerLipTop = face.getContour(FaceContour.LOWER_LIP_TOP)?.points
+        val mouthLeft = face.getLandmark(FaceLandmark.MOUTH_LEFT)?.position
+        val mouthRight = face.getLandmark(FaceLandmark.MOUTH_RIGHT)?.position
+        if (upperLipBottom.isNullOrEmpty() || lowerLipTop.isNullOrEmpty() || mouthLeft == null || mouthRight == null) {
+            return 0.7f
+        }
+        val upperY = upperLipBottom.map { it.y }.average()
+        val lowerY = lowerLipTop.map { it.y }.average()
+        val mouthWidth = hypot((mouthRight.x - mouthLeft.x).toDouble(), (mouthRight.y - mouthLeft.y).toDouble())
+        if (mouthWidth < 1e-3) return 0.7f
+        val ratio = ((lowerY - upperY) / mouthWidth).toFloat()
+        return (1f - (ratio - MOUTH_RATIO_CLOSED) / (MOUTH_RATIO_OPEN - MOUTH_RATIO_CLOSED)).coerceIn(0f, 1f)
+    }
+
+    private companion object {
+        const val MOUTH_RATIO_CLOSED = 0.03f
+        const val MOUTH_RATIO_OPEN = 0.35f
     }
 }

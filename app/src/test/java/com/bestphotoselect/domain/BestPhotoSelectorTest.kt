@@ -44,10 +44,10 @@ class BestPhotoSelectorTest {
     @Test
     fun `gozleri acik olan kazanir`() {
         val eyesOpen = analysis(
-            1, face = FaceMetrics(1, eyesOpen = 0.95f, frontal = 0.9f, smile = 0.5f, faceAreaRatio = 0.2f)
+            1, face = FaceMetrics(1, eyesOpen = 0.95f, frontal = 0.9f, smile = 0.5f, mouthClosed = 0.7f, faceAreaRatio = 0.2f)
         )
         val eyesClosed = analysis(
-            2, face = FaceMetrics(1, eyesOpen = 0.05f, frontal = 0.9f, smile = 0.5f, faceAreaRatio = 0.2f)
+            2, face = FaceMetrics(1, eyesOpen = 0.05f, frontal = 0.9f, smile = 0.5f, mouthClosed = 0.7f, faceAreaRatio = 0.2f)
         )
         val group = BestPhotoSelector.buildGroup(0, listOf(eyesClosed, eyesOpen))
         assertEquals(1L, group.bestPhotoId)
@@ -56,12 +56,24 @@ class BestPhotoSelectorTest {
     @Test
     fun `kameraya donuk yuz kazanir`() {
         val frontal = analysis(
-            1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.95f, smile = 0.5f, faceAreaRatio = 0.2f)
+            1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.95f, smile = 0.5f, mouthClosed = 0.7f, faceAreaRatio = 0.2f)
         )
         val turnedAway = analysis(
-            2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.1f, smile = 0.5f, faceAreaRatio = 0.2f)
+            2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.1f, smile = 0.5f, mouthClosed = 0.7f, faceAreaRatio = 0.2f)
         )
         val group = BestPhotoSelector.buildGroup(0, listOf(turnedAway, frontal))
+        assertEquals(1L, group.bestPhotoId)
+    }
+
+    @Test
+    fun `agzi konusma aninda garip acik olan kaybeder`() {
+        val mouthNatural = analysis(
+            1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.5f, mouthClosed = 0.95f, faceAreaRatio = 0.2f)
+        )
+        val mouthTalking = analysis(
+            2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.5f, mouthClosed = 0.05f, faceAreaRatio = 0.2f)
+        )
+        val group = BestPhotoSelector.buildGroup(0, listOf(mouthTalking, mouthNatural))
         assertEquals(1L, group.bestPhotoId)
     }
 
@@ -77,7 +89,7 @@ class BestPhotoSelectorTest {
     fun `grupta yuz varken yuzsuz kare cezalandirilir`() {
         val withFace = analysis(
             1, sharpness = 300.0,
-            face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.6f, faceAreaRatio = 0.2f)
+            face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.6f, mouthClosed = 0.7f, faceAreaRatio = 0.2f)
         )
         val noFace = analysis(2, sharpness = 400.0, face = null)
         val group = BestPhotoSelector.buildGroup(0, listOf(noFace, withFace))
@@ -122,15 +134,15 @@ class BestPhotoSelectorTest {
     @Test
     fun `ozel agirliklarla yuze donuklugun etkisi degistirilebilir`() {
         // A: yuze donuklukte iyi ama gulumsemede zayif. B: tam tersi.
-        val a = analysis(1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.3f, faceAreaRatio = 0.2f))
-        val b = analysis(2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.5f, smile = 0.9f, faceAreaRatio = 0.2f))
+        val a = analysis(1, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.9f, smile = 0.3f, mouthClosed = 0.7f, faceAreaRatio = 0.2f))
+        val b = analysis(2, face = FaceMetrics(1, eyesOpen = 0.9f, frontal = 0.5f, smile = 0.9f, mouthClosed = 0.7f, faceAreaRatio = 0.2f))
 
-        // Varsayilan agirliklarla (goz %55, yuz donuklugu %20, gulumseme %25) B kazanir.
+        // Varsayilan agirliklarla (goz %45, agiz dogalligi %25, yuz donuklugu %15, gulumseme %15) B kazanir.
         val default = BestPhotoSelector.buildGroup(0, listOf(a, b))
         assertEquals(2L, default.bestPhotoId)
 
         // Ayarlardan yuz donukluguyu tek belirleyici yapinca A kazanmali.
-        val frontalFocused = ScoringWeights(eyesOpen = 0, frontal = 100, smile = 0)
+        val frontalFocused = ScoringWeights(eyesOpen = 0, frontal = 100, smile = 0, mouthClosed = 0)
         val custom = BestPhotoSelector.buildGroup(0, listOf(a, b), frontalFocused)
         assertEquals(1L, custom.bestPhotoId)
     }
