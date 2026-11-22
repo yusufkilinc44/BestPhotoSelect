@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.bestphotoselect.ui.about.AboutAlgorithmScreen
 import com.bestphotoselect.ui.albums.AlbumsScreen
 import com.bestphotoselect.ui.groupdetail.GroupDetailScreen
 import com.bestphotoselect.ui.history.HistoryScreen
@@ -47,7 +48,13 @@ fun AppNav() {
             GroupDetailScreen(onBack = { nav.popBackStack() })
         }
         composable("settings") {
-            SettingsScreen(onBack = { nav.popBackStack() })
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
+                onOpenAbout = { nav.navigate("about") }
+            )
+        }
+        composable("about") {
+            AboutAlgorithmScreen(onBack = { nav.popBackStack() })
         }
         composable("history") {
             HistoryScreen(onBack = { nav.popBackStack() })

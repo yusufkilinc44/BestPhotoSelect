@@ -60,14 +60,22 @@ class ResultsViewModel @Inject constructor(
         _confirmDialogVisible.value = false
     }
 
-    /** Kullanıcı uygulama içi onayı verdi: sistem silme isteğini başlat. */
+    /**
+     * Kullanıcı uygulama içi onayı verdi. MANAGE_MEDIA varsa sistem diyaloğu
+     * olmadan sessizce silinir; yoksa (ya da doğrulanamazsa) sistem silme isteği
+     * başlatılır.
+     */
     fun confirmDelete() {
         _confirmDialogVisible.value = false
         viewModelScope.launch {
             val photos = deletionCandidates()
             if (photos.isEmpty()) return@launch
-            pendingDeletion = photos
             val trash = settingsRepository.settings.first().trashMode
+            if (deletionRepository.trySilentDelete(photos, toTrash = trash)) {
+                onDeleted(photos, trash)
+                return@launch
+            }
+            pendingDeletion = photos
             val intent = deletionRepository.buildDeleteRequest(photos, toTrash = trash)
             _events.emit(Event.LaunchSystemDelete(intent))
         }
@@ -79,14 +87,17 @@ class ResultsViewModel @Inject constructor(
             val photos = pendingDeletion
             pendingDeletion = emptyList()
             if (approved && photos.isNotEmpty()) {
-                val trash = settingsRepository.settings.first().trashMode
-                deletionRepository.recordDeletion(photos, wasAuto = false, trashed = trash)
-                scanRepository.onPhotosDeleted(photos.map { it.id }.toSet())
-                _events.emit(Event.Deleted(photos.count()))
+                onDeleted(photos, settingsRepository.settings.first().trashMode)
             } else if (!approved) {
                 _events.emit(Event.DeleteFailed)
             }
         }
+    }
+
+    private suspend fun onDeleted(photos: List<PhotoItem>, trashed: Boolean) {
+        deletionRepository.recordDeletion(photos, wasAuto = false, trashed = trashed)
+        scanRepository.onPhotosDeleted(photos.map { it.id }.toSet())
+        _events.emit(Event.Deleted(photos.size))
     }
 
     fun skipGroup(groupId: Int) = scanRepository.skipGroup(groupId)

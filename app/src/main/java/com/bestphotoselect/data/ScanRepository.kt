@@ -22,6 +22,7 @@ import javax.inject.Singleton
 class ScanRepository @Inject constructor(
     private val scanEngine: ScanEngine,
     private val settingsRepository: SettingsRepository,
+    private val ignoredGroupsRepository: IgnoredGroupsRepository,
     @ApplicationScope private val scope: CoroutineScope
 ) {
     private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
@@ -93,8 +94,17 @@ class ScanRepository @Inject constructor(
         }
     }
 
-    fun skipGroup(groupId: Int) = mutateGroups { groups ->
-        groups.filterNot { it.id == groupId }
+    /**
+     * Grubu "bir daha gösterme": üyelerin imzası kalıcı olarak kaydedilir
+     * (bkz. IgnoredGroupsRepository) — bir sonraki taramada bu tam fotoğraf
+     * kümesi ARTIK HİÇ grup olarak önerilmez. Ayrıca oturumdan da düşürülür.
+     */
+    fun skipGroup(groupId: Int) {
+        val memberIds = currentGroups().firstOrNull { it.id == groupId }?.photos?.map { it.photo.id }
+        if (memberIds != null) {
+            scope.launch { ignoredGroupsRepository.ignore(memberIds) }
+        }
+        mutateGroups { groups -> groups.filterNot { it.id == groupId } }
     }
 
     /** Başarıyla silinen fotoğrafları oturumdan düşürür. */

@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -16,14 +15,11 @@ import com.bestphotoselect.BestPhotoApp
 import com.bestphotoselect.MainActivity
 import com.bestphotoselect.R
 import com.bestphotoselect.data.DeletionRepository
-import com.bestphotoselect.data.MediaStoreDataSource
 import com.bestphotoselect.data.ScanEngine
 import com.bestphotoselect.data.SettingsRepository
-import com.bestphotoselect.data.model.PhotoItem
 import com.bestphotoselect.util.formatBytes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.delay
 
 /**
  * Otomatik pilot: seçili albümleri arka planda tarar ve her benzer grupta
@@ -41,7 +37,6 @@ class AutoPilotWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val scanEngine: ScanEngine,
     private val settingsRepository: SettingsRepository,
-    private val mediaStore: MediaStoreDataSource,
     private val deletionRepository: DeletionRepository
 ) : CoroutineWorker(appContext, params) {
 
@@ -60,12 +55,7 @@ class AutoPilotWorker @AssistedInject constructor(
         val toDelete = groups.flatMap { it.deletionCandidates }.map { it.photo }
         if (toDelete.isEmpty()) return Result.success()
 
-        if (!canManageMedia()) {
-            notifyPendingApproval(toDelete.size)
-            return Result.success()
-        }
-
-        val deleted = performSilentDeletion(toDelete, settings.trashMode)
+        val deleted = deletionRepository.trySilentDelete(toDelete, settings.trashMode)
         return if (deleted) {
             deletionRepository.recordDeletion(toDelete, wasAuto = true, trashed = settings.trashMode)
             notifyDone(toDelete.size, toDelete.sumOf { it.sizeBytes })
@@ -75,35 +65,6 @@ class AutoPilotWorker @AssistedInject constructor(
             Result.success()
         }
     }
-
-    /**
-     * MANAGE_MEDIA varken sistem isteği onay diyaloğu göstermez; isteği gönderip
-     * sonucu MediaStore üzerinden doğruluyoruz.
-     */
-    private suspend fun performSilentDeletion(photos: List<PhotoItem>, toTrash: Boolean): Boolean {
-        val uris = photos.map { it.uri }
-        val request = if (toTrash) {
-            mediaStore.createTrashRequest(uris)
-        } else {
-            mediaStore.createDeleteRequest(uris)
-        }
-        try {
-            request.send()
-        } catch (e: PendingIntent.CanceledException) {
-            return false
-        } catch (e: SecurityException) {
-            return false
-        }
-        // Sistemin işlemi tamamlaması için kısa bir bekleme + doğrulama.
-        repeat(5) {
-            delay(1500)
-            if (mediaStore.countStillVisible(photos.map { it.id }) == 0) return true
-        }
-        return false
-    }
-
-    private fun canManageMedia(): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(applicationContext)
 
     private fun hasReadPermission(): Boolean {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

@@ -8,12 +8,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -30,6 +32,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -82,6 +87,8 @@ fun GroupDetailScreen(
     viewModel: GroupDetailViewModel = hiltViewModel()
 ) {
     val group by viewModel.group.collectAsState()
+    var viewerIndex by remember { mutableStateOf<Int?>(null) }
+    var showIgnoreConfirm by remember { mutableStateOf(false) }
 
     // Grup silindi/atlandıysa geri dön.
     LaunchedEffect(group) {
@@ -98,10 +105,7 @@ fun GroupDetailScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = {
-                        viewModel.skipGroup()
-                        onBack()
-                    }) {
+                    TextButton(onClick = { showIgnoreConfirm = true }) {
                         Text(stringResource(R.string.group_skip))
                     }
                 }
@@ -116,14 +120,56 @@ fun GroupDetailScreen(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            items(g.photos, key = { it.photo.id }) { scored ->
+            item {
+                Text(
+                    text = stringResource(R.string.group_tap_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            itemsIndexed(g.photos, key = { _, it -> it.photo.id }) { index, scored ->
                 PhotoCard(
                     scored = scored,
                     isBest = scored.photo.id == g.bestPhotoId,
                     onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
-                    onSetBest = { viewModel.setBest(scored.photo.id) }
+                    onSetBest = { viewModel.setBest(scored.photo.id) },
+                    onOpenViewer = { viewerIndex = index }
                 )
             }
+        }
+
+        val vi = viewerIndex
+        if (vi != null) {
+            PhotoViewerOverlay(
+                photos = g.photos,
+                bestPhotoId = g.bestPhotoId,
+                initialIndex = vi,
+                onToggleDeletion = viewModel::toggleDeletion,
+                onSetBest = viewModel::setBest,
+                onDismiss = { viewerIndex = null }
+            )
+        }
+
+        if (showIgnoreConfirm) {
+            AlertDialog(
+                onDismissRequest = { showIgnoreConfirm = false },
+                title = { Text(stringResource(R.string.group_ignore_confirm_title)) },
+                text = { Text(stringResource(R.string.group_ignore_confirm_message, g.photos.size)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showIgnoreConfirm = false
+                        viewModel.skipGroup()
+                        onBack()
+                    }) {
+                        Text(stringResource(R.string.group_ignore_confirm_positive))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showIgnoreConfirm = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }
@@ -133,7 +179,8 @@ private fun PhotoCard(
     scored: ScoredPhoto,
     isBest: Boolean,
     onToggleDeletion: () -> Unit,
-    onSetBest: () -> Unit
+    onSetBest: () -> Unit,
+    onOpenViewer: () -> Unit
 ) {
     Card {
         Column {
@@ -145,6 +192,7 @@ private fun PhotoCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.33f)
+                        .clickable(onClick = onOpenViewer)
                 )
                 if (isBest) {
                     AssistChip(

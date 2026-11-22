@@ -33,7 +33,8 @@ import javax.inject.Singleton
 class ScanEngine @Inject constructor(
     private val mediaStore: MediaStoreDataSource,
     private val cacheDao: PhotoCacheDao,
-    private val faceAnalyzer: FaceAnalyzer
+    private val faceAnalyzer: FaceAnalyzer,
+    private val ignoredGroupsRepository: IgnoredGroupsRepository
 ) {
 
     sealed interface Progress {
@@ -153,11 +154,15 @@ class ScanEngine @Inject constructor(
         }
         persistCache(scoredCacheEntries)
 
-        // 4) En iyiyi seç, grupları kur
+        // 4) En iyiyi seç, grupları kur — kullanıcının kalıcı olarak yoksaydığı
+        // (bkz. IgnoredGroupsRepository) gruplar sonuçlara asla girmez.
+        val ignoredSignatures = ignoredGroupsRepository.ignoredSignatures()
         return idGroups.mapIndexedNotNull { index, ids ->
             val members = ids.mapNotNull { analyses[it] }
-            if (members.size < 2) null
-            else BestPhotoSelector.buildGroup(groupId = index, members = members, weights = settings.scoringWeights)
+            if (members.size < 2) return@mapIndexedNotNull null
+            val memberIds = members.map { it.photo.id }
+            if (ignoredGroupsRepository.isIgnored(memberIds, ignoredSignatures)) return@mapIndexedNotNull null
+            BestPhotoSelector.buildGroup(groupId = index, members = members, weights = settings.scoringWeights)
         }.sortedByDescending { it.bytesToFree }
     }
 

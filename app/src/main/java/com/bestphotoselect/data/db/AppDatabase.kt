@@ -63,12 +63,42 @@ interface HistoryDao {
     suspend fun clear()
 }
 
+/**
+ * Kullanıcının grup incelemesinde "Bir daha gösterme" dediği grupların kalıcı
+ * kaydı. Gruplar kalıcı bir kimliğe sahip değildir (her taramada sıfırdan
+ * hesaplanır); bu yüzden grup üyesi fotoğrafların MediaStore ID kümesinin
+ * sıralı, virgülle ayrılmış imzası birincil anahtar olarak kullanılır.
+ */
+@Entity(tableName = "ignored_groups")
+data class IgnoredGroupEntity(
+    @PrimaryKey val signature: String
+)
+
+@Dao
+interface IgnoredGroupDao {
+    @Query("SELECT signature FROM ignored_groups")
+    suspend fun allSignatures(): List<String>
+
+    @Query("SELECT COUNT(*) FROM ignored_groups")
+    fun observeCount(): Flow<Int>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(entity: IgnoredGroupEntity)
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAll(entities: List<IgnoredGroupEntity>)
+
+    @Query("DELETE FROM ignored_groups")
+    suspend fun clear()
+}
+
 @Database(
-    entities = [PhotoCacheEntity::class, HistoryEntity::class],
-    version = 1,
+    entities = [PhotoCacheEntity::class, HistoryEntity::class, IgnoredGroupEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun photoCacheDao(): PhotoCacheDao
     abstract fun historyDao(): HistoryDao
+    abstract fun ignoredGroupDao(): IgnoredGroupDao
 }

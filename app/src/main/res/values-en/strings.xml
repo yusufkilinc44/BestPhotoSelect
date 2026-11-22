@@ -94,6 +94,34 @@
     <string name="settings_manage_media_open">Open permission setting</string>
     <string name="settings_notification_permission">Notification permission is needed to see autopilot results.</string>
 
+    <string name="settings_weights_title">⚖️ \"Best\" Selection Weights</string>
+    <string name="settings_weights_desc">Sliders set relative importance; percentages are recalculated automatically.</string>
+    <string name="settings_weights_top_section">Top-level criteria:</string>
+    <string name="settings_weights_face_section">Within face quality:</string>
+    <string name="settings_weights_face_quality">Face quality</string>
+    <string name="settings_weights_sharpness">Sharpness</string>
+    <string name="settings_weights_exposure">Exposure</string>
+    <string name="settings_weights_resolution">Resolution</string>
+    <string name="settings_weights_eyes_open">Eyes open</string>
+    <string name="settings_weights_frontal">Facing camera</string>
+    <string name="settings_weights_smile">Smile</string>
+    <string name="settings_weights_mouth_closed">Natural mouth</string>
+    <string name="settings_weights_reset">Reset to defaults</string>
+
+    <string name="settings_how_it_works">🧠 How does it work? →</string>
+    <string name="settings_how_it_works_desc">Which AI model is used, and how are similarity and scoring calculated?</string>
+    <string name="about_title">🧠 AI and Algorithm</string>
+    <string name="about_subtitle">How does this app compare photos?</string>
+    <string name="about_model_title">👁 Face Analysis Model</string>
+    <string name="about_model_body">• Model: Google ML Kit Face Detection — on-device, bundled in the APK, no internet needed\n• First step: faces are counted in fast mode; then each face is classified with landmarks in accurate mode\n• Eyes open: average of the left/right eye-open probabilities\n• Facing camera: head angles (yaw/roll — headEulerAngleY/Z)\n• Smile: ML Kit\'s smiling probability\n• Natural mouth: vertical gap between upper/lower lip contours relative to mouth width — catches wide-open mouths such as mid-speech or yawning\n• Runs entirely on device: no photo ever leaves your phone</string>
+    <string name="about_similarity_title">🔎 How Is Similarity Found? (in order)</string>
+    <string name="about_similarity_body">1. Each photo is reduced to a small preview (for fast analysis)\n2. Perceptual fingerprint (dHash): the preview is reduced to 9×8 grayscale and neighbouring pixel brightness is compared to produce a 64-bit \"fingerprint\"\n3. Time window: only photos taken within a certain time of each other are compared — 60 seconds by default, adjustable from 10 to 600 seconds in Settings\n4. Hash distance: the number of differing bits (Hamming distance) between two fingerprints is checked; below the threshold counts as \"visually similar\" — default threshold is 10 out of 64 bits, adjustable from 4 to 16 with the \"sensitivity\" slider in Settings\n5. Face count check: even if visually similar, two shots with a different number of people are NEVER put in the same group\n6. Grouping: all photos linked by the criteria above end up in one group (transitive: if A~B and B~C, then A, B and C are in the same group)</string>
+    <string name="about_scoring_title">🏆 How Is the \"Best\" Chosen?</string>
+    <string name="about_scoring_body">If at least one face is detected in a group, with default weights: face quality 40% (within it: eyes open 45% · natural mouth 25% · smile 15% · facing camera 15%) + sharpness 35% + exposure 15% + resolution 10%.\n\nIf no face is detected in this shot but other shots in the group have faces, a fixed low base score is used instead of face quality.\n\nIf the group has no faces at all (landscapes, objects, etc.), face quality is disabled; sharpness, exposure and resolution are re-normalised among themselves.</string>
+    <string name="about_scoring_note">⚙️ All ratios above can be changed under Settings &gt; \"Best Selection Weights\".</string>
+    <string name="about_privacy_title">🔐 Privacy</string>
+    <string name="about_privacy_body">• All analysis (hashing, sharpness/exposure measurement, face analysis) runs on your device\n• No photo or analysis result is ever sent to the internet or a server</string>
+
     <string name="history_title">History</string>
     <string name="history_empty">No deleted photos yet</string>
     <string name="history_auto_badge">Auto</string>

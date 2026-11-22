@@ -5,6 +5,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import com.bestphotoselect.data.model.Album
@@ -140,6 +141,10 @@ class MediaStoreDataSource @Inject constructor(
 
     fun createDeleteRequest(uris: List<Uri>): PendingIntent =
         MediaStore.createDeleteRequest(context.contentResolver, uris)
+
+    /** MANAGE_MEDIA (Android 12+) verilmişse silme istekleri onay diyaloğu göstermez. */
+    fun canManageMedia(): Boolean =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && MediaStore.canManageMedia(context)
 
     /**
      * Otomatik pilot doğrulaması: verilen kayıtlardan kaçı hâlâ (çöpe taşınmamış

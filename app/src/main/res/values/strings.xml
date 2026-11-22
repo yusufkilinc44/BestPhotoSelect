@@ -104,6 +104,36 @@
     <string name="settings_manage_media_open">İzin ayarını aç</string>
     <string name="settings_notification_permission">Bildirim izni, otomatik pilot sonuçlarını görebilmeniz için gereklidir.</string>
 
+    <!-- "En iyi" seçim ağırlıkları -->
+    <string name="settings_weights_title">⚖️ \"En İyi\" Seçim Ağırlıkları</string>
+    <string name="settings_weights_desc">Kaydırıcılar göreli önemi belirler; yüzdeler otomatik yeniden hesaplanır.</string>
+    <string name="settings_weights_top_section">Üst düzey ölçütler:</string>
+    <string name="settings_weights_face_section">Yüz kalitesi içinde:</string>
+    <string name="settings_weights_face_quality">Yüz kalitesi</string>
+    <string name="settings_weights_sharpness">Netlik</string>
+    <string name="settings_weights_exposure">Pozlama</string>
+    <string name="settings_weights_resolution">Çözünürlük</string>
+    <string name="settings_weights_eyes_open">Gözler açık</string>
+    <string name="settings_weights_frontal">Yüze dönüklük</string>
+    <string name="settings_weights_smile">Gülümseme</string>
+    <string name="settings_weights_mouth_closed">Ağız doğallığı</string>
+    <string name="settings_weights_reset">Varsayılana sıfırla</string>
+
+    <!-- Nasıl çalışır? -->
+    <string name="settings_how_it_works">🧠 Nasıl çalışır? →</string>
+    <string name="settings_how_it_works_desc">Hangi yapay zeka modeli kullanılıyor, benzerlik ve puanlama nasıl hesaplanıyor?</string>
+    <string name="about_title">🧠 Yapay Zeka ve Algoritma</string>
+    <string name="about_subtitle">Bu uygulama fotoğrafları nasıl karşılaştırıyor?</string>
+    <string name="about_model_title">👁 Yüz Analizi Modeli</string>
+    <string name="about_model_body">• Model: Google ML Kit Face Detection — cihaz içi, APK içinde paketli, internet gerektirmez\n• Ön adım: hızlı modda yüz sayısı bulunur; ardından her yüz için tam doğruluk modunda sınıflandırma ve işaret noktaları hesaplanır\n• Göz açıklığı: sol/sağ göz açık olma olasılığının ortalaması\n• Yüze dönüklük: baş açıları (yaw/roll — headEulerAngleY/Z)\n• Gülümseme: ML Kit\'in gülümseme olasılığı (smilingProbability)\n• Ağız doğallığı: üst/alt dudak kontur noktalarının dikey açıklığının ağız genişliğine oranı — konuşma/esneme gibi geniş açık ağızları yakalar\n• Tamamı cihaz içinde çalışır: hiçbir fotoğraf cihazdan dışarı çıkmaz</string>
+    <string name="about_similarity_title">🔎 Benzerlik Nasıl Bulunuyor? (sırayla)</string>
+    <string name="about_similarity_body">1. Her fotoğraf küçük bir önizlemeye indirgenir (analiz hızlı olsun diye)\n2. Algısal parmak izi (dHash): küçük resim 9×8 gri tonlamaya indirgenir, komşu piksellerin parlaklığı karşılaştırılarak 64 bitlik bir \"parmak izi\" üretilir\n3. Zaman penceresi: yalnızca birbirine belirli bir süre içinde çekilmiş fotoğraflar karşılaştırılır — varsayılan 60 saniye, Ayarlar\'dan 10-600 saniye arasında değiştirilebilir\n4. Hash mesafesi: iki parmak izi arasındaki farklı bit sayısına (Hamming mesafesi) bakılır; eşiğin altındaysa \"görsel olarak benzer\" sayılır — varsayılan eşik 64 bit üzerinden 10, Ayarlar\'daki \"hassasiyet\" kaydırıcısıyla 4-16 arası ayarlanabilir\n5. Yüz sayısı kontrolü: görsel olarak benzer bulunsa bile, iki karedeki kişi sayısı farklıysa bu ikili HİÇBİR ZAMAN aynı gruba konmaz\n6. Gruplama: yukarıdaki kriterlerle birbirine bağlanan tüm fotoğraflar tek bir grupta toplanır (geçişli: A~B ve B~C benzerse A, B, C aynı grupta sayılır)</string>
+    <string name="about_scoring_title">🏆 \"En İyi\" Nasıl Seçiliyor?</string>
+    <string name="about_scoring_body">Bir grupta en az bir yüz tespit edildiyse varsayılan ağırlıklarla: yüz kalitesi %40 (içinde gözler açık %45 · ağız doğallığı %25 · gülümseme %15 · yüze dönüklük %15) + netlik %35 + pozlama %15 + çözünürlük %10.\n\nBu karede yüz tespit edilemediyse ama grupta başka karelerde yüz varsa, yüz kalitesi yerine sabit düşük bir taban puan kullanılır.\n\nGrupta hiç yüz yoksa (manzara, nesne vb.), yüz kalitesi ölçütü devre dışı kalır; netlik, pozlama ve çözünürlük kendi aralarındaki oranla yeniden hesaplanır.</string>
+    <string name="about_scoring_note">⚙️ Yukarıdaki tüm oranlar Ayarlar &gt; \"En İyi Seçim Ağırlıkları\" bölümünden değiştirilebilir.</string>
+    <string name="about_privacy_title">🔐 Gizlilik</string>
+    <string name="about_privacy_body">• Tüm analiz (hash, netlik/pozlama ölçümü, yüz analizi) cihazınızda çalışır\n• Hiçbir fotoğraf veya analiz sonucu internete/bir sunucuya gönderilmez</string>
+
     <!-- Geçmiş -->
     <string name="history_title">Geçmiş</string>
     <string name="history_empty">Henüz silinen fotoğraf yok</string>

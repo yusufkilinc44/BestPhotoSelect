@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +32,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,9 +44,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bestphotoselect.R
+import com.bestphotoselect.data.IgnoredGroupsRepository
 import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.data.model.AppSettings
 import com.bestphotoselect.data.model.AutopilotSchedule
+import com.bestphotoselect.data.model.ScoringWeights
 import com.bestphotoselect.work.AutoPilotScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -50,15 +56,28 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
-    private val autoPilotScheduler: AutoPilotScheduler
+    private val autoPilotScheduler: AutoPilotScheduler,
+    private val ignoredGroupsRepository: IgnoredGroupsRepository
 ) : ViewModel() {
 
     val settings: StateFlow<AppSettings?> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    val ignoredGroupsCount: StateFlow<Int> = ignoredGroupsRepository.ignoredCount
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    fun resetIgnoredGroups() = viewModelScope.launch {
+        ignoredGroupsRepository.clearAll()
+    }
+
+    fun setScoringWeights(weights: ScoringWeights) = viewModelScope.launch {
+        settingsRepository.setScoringWeights(weights)
+    }
 
     fun setHamming(value: Int) = viewModelScope.launch {
         settingsRepository.setHammingThreshold(value)
@@ -95,9 +114,11 @@ class SettingsViewModel @Inject constructor(
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenAbout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val settings by viewModel.settings.collectAsState()
+    val ignoredCount by viewModel.ignoredGroupsCount.collectAsState()
     val context = LocalContext.current
 
     val notificationLauncher = rememberLauncherForActivityResult(
@@ -214,38 +235,202 @@ fun SettingsScreen(
                         label = { Text(stringResource(R.string.settings_schedule_weekly)) }
                     )
                 }
+            }
 
-                // MANAGE_MEDIA izni (Android 12+)
-                val canManage = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                    MediaStore.canManageMedia(context)
-                if (!canManage) {
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(Modifier.padding(12.dp)) {
-                            Text(
-                                text = stringResource(R.string.settings_manage_media_title),
-                                style = MaterialTheme.typography.titleSmall
+            // MANAGE_MEDIA izni (Android 12+): hem elle hem otomatik pilotta
+            // sistem onay diyaloğunu kaldırır.
+            val canManage = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                MediaStore.canManageMedia(context)
+            SectionCard {
+                Text(
+                    text = stringResource(R.string.settings_manage_media_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                if (canManage) {
+                    Text(
+                        text = stringResource(R.string.settings_manage_media_granted),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.settings_manage_media_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    OutlinedButton(onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            context.startActivity(
+                                Intent(
+                                    Settings_ACTION_REQUEST_MANAGE_MEDIA,
+                                    Uri.parse("package:${context.packageName}")
+                                )
                             )
-                            Text(
-                                text = stringResource(R.string.settings_manage_media_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                            OutlinedButton(onClick = {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                    context.startActivity(
-                                        Intent(
-                                            Settings_ACTION_REQUEST_MANAGE_MEDIA,
-                                            Uri.parse("package:${context.packageName}")
-                                        )
-                                    )
-                                }
-                            }) {
-                                Text(stringResource(R.string.settings_manage_media_open))
-                            }
                         }
+                    }) {
+                        Text(stringResource(R.string.settings_manage_media_open))
                     }
                 }
             }
+
+            WeightsSection(
+                weights = s.scoringWeights,
+                onChange = viewModel::setScoringWeights
+            )
+
+            IgnoredGroupsSection(
+                count = ignoredCount,
+                onReset = viewModel::resetIgnoredGroups
+            )
+
+            SectionCard {
+                Text(
+                    text = stringResource(R.string.settings_how_it_works_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = onOpenAbout,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_how_it_works))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)
+    ) {
+        Column(Modifier.padding(12.dp), content = content)
+    }
+}
+
+@Composable
+private fun WeightsSection(
+    weights: ScoringWeights,
+    onChange: (ScoringWeights) -> Unit
+) {
+    SectionCard {
+        Text(stringResource(R.string.settings_weights_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = stringResource(R.string.settings_weights_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = stringResource(R.string.settings_weights_top_section),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+        val topSum = weights.faceQuality + weights.sharpness + weights.exposure + weights.resolution
+        WeightSlider(R.string.settings_weights_face_quality, weights.faceQuality, topSum) {
+            onChange(weights.copy(faceQuality = it))
+        }
+        WeightSlider(R.string.settings_weights_sharpness, weights.sharpness, topSum) {
+            onChange(weights.copy(sharpness = it))
+        }
+        WeightSlider(R.string.settings_weights_exposure, weights.exposure, topSum) {
+            onChange(weights.copy(exposure = it))
+        }
+        WeightSlider(R.string.settings_weights_resolution, weights.resolution, topSum) {
+            onChange(weights.copy(resolution = it))
+        }
+
+        Text(
+            text = stringResource(R.string.settings_weights_face_section),
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+        val faceSum = weights.eyesOpen + weights.frontal + weights.smile + weights.mouthClosed
+        WeightSlider(R.string.settings_weights_eyes_open, weights.eyesOpen, faceSum) {
+            onChange(weights.copy(eyesOpen = it))
+        }
+        WeightSlider(R.string.settings_weights_mouth_closed, weights.mouthClosed, faceSum) {
+            onChange(weights.copy(mouthClosed = it))
+        }
+        WeightSlider(R.string.settings_weights_smile, weights.smile, faceSum) {
+            onChange(weights.copy(smile = it))
+        }
+        WeightSlider(R.string.settings_weights_frontal, weights.frontal, faceSum) {
+            onChange(weights.copy(frontal = it))
+        }
+
+        OutlinedButton(
+            onClick = { onChange(ScoringWeights()) },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text(stringResource(R.string.settings_weights_reset))
+        }
+    }
+}
+
+@Composable
+private fun WeightSlider(labelRes: Int, value: Int, groupSum: Int, onValueChange: (Int) -> Unit) {
+    val percent = if (groupSum > 0) value * 100 / groupSum else 0
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(labelRes),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.fillMaxWidth(0.35f)
+        )
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.roundToInt()) },
+            valueRange = 0f..100f,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = "%$percent",
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
+
+@Composable
+private fun IgnoredGroupsSection(count: Int, onReset: () -> Unit) {
+    var resetDone by remember { mutableStateOf(false) }
+    SectionCard {
+        Text(stringResource(R.string.settings_ignored_groups_title), style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = stringResource(R.string.settings_ignored_groups_desc),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.settings_ignored_groups_count, count),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            OutlinedButton(
+                onClick = {
+                    onReset()
+                    resetDone = true
+                },
+                enabled = count > 0
+            ) {
+                Text(stringResource(R.string.settings_ignored_groups_reset))
+            }
+        }
+        if (resetDone && count == 0) {
+            Text(
+                text = stringResource(R.string.settings_ignored_groups_reset_done),
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

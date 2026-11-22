@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.bestphotoselect.data.db.AppDatabase
 import com.bestphotoselect.data.db.HistoryDao
+import com.bestphotoselect.data.db.IgnoredGroupDao
 import com.bestphotoselect.data.db.PhotoCacheDao
 import dagger.Module
 import dagger.Provides
@@ -36,6 +37,9 @@ object AppModule {
 
     @Provides
     fun provideHistoryDao(db: AppDatabase): HistoryDao = db.historyDao()
+
+    @Provides
+    fun provideIgnoredGroupDao(db: AppDatabase): IgnoredGroupDao = db.ignoredGroupDao()
 
     @Provides
     @Singleton
