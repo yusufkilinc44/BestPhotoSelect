@@ -13,6 +13,4 @@ build/
 *.apk
 *.aab
 *.hprof
-applite/build/
-applite/tools/
 !releases/*.apk

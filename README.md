@@ -20,6 +20,12 @@ internet bağlantısı gerekmez.
   bileşik puanlanır; en yüksek puanlı kare **EN İYİ** işaretlenir, diğerleri silme adayı olur.
 - **İnceleme ve onay** — grupları tek tek inceleyebilir, "en iyi"yi elle değiştirebilir,
   silinecekleri işaretleyebilir/çıkarabilirsiniz. Silme, tek bir sistem onayıyla toplu yapılır.
+- **Tam ekran karşılaştırma** — grup içinde yan yana kaydırma, pinch/çift dokunuş zoom.
+- **Bir daha gösterme** — yoksayılan gruplar sonraki taramalarda hiç önerilmez
+  (Ayarlar'dan sıfırlanabilir).
+- **Ayarlanabilir puanlama** — "en iyi" seçim ağırlıkları Ayarlar'dan değiştirilebilir;
+  "Nasıl çalışır?" ekranı modeli ve algoritmayı açıkça anlatır.
+- **Sessiz silme** — Medya yönetimi izni verildiyse elle silmede de sistem diyaloğu çıkmaz.
 - **Çöp kutusu modu** (varsayılan) — silinenler 30 gün sistem çöp kutusunda bekler, geri alınabilir.
 - **Otomatik pilot** — günlük/haftalık arka plan taraması; **Medya yönetimi** özel izni
   (Android 12+) verildiyse sistem diyaloğu olmadan otomatik temizler, sonuç bildirimle raporlanır.
@@ -42,32 +48,26 @@ internet bağlantısı gerekmez.
 - `work/` — otomatik pilot WorkManager işleri
 - `ui/` — ekranlar (albümler, tarama, sonuçlar, grup detayı, ayarlar, geçmiş)
 
-## Hazır APK (kurulabilir)
+## Derleme ve sürüm
 
-`releases/BestPhotoSelect-v1.0.0.apk` — imzalı, doğrudan telefona kurulabilir
-(Android 11+, arm64/arm32). İndirip açın; "bilinmeyen kaynaklara izin ver"
-onayı istenebilir.
-
-Bu APK, `applite/` altındaki **lite sürümden** derlenir: aynı algoritma çekirdeğini
-kullanır, arayüzü Android'in yerleşik bileşenleriyle yazılmıştır ve yüz analizi
-ML Kit yerine **TFLite + MediaPipe Face Mesh** (468 nokta) ile yapılır — gözlerin
-açıklığı (EAR), yüzün dönüklüğü (yaw/roll) ve gülümseme noktalardan hesaplanır.
-`applite/build-apk.sh`, AGP gerektirmeden aapt2 + kotlinc + dx + apksigner ile
-APK üretir (betikteki açıklamalara bakın).
-
-## Derleme (tam sürüm, Android Studio)
+Tek uygulama, tek sürüm: `app/` (v2.0.0, versionCode 17).
 
 ```bash
-# Android Studio (önerilen): projeyi açın, çalıştırın.
-# Komut satırı:
+./gradlew assembleRelease      # imzalı APK: app/build/outputs/apk/release/
 ./gradlew assembleDebug        # APK: app/build/outputs/apk/debug/
 ./gradlew testDebugUnitTest    # birim testleri (saf JVM, emülatör gerekmez)
 ```
 
 Gereksinimler: JDK 17+, Android SDK Platform 35. `minSdk 30` (Android 11+).
 
+Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
+imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur ve
+eski sürümün ayarları, yoksayılan grupları ve geçmişi ilk açılışta otomatik
+taşınır. Kurulabilir APK'yı `releases/BestPhotoSelect-v<sürüm>.apk` olarak
+eklemeniz yeterli (yalnızca son sürüm tutulur).
+
 ## Yol haritası
 
-- [ ] iOS versiyonu (ayrı proje olarak planlandı)
+- [x] Grup içi tam ekran karşılaştırma (yan yana kaydırma)
 - [ ] Ekran görüntüsü/screenshot klasörlerini otomatik tanıma
-- [ ] Grup içi tam ekran karşılaştırma (yan yana kaydırma)
+- [ ] iOS versiyonu (en son, ayrı proje olarak)

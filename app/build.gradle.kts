@@ -14,15 +14,16 @@ android {
         applicationId = "com.bestphotoselect"
         minSdk = 30
         targetSdk = 35
-        versionCode = 10
+        // Eski lite sürümün son kodu 16'ydı (v1.10.0); üzerine güncelleme olarak
+        // kurulabilmesi için bundan büyük olmalı.
+        versionCode = 17
         versionName = "2.0.0"
     }
 
-    // Lite sürümle (releases/BestPhotoSelect-v1.0.0.apk) aynı anahtar:
-    // v2, telefonda v1 üzerine güncelleme olarak kurulabilir.
+    // Eski lite APK'larla aynı anahtar: telefondaki kurulumun üzerine güncellenir.
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("applite/keystore/bestphoto.keystore")
+            storeFile = rootProject.file("keystore/bestphoto.keystore")
             storePassword = "bestphoto"
             keyAlias = "bestphotoselect"
             keyPassword = "bestphoto"
