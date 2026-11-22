@@ -108,6 +108,9 @@ sürümler artık dağıtılmıyor.
 
 ## Yol haritası
 
-- [x] Grup içi tam ekran karşılaştırma (yan yana kaydırma)
-- [x] Ekran görüntüsü/screenshot klasörlerini otomatik tanıma
+- [x] Grup içi tam ekran karşılaştırma (yan yana kaydırma, zoom) — v2.0.0
+- [x] Kalıcı "Bir daha gösterme" ve ayarlanabilir "en iyi" ağırlıkları — v2.0.0
+- [x] Lite sürümü birleştirme: tek uygulama, tek sürüm — v2.0.0
+- [x] Yalnızca ARM mimarileri ile küçültülmüş APK — v2.0.1
+- [x] Ekran görüntülerini otomatik tanıma ve sıkı kopya eşleştirme — v2.1.0
 - [ ] iOS versiyonu (en son, ayrı proje olarak)
