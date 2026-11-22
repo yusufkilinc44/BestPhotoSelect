@@ -16,8 +16,14 @@ android {
         targetSdk = 35
         // Eski lite sürümün son kodu 16'ydı (v1.10.0); üzerine güncelleme olarak
         // kurulabilmesi için bundan büyük olmalı.
-        versionCode = 17
-        versionName = "2.0.0"
+        versionCode = 18
+        versionName = "2.0.1"
+
+        // Yalnızca gerçek telefonlarda kullanılan ARM mimarileri; x86/x86_64
+        // (emülatör) yerel kütüphaneleri APK boyutunu gereksiz büyütüyordu.
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     // Eski lite APK'larla aynı anahtar: telefondaki kurulumun üzerine güncellenir.

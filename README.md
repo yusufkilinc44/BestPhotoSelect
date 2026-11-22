@@ -50,7 +50,8 @@ internet bağlantısı gerekmez.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.0.0, versionCode 17).
+Tek uygulama, tek sürüm: `app/` (v2.0.1, versionCode 18). APK yalnızca ARM
+(arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
 ./gradlew assembleRelease      # imzalı APK: app/build/outputs/apk/release/
