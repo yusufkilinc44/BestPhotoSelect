@@ -12,48 +12,74 @@ internet bağlantısı gerekmez.
 📥 **[BestPhotoSelect v2.1.0 APK'sını indir](https://github.com/yusufkilinc44/BestPhotoSelect/raw/claude/android-photo-dedup-yfscf8/releases/BestPhotoSelect-v2.1.0.apk)**
 (Android 11+, ARM; [`releases/BestPhotoSelect-v2.1.0.apk`](releases/BestPhotoSelect-v2.1.0.apk))
 
+## Kurulum
+
+1. Yukarıdaki bağlantıdan APK'yı telefona indirin.
+2. Gerekirse tarayıcınıza/dosya yöneticinize "bilinmeyen kaynaklardan yükleme" izni verin.
+3. APK'yı açıp kurun. Eski bir BestPhotoSelect (lite dahil) kuruluysa üzerine
+   güncellenir; ayarlar, yoksayılan gruplar ve geçmiş korunur.
+4. İlk açılışta fotoğraflara erişim izni verin. Sessiz silme ve otomatik pilot için
+   Ayarlar'dan **Medya yönetimi** iznini, sonuç bildirimleri için bildirim iznini açın.
+
+Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
+
 ## Özellikler
 
 - **Albüm seçimi** — galerideki albümlerden hangilerinin taranacağını siz seçersiniz.
 - **Benzerlik gruplama** — algısal hash (dHash) + çekim zamanı yakınlığı ile art arda
-  çekilmiş benzer kareler otomatik gruplanır. Hassasiyet ve zaman penceresi ayarlanabilir.
+  çekilmiş benzer kareler otomatik gruplanır. Yüz sayısı belirgin şekilde farklı kareler
+  (ör. 1 kişi / 4 kişi) aynı gruba konmaz. Hassasiyet ve zaman penceresi ayarlanabilir.
 - **Yapay zeka ile "en iyi" seçimi** — her grupta:
   - 👁 Gözler açık mı? (ML Kit yüz analizi)
   - 🙂 Yüz kameraya dönük mü, gülümseme var mı?
+  - 👄 Konuşurken yakalanmış garip açık ağız var mı?
   - 🔍 Netlik (Laplacian varyansı) ve pozlama (histogram analizi)
   - 📐 Çözünürlük
+
   bileşik puanlanır; en yüksek puanlı kare **EN İYİ** işaretlenir, diğerleri silme adayı olur.
+- **Ekran görüntüleri** — klasör yolu veya dosya adından otomatik tanınır, normal
+  fotoğraflarla karışmaz; yalnızca neredeyse birebir aynı kopyalar (sıkı piksel
+  karşılaştırması) gruplanır ve en yeni kopya korunur.
 - **İnceleme ve onay** — grupları tek tek inceleyebilir, "en iyi"yi elle değiştirebilir,
   silinecekleri işaretleyebilir/çıkarabilirsiniz. Silme, tek bir sistem onayıyla toplu yapılır.
-- **Tam ekran karşılaştırma** — grup içinde yan yana kaydırma, pinch/çift dokunuş zoom.
-- **Bir daha gösterme** — yoksayılan gruplar sonraki taramalarda hiç önerilmez
-  (Ayarlar'dan sıfırlanabilir).
-- **Ayarlanabilir puanlama** — "en iyi" seçim ağırlıkları Ayarlar'dan değiştirilebilir;
-  "Nasıl çalışır?" ekranı modeli ve algoritmayı açıkça anlatır.
-- **Ekran görüntüleri** — otomatik tanınır, normal fotoğraflarla karışmaz; yalnızca
-  neredeyse birebir aynı kopyalar (sıkı piksel karşılaştırması) gruplanır, en yenisi korunur.
-- **Sessiz silme** — Medya yönetimi izni verildiyse elle silmede de sistem diyaloğu çıkmaz.
+- **Tam ekran karşılaştırma** — grup içinde yan yana kaydırma, pinch/çift dokunuş zoom;
+  tam ekrandan "en iyi yap" / "sil işaretle".
+- **Bir daha gösterme** — yoksayılan gruplar sonraki taramalarda (otomatik pilot dahil)
+  hiç önerilmez; Ayarlar'dan sıfırlanabilir.
+- **Ayarlanabilir puanlama** — "en iyi" seçim ağırlıkları (yüz kalitesi, netlik, pozlama,
+  çözünürlük; göz, yüz yönü, gülümseme, ağız) Ayarlar'dan değiştirilebilir.
+- **"Nasıl çalışır?" ekranı** — kullanılan model, algoritma ve oranlar açıkça anlatılır.
+- **Artımlı tarama** — analiz sonuçları önbelleğe alınır; sonraki taramalarda yalnızca
+  yeni/değişen fotoğraflar işlenir.
 - **Çöp kutusu modu** (varsayılan) — silinenler 30 gün sistem çöp kutusunda bekler, geri alınabilir.
-- **Otomatik pilot** — günlük/haftalık arka plan taraması; **Medya yönetimi** özel izni
-  (Android 12+) verildiyse sistem diyaloğu olmadan otomatik temizler, sonuç bildirimle raporlanır.
+- **Sessiz silme** — Medya yönetimi izni verildiyse elle silmede de sistem diyaloğu çıkmaz.
+- **Otomatik pilot** — günlük/haftalık arka plan taraması (pil düşük değilken);
+  **Medya yönetimi** izni verildiyse sistem diyaloğu olmadan otomatik temizler,
+  sonuç bildirimle raporlanır.
 - **Geçmiş** — tüm manuel/otomatik silmelerin kaydı.
-- Türkçe (varsayılan) ve İngilizce arayüz.
+- Türkçe (varsayılan) ve İngilizce arayüz, açık/koyu tema.
 
 ## Teknik mimari
 
 | Katman | Teknoloji |
 |---|---|
-| UI | Kotlin, Jetpack Compose, Material 3, Navigation |
+| UI | Kotlin 2.0, Jetpack Compose (BOM 2024.10), Material 3, Navigation |
 | Mimari | MVVM + Repository, Hilt, Room, WorkManager, DataStore |
 | Görüntü | Coil, MediaStore thumbnail API |
-| AI | ML Kit Face Detection (cihaz içi), saf Kotlin dHash / Laplacian / histogram |
-| Silme | `MediaStore.createTrashRequest` / `createDeleteRequest`, otomatik pilot için `MANAGE_MEDIA` |
+| AI | ML Kit Face Detection (cihaz içi), saf Kotlin dHash / Laplacian / histogram / piksel karşılaştırma |
+| Silme | `MediaStore.createTrashRequest` / `createDeleteRequest`, sessiz silme için `MANAGE_MEDIA` |
+| Derleme | AGP 8.7, Gradle 8.14, compileSdk/targetSdk 35, minSdk 30 |
 
-- `app/src/main/java/com/bestphotoselect/domain/` — algoritma çekirdeği
-  (**Android bağımsız, birim testli**: `DHash`, `PhotoGrouper`, `QualityScorer`, `BestPhotoSelector`)
-- `data/` — MediaStore erişimi, Room önbelleği (artımlı tarama), ayarlar, tarama motoru
+`app/src/main/java/com/bestphotoselect/` altında:
+
+- `domain/` — algoritma çekirdeği (**Android bağımsız, birim testli**):
+  `DHash`, `PhotoGrouper`, `QualityScorer`, `BestPhotoSelector`,
+  `ScreenshotDetector`, `ScreenshotMatcher`; ayrıca ML Kit sarmalayıcısı `FaceAnalyzer`
+- `data/` — MediaStore erişimi, Room önbelleği (artımlı tarama), ayarlar, tarama motoru,
+  silme ve yoksayılan gruplar depoları, lite sürümden veri taşıma
 - `work/` — otomatik pilot WorkManager işleri
-- `ui/` — ekranlar (albümler, tarama, sonuçlar, grup detayı, ayarlar, geçmiş)
+- `ui/` — ekranlar: albümler, tarama, sonuçlar, grup detayı + tam ekran görüntüleyici,
+  ayarlar, geçmiş, "Nasıl çalışır?"
 
 ## Derleme ve sürüm
 
@@ -66,13 +92,17 @@ Tek uygulama, tek sürüm: `app/` (v2.1.0, versionCode 19). APK yalnızca ARM
 ./gradlew testDebugUnitTest    # birim testleri (saf JVM, emülatör gerekmez)
 ```
 
-Gereksinimler: JDK 17+, Android SDK Platform 35. `minSdk 30` (Android 11+).
+Gereksinimler: JDK 17+, Android SDK Platform 35 ve Build-Tools 35
+(`local.properties` içinde `sdk.dir`).
+
+Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScorer`,
+`BestPhotoSelector`, ekran görüntüsü tanıma/eşleştirme) — v2.1.0'da tümü geçiyor.
 
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
-imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur ve
-eski sürümün ayarları, yoksayılan grupları ve geçmişi ilk açılışta otomatik
-taşınır. Kurulabilir APK'yı `releases/BestPhotoSelect-v<sürüm>.apk` olarak
-eklemeniz yeterli (yalnızca son sürüm tutulur).
+imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
+Yeni sürümde APK `releases/BestPhotoSelect-v<sürüm>.apk` olarak eklenir, eskisi
+silinir (yalnızca son sürüm tutulur) ve bu README'deki indirme bağlantısı ile
+sürüm notları güncellenir.
 
 ## Sürüm notları
 
