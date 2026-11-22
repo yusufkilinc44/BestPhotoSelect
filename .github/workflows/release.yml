@@ -147,6 +147,33 @@ jobs:
             - Desteklenen ABI'ler: arm64-v8a, armeabi-v7a
             - İmza SHA-256: ${{ env.EXPECTED_CERT_SHA256 }}
 
+      # Google Drive "Android Apps/Best Photo Select" klasörüne yalnızca son APK
+      # kalır: yenisi yüklenir, eski BestPhotoSelect-v*.apk'ler çöp kutusuna
+      # taşınır (30 gün geri alınabilir). Erişim anahtarı GDRIVE_RCLONE_TOKEN
+      # secret'ındadır (`rclone authorize "drive"` çıktısı); yoksa adım atlanır.
+      - name: Google Drive'a kopyala (eskileri sil)
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ inputs.version }}
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_RCLONE_TOKEN }}
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: 1luREERbEFqP5Of5N8P5y303LsyrQv7K7
+        run: |
+          set -o pipefail
+          if [ -z "$RCLONE_CONFIG_GDRIVE_TOKEN" ]; then
+            echo "::warning::GDRIVE_RCLONE_TOKEN secret'ı tanımlı değil; Drive kopyalama atlandı."
+            exit 0
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rclone
+          NAME="BestPhotoSelect-v${VERSION}.apk"
+          rclone copyto "$APK_PATH" "gdrive:$NAME"
+          rclone delete gdrive: --max-depth 1 \
+            --filter "- $NAME" --filter "+ BestPhotoSelect-v*.apk" --filter "- *"
+          echo "Drive klasörü:"
+          rclone lsl gdrive: --max-depth 1
+
       # Telefona ntfy bildirimi: dokununca APK doğrudan indirilir. Repo herkese
       # açık olduğundan link GitHub girişi gerektirmez. ntfy konuları da herkese
       # açıktır; bu yüzden mesajda yalnızca zaten açık olan bilgiler yer alır.
