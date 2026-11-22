@@ -9,8 +9,8 @@ internet bağlantısı gerekmez.
 
 ## İndir
 
-📥 **[BestPhotoSelect v2.1.0 APK'sını indir](https://github.com/yusufkilinc44/BestPhotoSelect/raw/claude/android-photo-dedup-yfscf8/releases/BestPhotoSelect-v2.1.0.apk)**
-(Android 11+, ARM; [`releases/BestPhotoSelect-v2.1.0.apk`](releases/BestPhotoSelect-v2.1.0.apk))
+📥 **[BestPhotoSelect v2.1.1 APK'sını indir](https://github.com/yusufkilinc44/BestPhotoSelect/raw/claude/android-photo-dedup-yfscf8/releases/BestPhotoSelect-v2.1.1.apk)**
+(Android 11+, ARM; [`releases/BestPhotoSelect-v2.1.1.apk`](releases/BestPhotoSelect-v2.1.1.apk))
 
 ## Kurulum
 
@@ -83,7 +83,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.1.0, versionCode 19). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.1.1, versionCode 20). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -96,15 +96,21 @@ Gereksinimler: JDK 17+, Android SDK Platform 35 ve Build-Tools 35
 (`local.properties` içinde `sdk.dir`).
 
 Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScorer`,
-`BestPhotoSelector`, ekran görüntüsü tanıma/eşleştirme) — v2.1.0'da tümü geçiyor.
+`BestPhotoSelector`, ekran görüntüsü tanıma/eşleştirme) — tümü geçiyor.
 
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
 imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
 Yeni sürümde APK `releases/BestPhotoSelect-v<sürüm>.apk` olarak eklenir, eskisi
 silinir (yalnızca son sürüm tutulur) ve bu README'deki indirme bağlantısı ile
-sürüm notları güncellenir.
+sürüm notları güncellenir. İsteğe bağlı olarak Actions sekmesindeki **Release**
+workflow'u sürüm numarasıyla çalıştırılarak aynı APK GitHub Release'e eklenir.
 
 ## Sürüm notları
+
+### v2.1.1 (versionCode 20)
+- Yeniden imzalanmış bakım sürümü; uygulama davranışında değişiklik yok.
+- GitHub Release oluşturmak için `Release` workflow'u eklendi
+  (`.github/workflows/release.yml`, elle tetiklenir).
 
 ### v2.1.0 (versionCode 19)
 - **Ekran görüntüsü tanıma:** klasör yolu (Screenshots, DCIM/Screenshots,
