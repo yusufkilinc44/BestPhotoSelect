@@ -7,6 +7,11 @@ temizleyen Android uygulaması.
 Tüm analiz **cihaz içinde** yapılır: fotoğraflarınız telefonunuzdan asla çıkmaz,
 internet bağlantısı gerekmez.
 
+## İndir
+
+📥 **[BestPhotoSelect v2.1.0 APK'sını indir](https://github.com/yusufkilinc44/BestPhotoSelect/raw/claude/android-photo-dedup-yfscf8/releases/BestPhotoSelect-v2.1.0.apk)**
+(Android 11+, ARM; [`releases/BestPhotoSelect-v2.1.0.apk`](releases/BestPhotoSelect-v2.1.0.apk))
+
 ## Özellikler
 
 - **Albüm seçimi** — galerideki albümlerden hangilerinin taranacağını siz seçersiniz.
