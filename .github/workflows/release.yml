@@ -14,10 +14,21 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: APK var mı kontrol et
-        run: test -f "releases/BestPhotoSelect-v${{ inputs.version }}.apk"
-      - uses: softprops/action-gh-release@v2
+      # Üçüncü taraf eylemler commit SHA'sına sabitlenir: etiket sonradan başka
+      # bir koda taşınsa bile burada çalışan kod değişmez.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      # Girdi kabuğa doğrudan gömülmez (komut enjeksiyonu riski); ortam
+      # değişkeniyle geçirilip önce biçimi doğrulanır.
+      - name: Sürümü doğrula ve APK var mı kontrol et
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Geçersiz sürüm: '$VERSION' (beklenen biçim: 2.1.1)" >&2
+            exit 1
+          fi
+          test -f "releases/BestPhotoSelect-v${VERSION}.apk"
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: v${{ inputs.version }}
           name: BestPhotoSelect v${{ inputs.version }}
