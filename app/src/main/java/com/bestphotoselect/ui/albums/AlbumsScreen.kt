@@ -196,6 +196,15 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (album.isScreenshots) {
+                    Text(
+                        text = stringResource(R.string.albums_screenshot_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }

@@ -18,12 +18,15 @@ object PhotoGrouper {
      *   aralarındaki azami çekim zamanı farkı; 0 veya negatifse zaman koşulu uygulanmaz
      *   (bu durumda karşılaştırma, sıralı listede en fazla [MAX_NEIGHBOR_SCAN] komşuyla sınırlanır).
      * @param maxHammingDistance 64-bit dHash için eşik; tipik olarak 8..12.
+     * @param isMatch hash ve yüz sayısı kontrolünü geçen her aday çift için ek,
+     *   daha sıkı doğrulama (ör. ekran görüntüleri için piksel karşılaştırması).
      * @return her biri en az 2 eleman içeren, id listelerinden oluşan gruplar.
      */
     fun group(
         photos: List<Input>,
         timeWindowMs: Long,
-        maxHammingDistance: Int
+        maxHammingDistance: Int,
+        isMatch: ((Long, Long) -> Boolean)? = null
     ): List<List<Long>> {
         if (photos.size < 2) return emptyList()
         val sorted = photos.sortedBy { it.timeMs }
@@ -39,7 +42,8 @@ object PhotoGrouper {
                     break
                 }
                 if (DHash.hammingDistance(sorted[i].hash, sorted[j].hash) <= maxHammingDistance &&
-                    faceCountsCompatible(sorted[i], sorted[j])
+                    faceCountsCompatible(sorted[i], sorted[j]) &&
+                    (isMatch == null || isMatch(sorted[i].id, sorted[j].id))
                 ) {
                     uf.union(i, j)
                 }

@@ -117,6 +117,8 @@ class ScanRepository @Inject constructor(
                 else -> {
                     val best = if (remaining.any { it.photo.id == group.bestPhotoId }) {
                         group.bestPhotoId
+                    } else if (group.isScreenshots) {
+                        remaining.maxBy { it.photo.dateTakenMs }.photo.id
                     } else {
                         remaining.maxByOrNull { it.score }!!.photo.id
                     }

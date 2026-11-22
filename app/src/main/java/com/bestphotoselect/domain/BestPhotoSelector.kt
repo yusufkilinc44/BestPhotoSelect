@@ -38,6 +38,26 @@ object BestPhotoSelector {
         return PhotoGroup(id = groupId, photos = photos, bestPhotoId = best)
     }
 
+    /**
+     * Ekran görüntüsü grubu: üyeler zaten neredeyse birebir aynı olduğundan
+     * kalite puanlaması anlamsızdır; en yeni kopya korunur, diğerleri silinmeye
+     * işaretlenir.
+     */
+    fun buildNewestKeptGroup(groupId: Int, members: List<PhotoAnalysis>): PhotoGroup {
+        require(members.isNotEmpty())
+        val newest = members.maxWith(compareBy({ it.photo.dateTakenMs }, { it.photo.id })).photo.id
+        val photos = members
+            .sortedWith(compareByDescending<PhotoAnalysis> { it.photo.dateTakenMs }.thenByDescending { it.photo.id })
+            .map { analysis ->
+                ScoredPhoto(
+                    analysis = analysis,
+                    score = if (analysis.photo.id == newest) 1f else 0f,
+                    markedForDeletion = analysis.photo.id != newest
+                )
+            }
+        return PhotoGroup(id = groupId, photos = photos, bestPhotoId = newest, isScreenshots = true)
+    }
+
     fun score(
         members: List<PhotoAnalysis>,
         weights: ScoringWeights = ScoringWeights()

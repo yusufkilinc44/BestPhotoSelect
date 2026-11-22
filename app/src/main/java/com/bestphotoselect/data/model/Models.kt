@@ -9,7 +9,8 @@ data class Album(
     val name: String,
     val photoCount: Int,
     val coverUri: Uri,
-    val totalBytes: Long
+    val totalBytes: Long,
+    val isScreenshots: Boolean = false
 )
 
 data class PhotoItem(
@@ -20,7 +21,8 @@ data class PhotoItem(
     val sizeBytes: Long,
     val width: Int,
     val height: Int,
-    val displayName: String
+    val displayName: String,
+    val isScreenshot: Boolean = false
 ) {
     /** Türetilmiş alan: kurucu Android tipi almaz, saf JVM testleri kolaylaşır. */
     val uri: Uri
@@ -58,7 +60,9 @@ data class ScoredPhoto(
 data class PhotoGroup(
     val id: Int,
     val photos: List<ScoredPhoto>,
-    val bestPhotoId: Long
+    val bestPhotoId: Long,
+    /** Ekran görüntüsü grubu: sıkı kurallarla bulunur, en yeni kopya korunur. */
+    val isScreenshots: Boolean = false
 ) {
     val deletionCandidates: List<ScoredPhoto>
         get() = photos.filter { it.markedForDeletion }

@@ -25,6 +25,8 @@ internet bağlantısı gerekmez.
   (Ayarlar'dan sıfırlanabilir).
 - **Ayarlanabilir puanlama** — "en iyi" seçim ağırlıkları Ayarlar'dan değiştirilebilir;
   "Nasıl çalışır?" ekranı modeli ve algoritmayı açıkça anlatır.
+- **Ekran görüntüleri** — otomatik tanınır, normal fotoğraflarla karışmaz; yalnızca
+  neredeyse birebir aynı kopyalar (sıkı piksel karşılaştırması) gruplanır, en yenisi korunur.
 - **Sessiz silme** — Medya yönetimi izni verildiyse elle silmede de sistem diyaloğu çıkmaz.
 - **Çöp kutusu modu** (varsayılan) — silinenler 30 gün sistem çöp kutusunda bekler, geri alınabilir.
 - **Otomatik pilot** — günlük/haftalık arka plan taraması; **Medya yönetimi** özel izni
@@ -50,7 +52,7 @@ internet bağlantısı gerekmez.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.0.1, versionCode 18). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.1.0, versionCode 19). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -70,5 +72,5 @@ eklemeniz yeterli (yalnızca son sürüm tutulur).
 ## Yol haritası
 
 - [x] Grup içi tam ekran karşılaştırma (yan yana kaydırma)
-- [ ] Ekran görüntüsü/screenshot klasörlerini otomatik tanıma
+- [x] Ekran görüntüsü/screenshot klasörlerini otomatik tanıma
 - [ ] iOS versiyonu (en son, ayrı proje olarak)

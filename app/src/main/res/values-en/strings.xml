@@ -135,4 +135,12 @@
     <string name="notif_autopilot_done_text">%1$d photos cleaned, %2$s freed</string>
     <string name="notif_autopilot_pending_title">Your approval is needed</string>
     <string name="notif_autopilot_pending_text">%1$d photos are ready to delete. Tap to confirm.</string>
+
+    <!-- Ekran görüntüleri -->
+    <string name="albums_screenshot_badge">📱 Screenshots · exact copies only</string>
+    <string name="results_screenshot_group_title">📱 %1$d identical screenshots</string>
+    <string name="results_newest_badge">NEWEST</string>
+    <string name="group_screenshot_hint">📱 These are near-identical screenshots: the newest is kept, the others are marked for deletion.</string>
+    <string name="about_screenshots_title">📱 Screenshots</string>
+    <string name="about_screenshots_body">• Detected automatically from the folder name/path (Screenshots…) or file name (Screenshot_…)\n• Never grouped with regular photos\n• Because different screens of the same app can look alike to the coarse fingerprint, strict rules apply: first at most 4 of 64 bits may differ, then a 48×96 grayscale pixel comparison excluding the status and navigation bars (at most 0.3 percent of pixels may differ noticeably)\n• No face/sharpness scoring; the newest copy in each group is kept</string>
 </resources>

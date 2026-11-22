@@ -10,6 +10,7 @@ import android.provider.MediaStore
 import android.util.Size
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.PhotoItem
+import com.bestphotoselect.domain.ScreenshotDetector
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -32,11 +33,15 @@ class MediaStoreDataSource @Inject constructor(
         MediaStore.Images.Media.SIZE,
         MediaStore.Images.Media.WIDTH,
         MediaStore.Images.Media.HEIGHT,
-        MediaStore.Images.Media.DISPLAY_NAME
+        MediaStore.Images.Media.DISPLAY_NAME,
+        MediaStore.Images.Media.RELATIVE_PATH
     )
 
     suspend fun queryAlbums(): List<Album> = withContext(Dispatchers.IO) {
-        data class Acc(var count: Int, var bytes: Long, var coverId: Long, var coverDate: Long, var name: String)
+        data class Acc(
+            var count: Int, var bytes: Long, var coverId: Long, var coverDate: Long,
+            var name: String, var isScreenshots: Boolean
+        )
 
         val albums = LinkedHashMap<Long, Acc>()
         context.contentResolver.query(
@@ -48,12 +53,14 @@ class MediaStoreDataSource @Inject constructor(
             val nameCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
             val sizeCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)
             val dateCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+            val pathCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
             while (c.moveToNext()) {
                 val bucket = c.getLong(bucketCol)
                 val id = c.getLong(idCol)
                 val date = c.getLong(dateCol)
                 val acc = albums.getOrPut(bucket) {
-                    Acc(0, 0, id, date, c.getString(nameCol) ?: "?")
+                    val name = c.getString(nameCol) ?: "?"
+                    Acc(0, 0, id, date, name, ScreenshotDetector.isScreenshot(name, c.getString(pathCol)))
                 }
                 acc.count++
                 acc.bytes += c.getLong(sizeCol)
@@ -69,7 +76,8 @@ class MediaStoreDataSource @Inject constructor(
                 name = acc.name,
                 photoCount = acc.count,
                 coverUri = ContentUris.withAppendedId(collection, acc.coverId),
-                totalBytes = acc.bytes
+                totalBytes = acc.bytes,
+                isScreenshots = acc.isScreenshots
             )
         }.sortedByDescending { it.photoCount }
     }
@@ -94,9 +102,12 @@ class MediaStoreDataSource @Inject constructor(
             val widthCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
             val heightCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
             val nameCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            val bucketNameCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            val pathCol = c.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
             while (c.moveToNext()) {
                 val id = c.getLong(idCol)
                 val taken = c.getLong(takenCol)
+                val displayName = c.getString(nameCol) ?: id.toString()
                 result += PhotoItem(
                     id = id,
                     bucketId = c.getLong(bucketCol),
@@ -105,7 +116,10 @@ class MediaStoreDataSource @Inject constructor(
                     sizeBytes = c.getLong(sizeCol),
                     width = c.getInt(widthCol),
                     height = c.getInt(heightCol),
-                    displayName = c.getString(nameCol) ?: id.toString()
+                    displayName = displayName,
+                    isScreenshot = ScreenshotDetector.isScreenshot(
+                        c.getString(bucketNameCol), c.getString(pathCol), displayName
+                    )
                 )
             }
         }

@@ -56,6 +56,7 @@ fun AboutAlgorithmScreen(onBack: () -> Unit) {
             InfoCard(R.string.about_model_title, R.string.about_model_body)
             InfoCard(R.string.about_similarity_title, R.string.about_similarity_body)
             InfoCard(R.string.about_scoring_title, R.string.about_scoring_body, R.string.about_scoring_note)
+            InfoCard(R.string.about_screenshots_title, R.string.about_screenshots_body)
             InfoCard(R.string.about_privacy_title, R.string.about_privacy_body)
         }
     }

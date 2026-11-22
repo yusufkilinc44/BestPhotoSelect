@@ -233,7 +233,10 @@ private fun GroupCard(group: PhotoGroup, onClick: () -> Unit) {
         Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = stringResource(R.string.results_group_title, group.photos.size),
+                    text = stringResource(
+                        if (group.isScreenshots) R.string.results_screenshot_group_title else R.string.results_group_title,
+                        group.photos.size
+                    ),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f)
                 )
@@ -259,7 +262,9 @@ private fun GroupCard(group: PhotoGroup, onClick: () -> Unit) {
                         )
                         if (scored.photo.id == group.bestPhotoId) {
                             Text(
-                                text = stringResource(R.string.results_best_badge),
+                                text = stringResource(
+                                    if (group.isScreenshots) R.string.results_newest_badge else R.string.results_best_badge
+                                ),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier

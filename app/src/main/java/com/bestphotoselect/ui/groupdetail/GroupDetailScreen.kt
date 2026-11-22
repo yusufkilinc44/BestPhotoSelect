@@ -121,16 +121,26 @@ fun GroupDetailScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Text(
-                    text = stringResource(R.string.group_tap_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column {
+                    if (g.isScreenshots) {
+                        Text(
+                            text = stringResource(R.string.group_screenshot_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.group_tap_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
                 PhotoCard(
                     scored = scored,
                     isBest = scored.photo.id == g.bestPhotoId,
+                    isScreenshotGroup = g.isScreenshots,
                     onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
                     onSetBest = { viewModel.setBest(scored.photo.id) },
                     onOpenViewer = { viewerIndex = index }
@@ -143,6 +153,7 @@ fun GroupDetailScreen(
             PhotoViewerOverlay(
                 photos = g.photos,
                 bestPhotoId = g.bestPhotoId,
+                isScreenshotGroup = g.isScreenshots,
                 initialIndex = vi,
                 onToggleDeletion = viewModel::toggleDeletion,
                 onSetBest = viewModel::setBest,
@@ -178,6 +189,7 @@ fun GroupDetailScreen(
 private fun PhotoCard(
     scored: ScoredPhoto,
     isBest: Boolean,
+    isScreenshotGroup: Boolean,
     onToggleDeletion: () -> Unit,
     onSetBest: () -> Unit,
     onOpenViewer: () -> Unit
@@ -197,7 +209,13 @@ private fun PhotoCard(
                 if (isBest) {
                     AssistChip(
                         onClick = {},
-                        label = { Text(stringResource(R.string.results_best_badge)) },
+                        label = {
+                            Text(
+                                stringResource(
+                                    if (isScreenshotGroup) R.string.results_newest_badge else R.string.results_best_badge
+                                )
+                            )
+                        },
                         leadingIcon = {
                             Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                         },
@@ -208,7 +226,7 @@ private fun PhotoCard(
                 }
             }
             Column(Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (!isScreenshotGroup) Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(
                             text = stringResource(R.string.group_score, (scored.score * 100).roundToInt()),

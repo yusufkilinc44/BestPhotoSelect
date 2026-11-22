@@ -12,6 +12,7 @@ import com.bestphotoselect.domain.DHash
 import com.bestphotoselect.domain.FaceAnalyzer
 import com.bestphotoselect.domain.PhotoGrouper
 import com.bestphotoselect.domain.QualityScorer
+import com.bestphotoselect.domain.ScreenshotMatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -77,7 +78,10 @@ class ScanEngine @Inject constructor(
                             val h = bmp?.let { b ->
                                 try {
                                     val computed = DHash.compute(b)
-                                    val count = try { faceAnalyzer.countFaces(b) } catch (t: Throwable) { -1 }
+                                    // Ekran görüntülerinde yüz sayısı anlamsız; analiz atlanır.
+                                    val count = if (photo.isScreenshot) -1 else {
+                                        try { faceAnalyzer.countFaces(b) } catch (t: Throwable) { -1 }
+                                    }
                                     synchronized(faceCounts) { faceCounts[photo.id] = count }
                                     computed
                                 } catch (t: Throwable) {
@@ -109,20 +113,23 @@ class ScanEngine @Inject constructor(
         }
         persistCache(newCacheEntries)
 
-        // 2) Gruplama
+        // 2) Gruplama — ekran görüntüleri normal fotoğraflarla asla karışmaz;
+        // ayrı ve çok daha sıkı kurallarla gruplanır (bkz. groupScreenshots).
         onProgress(Progress.Grouping)
+        val photoById = photos.associateBy { it.id }
         val inputs = photos.mapNotNull { p ->
             hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it, faceCounts[p.id] ?: -1) }
         }
+        val (screenshotInputs, photoInputs) = inputs.partition { photoById.getValue(it.id).isScreenshot }
         val idGroups = PhotoGrouper.group(
-            photos = inputs,
+            photos = photoInputs,
             timeWindowMs = settings.timeWindowSec * 1000L,
             maxHammingDistance = settings.hammingThreshold
         )
-        if (idGroups.isEmpty()) return emptyList()
+        val screenshotIdGroups = groupScreenshots(screenshotInputs, photoById, settings.timeWindowSec * 1000L)
+        if (idGroups.isEmpty() && screenshotIdGroups.isEmpty()) return emptyList()
 
-        // 3) Puanlama (yalnızca grup üyeleri)
-        val photoById = photos.associateBy { it.id }
+        // 3) Puanlama (yalnızca normal fotoğraf grubu üyeleri)
         val memberIds = idGroups.flatten()
         val scoreCache = loadCache(memberIds.mapNotNull { photoById[it] })
         val analyses = HashMap<Long, PhotoAnalysis>(memberIds.size)
@@ -157,13 +164,68 @@ class ScanEngine @Inject constructor(
         // 4) En iyiyi seç, grupları kur — kullanıcının kalıcı olarak yoksaydığı
         // (bkz. IgnoredGroupsRepository) gruplar sonuçlara asla girmez.
         val ignoredSignatures = ignoredGroupsRepository.ignoredSignatures()
-        return idGroups.mapIndexedNotNull { index, ids ->
+        val photoGroups = idGroups.mapIndexedNotNull { index, ids ->
             val members = ids.mapNotNull { analyses[it] }
             if (members.size < 2) return@mapIndexedNotNull null
             val memberIds = members.map { it.photo.id }
             if (ignoredGroupsRepository.isIgnored(memberIds, ignoredSignatures)) return@mapIndexedNotNull null
             BestPhotoSelector.buildGroup(groupId = index, members = members, weights = settings.scoringWeights)
-        }.sortedByDescending { it.bytesToFree }
+        }
+        // Grup kimlikleri tekil kalsın diye ekran görüntüsü grupları normal grupların ardından numaralanır.
+        val screenshotGroups = screenshotIdGroups.mapIndexedNotNull { index, ids ->
+            if (ignoredGroupsRepository.isIgnored(ids, ignoredSignatures)) return@mapIndexedNotNull null
+            val members = ids.map { id ->
+                PhotoAnalysis(photoById.getValue(id), hashes.getValue(id), sharpness = 0.0, exposure = 0f, face = null)
+            }
+            BestPhotoSelector.buildNewestKeptGroup(groupId = idGroups.size + index, members = members)
+        }
+        return (photoGroups + screenshotGroups).sortedByDescending { it.bytesToFree }
+    }
+
+    /**
+     * Ekran görüntüleri: önce sıkı bir dHash eşiğiyle aday çiftler bulunur, sonra
+     * her aday çift yüksek çözünürlüklü piksel karşılaştırmasıyla doğrulanır
+     * (bkz. ScreenshotMatcher). Yalnızca neredeyse birebir aynı kopyalar gruplanır.
+     */
+    private suspend fun groupScreenshots(
+        inputs: List<PhotoGrouper.Input>,
+        photoById: Map<Long, PhotoItem>,
+        timeWindowMs: Long
+    ): List<List<Long>> {
+        if (inputs.size < 2) return emptyList()
+        val candidates = PhotoGrouper.group(inputs, timeWindowMs, SCREENSHOT_MAX_HAMMING).flatten().toSet()
+        if (candidates.isEmpty()) return emptyList()
+
+        val signatures = HashMap<Long, ScreenshotMatcher.Signature>(candidates.size)
+        coroutineScope {
+            val semaphore = Semaphore(PARALLELISM)
+            candidates.map { id ->
+                async(Dispatchers.Default) {
+                    semaphore.withPermit {
+                        val bmp = mediaStore.loadThumbnail(photoById.getValue(id).uri, SCREENSHOT_THUMB_SIZE)
+                            ?: return@withPermit
+                        try {
+                            val sig = ScreenshotMatcher.signature(bmp)
+                            synchronized(signatures) { signatures[id] = sig }
+                        } catch (t: Throwable) {
+                            // İmzası çıkarılamayan kare hiçbir grupla eşleşmez.
+                        } finally {
+                            bmp.recycle()
+                        }
+                    }
+                }
+            }.awaitAll()
+        }
+
+        return PhotoGrouper.group(
+            photos = inputs.filter { it.id in candidates },
+            timeWindowMs = timeWindowMs,
+            maxHammingDistance = SCREENSHOT_MAX_HAMMING
+        ) { a, b ->
+            val sa = signatures[a]
+            val sb = signatures[b]
+            sa != null && sb != null && ScreenshotMatcher.isNearDuplicate(sa, sb)
+        }
     }
 
     private suspend fun analyzeQuality(
@@ -236,5 +298,9 @@ class ScanEngine @Inject constructor(
         private const val HASH_THUMB_SIZE = 384
         private const val SCORE_THUMB_SIZE = 640
         private const val SQL_CHUNK = 500
+        // Ekran görüntüleri için ön eleme eşiği (64 bit üzerinden); asıl karar
+        // ScreenshotMatcher'ın piksel karşılaştırmasındadır.
+        private const val SCREENSHOT_MAX_HAMMING = 4
+        private const val SCREENSHOT_THUMB_SIZE = 512
     }
 }

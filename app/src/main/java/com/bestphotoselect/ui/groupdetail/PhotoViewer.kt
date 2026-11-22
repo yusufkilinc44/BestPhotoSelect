@@ -60,6 +60,7 @@ private const val DOUBLE_TAP_SCALE = 2.5f
 fun PhotoViewerOverlay(
     photos: List<ScoredPhoto>,
     bestPhotoId: Long?,
+    isScreenshotGroup: Boolean,
     initialIndex: Int,
     onToggleDeletion: (Long) -> Unit,
     onSetBest: (Long) -> Unit,
@@ -118,6 +119,7 @@ fun PhotoViewerOverlay(
             ViewerBottomBar(
                 scored = current,
                 isBest = isBest,
+                isScreenshotGroup = isScreenshotGroup,
                 onSetBest = { onSetBest(current.photo.id) },
                 onToggleDeletion = { onToggleDeletion(current.photo.id) },
                 modifier = Modifier
@@ -133,6 +135,7 @@ fun PhotoViewerOverlay(
 private fun ViewerBottomBar(
     scored: ScoredPhoto,
     isBest: Boolean,
+    isScreenshotGroup: Boolean,
     onSetBest: () -> Unit,
     onToggleDeletion: () -> Unit,
     modifier: Modifier = Modifier
@@ -143,7 +146,17 @@ private fun ViewerBottomBar(
             modifier = Modifier.fillMaxWidth()
         ) {
             StatusChip(
-                text = stringResource(R.string.group_score, (scored.score * 100).roundToInt())
+                text = if (isScreenshotGroup) {
+                    stringResource(
+                        when {
+                            scored.markedForDeletion -> R.string.viewer_will_delete
+                            isBest -> R.string.results_newest_badge
+                            else -> R.string.group_keep
+                        }
+                    )
+                } else {
+                    stringResource(R.string.group_score, (scored.score * 100).roundToInt())
+                }
             )
             scored.analysis.face?.let { face ->
                 Spacer(Modifier.width(6.dp))

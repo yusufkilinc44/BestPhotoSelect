@@ -149,4 +149,12 @@
     <string name="notif_autopilot_done_text">%1$d fotoğraf temizlendi, %2$s yer açıldı</string>
     <string name="notif_autopilot_pending_title">Onayınız gerekiyor</string>
     <string name="notif_autopilot_pending_text">%1$d fotoğraf silinmeye hazır. Onaylamak için dokunun.</string>
+
+    <!-- Ekran görüntüleri -->
+    <string name="albums_screenshot_badge">📱 Ekran görüntüsü · yalnızca birebir kopyalar</string>
+    <string name="results_screenshot_group_title">📱 %1$d aynı ekran görüntüsü</string>
+    <string name="results_newest_badge">EN YENİ</string>
+    <string name="group_screenshot_hint">📱 Bunlar neredeyse birebir aynı ekran görüntüleri: en yenisi korunur, diğerleri silinmeye işaretlidir.</string>
+    <string name="about_screenshots_title">📱 Ekran Görüntüleri</string>
+    <string name="about_screenshots_body">• Klasör adı/yolu (Screenshots, Ekran görüntüleri…) ya da dosya adı (Screenshot_…) ile otomatik tanınır\n• Normal fotoğraflarla asla aynı gruba konmaz\n• Aynı uygulamanın farklı ekranları kaba parmak izinde benzer görünebildiğinden çok sıkı kurallar uygulanır: önce 64 bit üzerinden en fazla 4 bit fark, ardından durum ve gezinme çubukları hariç 48×96 gri tonlamalı piksel karşılaştırması (piksellerin en fazla %0,3\'ü belirgin farklı olabilir)\n• Yüz/netlik puanı kullanılmaz; her grupta en yeni kopya korunur</string>
 </resources>
