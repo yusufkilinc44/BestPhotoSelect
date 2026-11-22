@@ -89,10 +89,18 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
+          set -o pipefail
           SRC=app/build/outputs/apk/release/app-release.apk
           APK="$RUNNER_TEMP/BestPhotoSelect-v${VERSION}.apk"
           cp "$SRC" "$APK"
-          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          # Projeyle aynı build-tools sürümü tercih edilir; runner'daki en yeni
+          # sürümün çıktı biçimi ya da Java gereksinimi farklı olabilir.
+          if [ -d "$ANDROID_HOME/build-tools/35.0.0" ]; then
+            BT="$ANDROID_HOME/build-tools/35.0.0"
+          else
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          fi
+          echo "build-tools: $BT"
 
           BADGING=$("$BT/aapt2" dump badging "$APK" | head -1)
           echo "$BADGING"
@@ -103,7 +111,15 @@ jobs:
           echo "ABI'ler: $ABIS"
           [ "$ABIS" = "arm64-v8a armeabi-v7a " ] || { echo "::error::Beklenmeyen ABI'ler: $ABIS"; exit 1; }
 
-          CERT=$("$BT/apksigner" verify --print-certs "$APK" | sed -nE 's/^Signer #1 certificate SHA-256 digest: //p')
+          # Tam çıktı (hatalar dahil) kayda yazılır; araç hata verirse adım o hatayla durur.
+          SIGNER_OUT=$("$BT/apksigner" verify --verbose --print-certs "$APK" 2>&1) || {
+            echo "$SIGNER_OUT"
+            echo "::error::apksigner doğrulaması başarısız"
+            exit 1
+          }
+          echo "$SIGNER_OUT"
+          CERT=$(echo "$SIGNER_OUT" | grep -oiE 'certificate SHA-256 digest: *[0-9a-f:]{64,95}' | head -1 \
+            | sed -E 's/.*digest: *//' | tr -d ':' | tr 'A-F' 'a-f')
           echo "İmza SHA-256: $CERT"
           [ "$CERT" = "$EXPECTED_CERT_SHA256" ] || { echo "::error::İmza parmak izi beklenenle eşleşmiyor"; exit 1; }
 
@@ -130,3 +146,22 @@ jobs:
 
             - Desteklenen ABI'ler: arm64-v8a, armeabi-v7a
             - İmza SHA-256: ${{ env.EXPECTED_CERT_SHA256 }}
+
+      # Telefona ntfy bildirimi: dokununca APK doğrudan indirilir. Repo herkese
+      # açık olduğundan link GitHub girişi gerektirmez. ntfy konuları da herkese
+      # açıktır; bu yüzden mesajda yalnızca zaten açık olan bilgiler yer alır.
+      - name: ntfy bildirimi gönder
+        if: ${{ !inputs.dry_run }}
+        env:
+          VERSION: ${{ inputs.version }}
+          NTFY_TOPIC: yusufkilinc-bestphotoselect
+        run: |
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/BestPhotoSelect-v${VERSION}.apk"
+          jq -n --arg topic "$NTFY_TOPIC" --arg v "$VERSION" --arg url "$URL" '{
+            topic: $topic,
+            title: ("BestPhotoSelect v" + $v + " hazır"),
+            message: ("Yeni sürüm yayınlandı. İndirmek için dokunun:\n" + $url),
+            tags: ["package"],
+            click: $url,
+            actions: [{action: "view", label: "APK indir", url: $url}]
+          }' | curl -sS --fail --retry 3 -H "Content-Type: application/json" -d @- https://ntfy.sh/
