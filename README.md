@@ -101,9 +101,7 @@ Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScor
 
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
 imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
-Yeni sürümde APK `releases/BestPhotoSelect-v<sürüm>.apk` olarak eklenir, eskisi
-silinir (yalnızca son sürüm tutulur), ardından Actions sekmesindeki **Release**
-workflow'u sürüm numarasıyla çalıştırılarak APK GitHub Release'e eklenir.
+APK'lar repoda tutulmaz; yalnızca GitHub Releases üzerinden dağıtılır.
 README'deki indirme bağlantısı her zaman en son Release'i açar; yalnızca
 "güncel sürüm" satırı ve sürüm notları güncellenir.
 
