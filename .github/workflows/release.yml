@@ -147,47 +147,35 @@ jobs:
             - Desteklenen ABI'ler: arm64-v8a, armeabi-v7a
             - İmza SHA-256: ${{ env.EXPECTED_CERT_SHA256 }}
 
-      # Google Drive "Android Apps/Best Photo Select" klasörüne yalnızca son APK
-      # kalır: yenisi yüklenir, eski BestPhotoSelect-v*.apk'ler çöp kutusuna
-      # taşınır (30 gün geri alınabilir). Erişim anahtarı GDRIVE_RCLONE_TOKEN
-      # secret'ındadır (`rclone authorize "drive"` çıktısı); yoksa adım atlanır.
-      - name: Google Drive'a kopyala (eskileri sil)
-        if: ${{ !inputs.dry_run }}
-        env:
-          VERSION: ${{ inputs.version }}
-          RCLONE_CONFIG_GDRIVE_TYPE: drive
-          RCLONE_CONFIG_GDRIVE_SCOPE: drive
-          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_RCLONE_TOKEN }}
-          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: 1luREERbEFqP5Of5N8P5y303LsyrQv7K7
-        run: |
-          set -o pipefail
-          if [ -z "$RCLONE_CONFIG_GDRIVE_TOKEN" ]; then
-            echo "::warning::GDRIVE_RCLONE_TOKEN secret'ı tanımlı değil; Drive kopyalama atlandı."
-            exit 0
-          fi
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rclone
-          NAME="BestPhotoSelect-v${VERSION}.apk"
-          rclone copyto "$APK_PATH" "gdrive:$NAME"
-          rclone delete gdrive: --max-depth 1 \
-            --filter "- $NAME" --filter "+ BestPhotoSelect-v*.apk" --filter "- *"
-          echo "Drive klasörü:"
-          rclone lsl gdrive: --max-depth 1
-
       # Telefona ntfy bildirimi: dokununca APK doğrudan indirilir. Repo herkese
       # açık olduğundan link GitHub girişi gerektirmez. ntfy konuları da herkese
       # açıktır; bu yüzden mesajda yalnızca zaten açık olan bilgiler yer alır.
+      # Deneme çalıştırmasında "[DENEME]" başlıklı bildirim, en son yayınlanmış
+      # APK'nın linkiyle gönderilir (hiçbir şey yayınlanmaz).
       - name: ntfy bildirimi gönder
-        if: ${{ !inputs.dry_run }}
         env:
           VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
           NTFY_TOPIC: yusufkilinc-bestphotoselect
+          GH_TOKEN: ${{ github.token }}
         run: |
-          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/BestPhotoSelect-v${VERSION}.apk"
-          jq -n --arg topic "$NTFY_TOPIC" --arg v "$VERSION" --arg url "$URL" '{
+          set -o pipefail
+          if [ "$DRY_RUN" = "true" ]; then
+            URL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" \
+              --jq '[.assets[] | select(.name | endswith(".apk"))][0].browser_download_url // empty')
+            [ -n "$URL" ] || { echo "::error::Yayınlanmış bir APK bulunamadı"; exit 1; }
+            TITLE="[DENEME] BestPhotoSelect bildirim testi"
+            INTRO="Deneme bildirimi: v${VERSION} derlemesi doğrulandı, yayınlanmadı. Son yayınlanmış APK:"
+          else
+            URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/BestPhotoSelect-v${VERSION}.apk"
+            TITLE="BestPhotoSelect v${VERSION} hazır"
+            INTRO="Yeni sürüm yayınlandı. İndirmek için dokunun:"
+          fi
+          echo "Link: $URL"
+          jq -n --arg topic "$NTFY_TOPIC" --arg title "$TITLE" --arg intro "$INTRO" --arg url "$URL" '{
             topic: $topic,
-            title: ("BestPhotoSelect v" + $v + " hazır"),
-            message: ("Yeni sürüm yayınlandı. İndirmek için dokunun:\n" + $url),
+            title: $title,
+            message: ($intro + "\n" + $url),
             tags: ["package"],
             click: $url,
             actions: [{action: "view", label: "APK indir", url: $url}]
