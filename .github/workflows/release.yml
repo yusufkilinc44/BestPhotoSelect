@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Sürüm (örn. 2.1.1) — releases/BestPhotoSelect-v<sürüm>.apk release'e eklenir"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: APK var mı kontrol et
+        run: test -f "releases/BestPhotoSelect-v${{ inputs.version }}.apk"
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          name: BestPhotoSelect v${{ inputs.version }}
+          target_commitish: ${{ github.sha }}
+          files: releases/BestPhotoSelect-v${{ inputs.version }}.apk
+          body: |
+            BestPhotoSelect v${{ inputs.version }} imzalı release APK'sı.
+
+            - Desteklenen ABI'ler: arm64-v8a, armeabi-v7a
+            - İmza SHA-256: 1057c59f03a81012e7d916bf9ffadc36e743c8531cb04dd96b334641cc6be66e
