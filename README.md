@@ -74,6 +74,38 @@ eski sürümün ayarları, yoksayılan grupları ve geçmişi ilk açılışta o
 taşınır. Kurulabilir APK'yı `releases/BestPhotoSelect-v<sürüm>.apk` olarak
 eklemeniz yeterli (yalnızca son sürüm tutulur).
 
+## Sürüm notları
+
+### v2.1.0 (versionCode 19)
+- **Ekran görüntüsü tanıma:** klasör yolu (Screenshots, DCIM/Screenshots,
+  Ekran görüntüleri…) ya da dosya adından (`Screenshot_…`) otomatik tanınır;
+  normal fotoğraflarla asla aynı gruba konmaz.
+- **Sıkı eşleştirme:** dHash yalnızca ön eleme yapar; adaylar durum/gezinme
+  çubukları hariç piksel düzeyinde doğrulanır. Yalnızca saat veya sıkıştırma
+  farkı olan kopyalar gruplanır, içeriği farklı ekranlar gruplanmaz.
+- Ekran görüntüsü gruplarında kalite puanı yerine **en yeni kopya korunur**.
+- Albümler, sonuçlar, grup detayı ve tam ekranda ekran görüntüsü grupları
+  ayrıca işaretlenir; "Nasıl çalışır?" ekranına ilgili bölüm eklendi.
+
+### v2.0.1 (versionCode 18)
+- APK'dan emülatöre özel x86/x86_64 kütüphaneleri çıkarıldı; yalnızca
+  arm64-v8a ve armeabi-v7a paketleniyor (daha küçük APK).
+
+### v2.0.0 (versionCode 17)
+- Lite sürüm kaldırıldı: **tek uygulama, tek sürüm** (Jetpack Compose).
+- Lite'taki tüm özellikler taşındı: grup içi tam ekran karşılaştırma,
+  kalıcı "Bir daha gösterme", ayarlanabilir "en iyi" ağırlıkları,
+  "Nasıl çalışır?" ekranı, manuel silmede de sessiz mod (`MANAGE_MEDIA`).
+- Aynı imza anahtarı: lite sürümün üzerine güncelleme olarak kurulur;
+  ayarlar, yoksayılan gruplar ve geçmiş ilk açılışta otomatik taşınır.
+- Tam ekran görüntüleyicide kaydırma ile zoom çakışması düzeltildi.
+
+### v1.x (lite sürüm, arşiv)
+v1.0–v1.10 arasında yüz analizi ile gruplama, konuşma anındaki açık ağız
+tespiti, renkli tema, WCAG kontrast düzeltmeleri, "Nasıl çalışır?" ekranı ve
+yoksayılan grupların kalıcı hale getirilmesi gibi özellikler eklendi. Bu
+sürümler artık dağıtılmıyor.
+
 ## Yol haritası
 
 - [x] Grup içi tam ekran karşılaştırma (yan yana kaydırma)
