@@ -28,11 +28,15 @@ android {
 
     // Eski lite APK'larla aynı anahtar: telefondaki kurulumun üzerine güncellenir.
     signingConfigs {
+        // CI (Release workflow) anahtarı GitHub Secrets'tan ortam değişkenleriyle
+        // verir; tanımlı değilse yerel derleme için repodaki keystore kullanılır.
+        fun env(name: String) = System.getenv(name)?.takeIf { it.isNotBlank() }
         create("release") {
-            storeFile = rootProject.file("keystore/bestphoto.keystore")
-            storePassword = "bestphoto"
-            keyAlias = "bestphotoselect"
-            keyPassword = "bestphoto"
+            storeFile = env("BESTPHOTO_KEYSTORE_PATH")?.let { file(it) }
+                ?: rootProject.file("keystore/bestphoto.keystore")
+            storePassword = env("BESTPHOTO_KEYSTORE_PASSWORD") ?: "bestphoto"
+            keyAlias = env("BESTPHOTO_KEY_ALIAS") ?: "bestphotoselect"
+            keyPassword = env("BESTPHOTO_KEY_PASSWORD") ?: "bestphoto"
         }
     }
 

@@ -102,8 +102,20 @@ Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScor
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
 imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
 APK'lar repoda tutulmaz; yalnızca GitHub Releases üzerinden dağıtılır.
-README'deki indirme bağlantısı her zaman en son Release'i açar; yalnızca
-"güncel sürüm" satırı ve sürüm notları güncellenir.
+
+**Yeni sürüm yayınlama:**
+1. `app/build.gradle.kts` içinde `versionCode` ve `versionName`'i artırın, push edin.
+2. GitHub → Actions → **Release** → *Run workflow*, sürüm numarasını girin
+   (önce denemek için *dry_run* işaretlenebilir; APK yalnızca artifact olarak yüklenir).
+3. Workflow birim testlerini çalıştırır, APK'yı derleyip imzalar; paket adı, sürüm,
+   ABI'ler ve imza parmak izi beklenenle eşleşmezse Release oluşturmaz.
+4. README'deki "güncel sürüm" satırını ve sürüm notlarını güncelleyin
+   (indirme bağlantısı her zaman en son Release'i açar).
+
+İmza anahtarı GitHub Secrets'tan okunur (`BESTPHOTO_KEYSTORE_BASE64`,
+`BESTPHOTO_KEYSTORE_PASSWORD`, `BESTPHOTO_KEY_ALIAS`, `BESTPHOTO_KEY_PASSWORD`);
+tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel derlemede
+aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
 
