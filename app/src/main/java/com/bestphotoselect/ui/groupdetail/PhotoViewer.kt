@@ -1,9 +1,11 @@
 package com.bestphotoselect.ui.groupdetail
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -34,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -62,10 +65,7 @@ fun PhotoViewerOverlay(
     onSetBest: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
-    if (photos.isEmpty()) {
-        onDismiss()
-        return
-    }
+    if (photos.isEmpty()) return
     val startPage = initialIndex.coerceIn(0, photos.size - 1)
     val pagerState = rememberPagerState(initialPage = startPage) { photos.size }
     var pagerScrollEnabled by remember { mutableStateOf(true) }
@@ -74,7 +74,6 @@ fun PhotoViewerOverlay(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        BackHandler(onBack = onDismiss)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -210,13 +209,24 @@ private fun ZoomableImage(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            // Yalnızca iki parmakla ya da zaten yakınlaştırılmışken tüketilir;
+            // tek parmakla yatay kaydırma pager'a kalır (fotoğraflar arası geçiş).
             .pointerInput(scored.photo.id) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    applyScale(scale * zoom)
-                    if (scale > MIN_SCALE) {
-                        offsetX += pan.x
-                        offsetY += pan.y
-                    }
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false)
+                    do {
+                        val event = awaitPointerEvent()
+                        val multiTouch = event.changes.count { it.pressed } > 1
+                        if (multiTouch || scale > MIN_SCALE) {
+                            applyScale(scale * event.calculateZoom())
+                            if (scale > MIN_SCALE) {
+                                val pan = event.calculatePan()
+                                offsetX += pan.x
+                                offsetY += pan.y
+                            }
+                            event.changes.forEach { if (it.positionChanged()) it.consume() }
+                        }
+                    } while (event.changes.any { it.pressed })
                 }
             }
             .pointerInput(scored.photo.id) {

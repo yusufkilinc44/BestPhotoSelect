@@ -127,7 +127,7 @@ fun GroupDetailScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            itemsIndexed(g.photos, key = { _, it -> it.photo.id }) { index, scored ->
+            itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
                 PhotoCard(
                     scored = scored,
                     isBest = scored.photo.id == g.bestPhotoId,
