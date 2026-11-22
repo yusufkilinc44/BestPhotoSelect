@@ -9,12 +9,13 @@ internet bağlantısı gerekmez.
 
 ## İndir
 
-📥 **[BestPhotoSelect v2.1.1 APK'sını indir](https://github.com/yusufkilinc44/BestPhotoSelect/raw/claude/android-photo-dedup-yfscf8/releases/BestPhotoSelect-v2.1.1.apk)**
-(Android 11+, ARM; [`releases/BestPhotoSelect-v2.1.1.apk`](releases/BestPhotoSelect-v2.1.1.apk))
+📥 **[En son sürümü indir (GitHub Releases)](https://github.com/yusufkilinc44/BestPhotoSelect/releases/latest)**
+— güncel sürüm: [v2.1.1](https://github.com/yusufkilinc44/BestPhotoSelect/releases/tag/v2.1.1)
+(Android 11+, ARM). Sayfadaki **Assets** bölümünden `BestPhotoSelect-v2.1.1.apk` dosyasını indirin.
 
 ## Kurulum
 
-1. Yukarıdaki bağlantıdan APK'yı telefona indirin.
+1. Yukarıdaki Release sayfasından APK'yı telefona indirin.
 2. Gerekirse tarayıcınıza/dosya yöneticinize "bilinmeyen kaynaklardan yükleme" izni verin.
 3. APK'yı açıp kurun. Eski bir BestPhotoSelect (lite dahil) kuruluysa üzerine
    güncellenir; ayarlar, yoksayılan gruplar ve geçmiş korunur.
@@ -101,9 +102,10 @@ Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScor
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
 imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
 Yeni sürümde APK `releases/BestPhotoSelect-v<sürüm>.apk` olarak eklenir, eskisi
-silinir (yalnızca son sürüm tutulur) ve bu README'deki indirme bağlantısı ile
-sürüm notları güncellenir. İsteğe bağlı olarak Actions sekmesindeki **Release**
-workflow'u sürüm numarasıyla çalıştırılarak aynı APK GitHub Release'e eklenir.
+silinir (yalnızca son sürüm tutulur), ardından Actions sekmesindeki **Release**
+workflow'u sürüm numarasıyla çalıştırılarak APK GitHub Release'e eklenir.
+README'deki indirme bağlantısı her zaman en son Release'i açar; yalnızca
+"güncel sürüm" satırı ve sürüm notları güncellenir.
 
 ## Sürüm notları
 
