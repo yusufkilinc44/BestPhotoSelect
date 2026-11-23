@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.groupdetail
 
+import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -7,8 +8,8 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -70,6 +72,7 @@ fun PhotoViewerOverlay(
     val startPage = initialIndex.coerceIn(0, photos.size - 1)
     val pagerState = rememberPagerState(initialPage = startPage) { photos.size }
     var pagerScrollEnabled by remember { mutableStateOf(true) }
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     // Ayrı bir Dialog penceresi sistem çubuğu boşluklarını her cihazda iletmiyordu;
     // görüntüleyici ana pencerede tüm ekranı kaplayan bir katman olarak çizilir ve
@@ -124,6 +127,7 @@ fun PhotoViewerOverlay(
             scored = current,
             isBest = isBest,
             isScreenshotGroup = isScreenshotGroup,
+            isLandscape = isLandscape,
             onSetBest = { onSetBest(current.photo.id) },
             onToggleDeletion = { onToggleDeletion(current.photo.id) },
             modifier = Modifier
@@ -131,7 +135,7 @@ fun PhotoViewerOverlay(
                 .fillMaxWidth()
                 .background(Color(0x99000000))
                 .safeDrawingPadding()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = if (isLandscape) 4.dp else 12.dp)
         )
     }
 }
@@ -141,59 +145,72 @@ private fun ViewerBottomBar(
     scored: ScoredPhoto,
     isBest: Boolean,
     isScreenshotGroup: Boolean,
+    isLandscape: Boolean,
     onSetBest: () -> Unit,
     onToggleDeletion: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            StatusChip(
-                text = if (isScreenshotGroup) {
-                    stringResource(
-                        when {
-                            scored.markedForDeletion -> R.string.viewer_will_delete
-                            isBest -> R.string.results_newest_badge
-                            else -> R.string.group_keep
-                        }
-                    )
-                } else {
-                    stringResource(R.string.group_score, (scored.score * 100).roundToInt())
+    // Yatayda yükseklik kıymetli: bilgi ve tuşlar tek satırda, fotoğraf alanı büyük kalır.
+    if (isLandscape) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+            ViewerChips(scored, isBest, isScreenshotGroup)
+            Spacer(Modifier.weight(1f))
+            ViewerActions(scored, isBest, onSetBest, onToggleDeletion)
+        }
+    } else {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+            Row { ViewerChips(scored, isBest, isScreenshotGroup) }
+            Row { ViewerActions(scored, isBest, onSetBest, onToggleDeletion) }
+        }
+    }
+}
+
+@Composable
+private fun ViewerChips(scored: ScoredPhoto, isBest: Boolean, isScreenshotGroup: Boolean) {
+    StatusChip(
+        text = if (isScreenshotGroup) {
+            stringResource(
+                when {
+                    scored.markedForDeletion -> R.string.viewer_will_delete
+                    isBest -> R.string.results_newest_badge
+                    else -> R.string.group_keep
                 }
             )
-            scored.analysis.face?.let { face ->
-                Spacer(Modifier.width(6.dp))
-                StatusChip(text = "👁 ${(face.eyesOpen * 100).roundToInt()}%")
-            }
+        } else {
+            stringResource(R.string.group_score, (scored.score * 100).roundToInt())
         }
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 40.dp)
-        ) {
-            if (!isBest) {
-                TextButton(onClick = onSetBest) {
-                    Text(stringResource(R.string.viewer_make_best), color = Color.White)
-                }
-            }
-            TextButton(onClick = onToggleDeletion) {
-                Text(
-                    text = if (scored.markedForDeletion) {
-                        stringResource(R.string.viewer_unmark_delete)
-                    } else {
-                        stringResource(R.string.viewer_mark_delete)
-                    },
-                    color = if (scored.markedForDeletion) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        Color.White
-                    }
-                )
-            }
+    )
+    scored.analysis.face?.let { face ->
+        Spacer(Modifier.width(6.dp))
+        StatusChip(text = "👁 ${(face.eyesOpen * 100).roundToInt()}%")
+    }
+}
+
+@Composable
+private fun ViewerActions(
+    scored: ScoredPhoto,
+    isBest: Boolean,
+    onSetBest: () -> Unit,
+    onToggleDeletion: () -> Unit
+) {
+    if (!isBest) {
+        TextButton(onClick = onSetBest) {
+            Text(stringResource(R.string.viewer_make_best), color = Color.White)
         }
+    }
+    TextButton(onClick = onToggleDeletion) {
+        Text(
+            text = if (scored.markedForDeletion) {
+                stringResource(R.string.viewer_unmark_delete)
+            } else {
+                stringResource(R.string.viewer_mark_delete)
+            },
+            color = if (scored.markedForDeletion) {
+                MaterialTheme.colorScheme.error
+            } else {
+                Color.White
+            }
+        )
     }
 }
 

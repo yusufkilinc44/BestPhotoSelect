@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.2.4, versionCode 25). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.3.0, versionCode 26). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,17 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.3.0 (versionCode 26)
+- **Yatay mod için yeni grup ekranı:** başlık ve açıklama yazıları kalkar; fotoğraflar
+  ekran yüksekliğinin tamamını kullanır, kırpılmadan gösterilir ve yan yana
+  kaydırılır (bir sonrakinin kenarı görünür, kaydırınca ortaya oturur). Her fotoğrafın
+  sil/koru, puan ve "en iyi" kontrolleri üst kenarında yarı saydam şeritte; silinecek
+  kareler kırmızı çerçeveli. Grubun genel tuşları (← önceki · bir daha gösterme ·
+  işaretlileri sil · sonraki →) fotoğrafların üstünde yüzen tek bir kapsülde.
+- Tam ekran görüntüleyicide yatayda bilgi ve tuşlar tek satıra iner.
+- Telefon çevrildiğinde açık olan tam ekran görüntüleyici kapanmaz.
+- Dikey mod değişmedi.
 
 ### v2.2.4 (versionCode 25)
 - Tam ekran görüntüleyicinin alt tuşları v2.2.2 düzeltmesine rağmen gezinme

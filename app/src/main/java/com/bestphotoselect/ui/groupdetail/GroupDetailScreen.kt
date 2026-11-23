@@ -2,6 +2,7 @@ package com.bestphotoselect.ui.groupdetail
 
 import android.app.Activity
 import android.app.PendingIntent
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import com.bestphotoselect.data.DeletionRepository
 import com.bestphotoselect.data.SettingsRepository
@@ -57,6 +59,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -216,7 +219,8 @@ fun GroupDetailScreen(
     val group by viewModel.group.collectAsState()
     val trashMode by viewModel.trashMode.collectAsState()
     val deleting by viewModel.deleting.collectAsState()
-    var viewerIndex by remember { mutableStateOf<Int?>(null) }
+    // Telefon çevrilince tam ekran görüntüleyici açık kalsın.
+    var viewerIndex by rememberSaveable { mutableStateOf<Int?>(null) }
     var showIgnoreConfirm by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -255,75 +259,96 @@ fun GroupDetailScreen(
         }
     }
 
-    // Tam ekran görüntüleyici Scaffold'un dışında, tüm ekranın üstünde çizilir.
+    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // Tam ekran görüntüleyici ve onay pencereleri her iki düzende de tüm ekranın üstünde çizilir.
     Box(Modifier.fillMaxSize()) {
-        Scaffold(
-            bottomBar = {
-                val g = group
-                if (g != null) {
-                    GroupBottomBar(
-                        markedCount = g.deletionCandidates.size,
-                        markedBytes = g.bytesToFree,
-                        hasOtherGroups = viewModel.nextGroupId() != null,
-                        deleting = deleting,
-                        onDelete = { showDeleteConfirm = true },
-                        onPrevious = viewModel::goToPreviousGroup,
-                        onNext = viewModel::goToNextGroup
+        val current = group
+        if (isLandscape && current != null) {
+            LandscapeGroupContent(
+                group = current,
+                hasOtherGroups = viewModel.nextGroupId() != null,
+                deleting = deleting,
+                onToggleDeletion = viewModel::toggleDeletion,
+                onSetBest = viewModel::setBest,
+                onOpenViewer = { viewerIndex = it },
+                onDelete = { showDeleteConfirm = true },
+                onIgnore = { showIgnoreConfirm = true },
+                onPrevious = viewModel::goToPreviousGroup,
+                onNext = viewModel::goToNextGroup
+            )
+        } else {
+            Scaffold(
+                bottomBar = {
+                    val g = group
+                    if (g != null) {
+                        GroupBottomBar(
+                            markedCount = g.deletionCandidates.size,
+                            markedBytes = g.bytesToFree,
+                            hasOtherGroups = viewModel.nextGroupId() != null,
+                            deleting = deleting,
+                            onDelete = { showDeleteConfirm = true },
+                            onPrevious = viewModel::goToPreviousGroup,
+                            onNext = viewModel::goToNextGroup
+                        )
+                    }
+                },
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(R.string.group_title)) },
+                        navigationIcon = {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                            }
+                        },
+                        actions = {
+                            TextButton(onClick = { showIgnoreConfirm = true }) {
+                                Text(stringResource(R.string.group_skip))
+                            }
+                        }
                     )
                 }
-            },
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(R.string.group_title)) },
-                    navigationIcon = {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                        }
-                    },
-                    actions = {
-                        TextButton(onClick = { showIgnoreConfirm = true }) {
-                            Text(stringResource(R.string.group_skip))
-                        }
-                    }
-                )
-            }
-        ) { padding ->
-            val g = group ?: return@Scaffold
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    Column {
-                        if (g.isScreenshots) {
+            ) { padding ->
+                val g = group ?: return@Scaffold
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        Column {
+                            if (g.isScreenshots) {
+                                Text(
+                                    text = stringResource(R.string.group_screenshot_hint),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(bottom = 4.dp)
+                                )
+                            }
                             Text(
-                                text = stringResource(R.string.group_screenshot_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 4.dp)
+                                text = stringResource(R.string.group_tap_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Text(
-                            text = stringResource(R.string.group_tap_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
+                        PhotoCard(
+                            scored = scored,
+                            isBest = scored.photo.id == g.bestPhotoId,
+                            isScreenshotGroup = g.isScreenshots,
+                            onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
+                            onSetBest = { viewModel.setBest(scored.photo.id) },
+                            onOpenViewer = { viewerIndex = index }
                         )
                     }
                 }
-                itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
-                    PhotoCard(
-                        scored = scored,
-                        isBest = scored.photo.id == g.bestPhotoId,
-                        isScreenshotGroup = g.isScreenshots,
-                        onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
-                        onSetBest = { viewModel.setBest(scored.photo.id) },
-                        onOpenViewer = { viewerIndex = index }
-                    )
-                }
             }
+        }
 
+        val g = group
+        if (g != null) {
             if (showIgnoreConfirm) {
                 AlertDialog(
                     onDismissRequest = { showIgnoreConfirm = false },
@@ -389,13 +414,12 @@ fun GroupDetailScreen(
             }
         }
 
-        val viewerGroup = group
         val vi = viewerIndex
-        if (viewerGroup != null && vi != null) {
+        if (g != null && vi != null) {
             PhotoViewerOverlay(
-                photos = viewerGroup.photos,
-                bestPhotoId = viewerGroup.bestPhotoId,
-                isScreenshotGroup = viewerGroup.isScreenshots,
+                photos = g.photos,
+                bestPhotoId = g.bestPhotoId,
+                isScreenshotGroup = g.isScreenshots,
                 initialIndex = vi,
                 onToggleDeletion = viewModel::toggleDeletion,
                 onSetBest = viewModel::setBest,
