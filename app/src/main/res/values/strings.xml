@@ -157,4 +157,10 @@
     <string name="group_screenshot_hint">📱 Bunlar neredeyse birebir aynı ekran görüntüleri: en yenisi korunur, diğerleri silinmeye işaretlidir.</string>
     <string name="about_screenshots_title">📱 Ekran Görüntüleri</string>
     <string name="about_screenshots_body">• Klasör adı/yolu (Screenshots, Ekran görüntüleri…) ya da dosya adı (Screenshot_…) ile otomatik tanınır\n• Normal fotoğraflarla asla aynı gruba konmaz\n• Aynı uygulamanın farklı ekranları kaba parmak izinde benzer görünebildiğinden çok sıkı kurallar uygulanır: önce 64 bit üzerinden en fazla 4 bit fark, ardından durum ve gezinme çubukları hariç 48×96 gri tonlamalı piksel karşılaştırması (piksellerin en fazla %0,3\'ü belirgin farklı olabilir)\n• Yüz/netlik puanı kullanılmaz; her grupta en yeni kopya korunur</string>
+
+    <!-- Grup bazında silme -->
+    <string name="group_delete_marked_now">🗑 İşaretlileri sil (%1$d · %2$s)</string>
+    <string name="group_delete_confirm_message">Bu gruptaki %1$d fotoğraf silinecek (%2$s yer açılacak). Ardından sıradaki gruba geçilecek.</string>
+    <string name="group_next">Sonraki grup →</string>
+    <string name="group_deleting">Siliniyor…</string>
 </resources>

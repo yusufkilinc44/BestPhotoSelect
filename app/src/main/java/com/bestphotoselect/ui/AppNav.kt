@@ -45,7 +45,16 @@ fun AppNav() {
             "group/{groupId}",
             arguments = listOf(navArgument("groupId") { type = NavType.IntType })
         ) {
-            GroupDetailScreen(onBack = { nav.popBackStack() })
+            GroupDetailScreen(
+                onBack = { nav.popBackStack() },
+                // Sıradaki gruba geçerken mevcut grup yığından çıkarılır: geri
+                // tuşu gezilen tüm grupları tek tek değil, doğrudan sonuçları açar.
+                onOpenGroup = { nextId ->
+                    nav.navigate("group/$nextId") {
+                        popUpTo("group/{groupId}") { inclusive = true }
+                    }
+                }
+            )
         }
         composable("settings") {
             SettingsScreen(

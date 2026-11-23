@@ -42,7 +42,9 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
   fotoğraflarla karışmaz; yalnızca neredeyse birebir aynı kopyalar (sıkı piksel
   karşılaştırması) gruplanır ve en yeni kopya korunur.
 - **İnceleme ve onay** — grupları tek tek inceleyebilir, "en iyi"yi elle değiştirebilir,
-  silinecekleri işaretleyebilir/çıkarabilirsiniz. Silme, tek bir sistem onayıyla toplu yapılır.
+  silinecekleri işaretleyebilir/çıkarabilirsiniz. İster sonuçlar ekranından tümünü tek
+  seferde, ister grup ekranındaki **"İşaretlileri sil"** tuşuyla yalnızca o grubu silip
+  otomatik olarak sıradaki gruba geçerek teker teker temizleyebilirsiniz.
 - **Tam ekran karşılaştırma** — grup içinde yan yana kaydırma, pinch/çift dokunuş zoom;
   tam ekrandan "en iyi yap" / "sil işaretle".
 - **Bir daha gösterme** — yoksayılan gruplar sonraki taramalarda (otomatik pilot dahil)
@@ -84,7 +86,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.1.1, versionCode 20). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.2.0, versionCode 21). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -118,6 +120,13 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.2.0 (versionCode 21)
+- **Grup bazında silme:** grup ekranında "İşaretlileri sil" tuşu yalnızca o gruptaki
+  işaretli fotoğrafları siler (Medya yönetimi izni varsa sistem onayı sorulmaz) ve
+  otomatik olarak sıradaki gruba geçer; son gruptan sonra sonuçlara dönülür.
+- **Sonraki grup →** tuşuyla silmeden geçilebilir; "Bir daha gösterme" de artık
+  sıradaki gruba geçirir. Geri tuşu doğrudan sonuçlar ekranını açar.
 
 ### v2.1.1 (versionCode 20)
 - Yeniden imzalanmış bakım sürümü; uygulama davranışında değişiklik yok.

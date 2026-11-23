@@ -1,5 +1,27 @@
 package com.bestphotoselect.ui.groupdetail
 
+import android.app.Activity
+import android.app.PendingIntent
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.ui.platform.LocalContext
+import com.bestphotoselect.data.DeletionRepository
+import com.bestphotoselect.data.SettingsRepository
+import com.bestphotoselect.data.model.PhotoItem
+import com.bestphotoselect.util.formatBytes
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,9 +83,18 @@ import kotlin.math.roundToInt
 @HiltViewModel
 class GroupDetailViewModel @Inject constructor(
     private val scanRepository: ScanRepository,
+    private val deletionRepository: DeletionRepository,
+    private val settingsRepository: SettingsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val groupId: Int = checkNotNull(savedStateHandle["groupId"])
+
+    sealed interface Event {
+        data class LaunchSystemDelete(val intent: PendingIntent) : Event
+        /** Sıradaki gruba geç; null ise başka grup kalmadı (sonuçlara dön). */
+        data class GoToGroup(val groupId: Int?, val deletedCount: Int) : Event
+        data object DeleteFailed : Event
+    }
 
     val group: StateFlow<PhotoGroup?> = scanRepository.state
         .map { state ->
@@ -75,27 +106,154 @@ class GroupDetailViewModel @Inject constructor(
             initialValue = scanRepository.currentGroups().firstOrNull { it.id == groupId }
         )
 
+    val trashMode: StateFlow<Boolean> = settingsRepository.settings
+        .map { it.trashMode }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    private val _events = MutableSharedFlow<Event>(extraBufferCapacity = 4)
+    val events: SharedFlow<Event> = _events.asSharedFlow()
+
+    private val _deleting = MutableStateFlow(false)
+    val deleting: StateFlow<Boolean> = _deleting.asStateFlow()
+
+    /**
+     * Bu ekran kendi isteğiyle başka gruba geçerken grup oturumdan düşebilir;
+     * o durumda "grup yok oldu, geri dön" davranışı tetiklenmemeli.
+     */
+    @Volatile
+    var leaving = false
+        private set
+
+    private var pendingDeletion: List<PhotoItem> = emptyList()
+
     fun toggleDeletion(photoId: Long) = scanRepository.toggleDeletion(groupId, photoId)
     fun setBest(photoId: Long) = scanRepository.setBest(groupId, photoId)
-    fun skipGroup() = scanRepository.skipGroup(groupId)
+
+    /** Sonuç listesindeki sıraya göre bir sonraki grup; sondaysa baştan ilk farklı grup. */
+    fun nextGroupId(): Int? {
+        val groups = scanRepository.currentGroups()
+        val index = groups.indexOfFirst { it.id == groupId }
+        return groups.drop(index + 1).firstOrNull()?.id
+            ?: groups.firstOrNull { it.id != groupId }?.id
+    }
+
+    fun goToNextGroup() {
+        val next = nextGroupId()
+        leaving = true
+        _events.tryEmit(Event.GoToGroup(next, deletedCount = 0))
+    }
+
+    fun skipGroup() {
+        val next = nextGroupId()
+        leaving = true
+        scanRepository.skipGroup(groupId)
+        _events.tryEmit(Event.GoToGroup(next, deletedCount = 0))
+    }
+
+    /**
+     * Yalnızca bu gruptaki işaretlileri siler. MANAGE_MEDIA varsa sistem
+     * diyaloğu olmadan, yoksa sistem silme isteğiyle.
+     */
+    fun deleteMarked() {
+        val photos = group.value?.deletionCandidates?.map { it.photo }.orEmpty()
+        if (photos.isEmpty() || _deleting.value) return
+        _deleting.value = true
+        viewModelScope.launch {
+            val trash = settingsRepository.settings.first().trashMode
+            if (deletionRepository.trySilentDelete(photos, toTrash = trash)) {
+                onDeleted(photos, trash)
+            } else {
+                pendingDeletion = photos
+                _events.emit(Event.LaunchSystemDelete(deletionRepository.buildDeleteRequest(photos, toTrash = trash)))
+            }
+        }
+    }
+
+    fun onSystemDeleteResult(approved: Boolean) {
+        viewModelScope.launch {
+            val photos = pendingDeletion
+            pendingDeletion = emptyList()
+            if (approved && photos.isNotEmpty()) {
+                onDeleted(photos, settingsRepository.settings.first().trashMode)
+            } else {
+                _deleting.value = false
+                _events.emit(Event.DeleteFailed)
+            }
+        }
+    }
+
+    private suspend fun onDeleted(photos: List<PhotoItem>, trashed: Boolean) {
+        val next = nextGroupId()
+        deletionRepository.recordDeletion(photos, wasAuto = false, trashed = trashed)
+        leaving = true
+        scanRepository.onPhotosDeleted(photos.map { it.id }.toSet())
+        _events.emit(Event.GoToGroup(next, deletedCount = photos.size))
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
     onBack: () -> Unit,
+    onOpenGroup: (Int) -> Unit,
     viewModel: GroupDetailViewModel = hiltViewModel()
 ) {
     val group by viewModel.group.collectAsState()
+    val trashMode by viewModel.trashMode.collectAsState()
+    val deleting by viewModel.deleting.collectAsState()
     var viewerIndex by remember { mutableStateOf<Int?>(null) }
     var showIgnoreConfirm by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    // Grup silindi/atlandıysa geri dön.
+    // Grup başka bir yerden düştüyse (ör. sonuçlardan toplu silme) geri dön;
+    // bu ekran kendisi sıradaki gruba geçiyorsa dokunma.
     LaunchedEffect(group) {
-        if (group == null) onBack()
+        if (group == null && !viewModel.leaving) onBack()
+    }
+
+    val deleteLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        viewModel.onSystemDeleteResult(result.resultCode == Activity.RESULT_OK)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is GroupDetailViewModel.Event.LaunchSystemDelete ->
+                    deleteLauncher.launch(IntentSenderRequest.Builder(event.intent.intentSender).build())
+                is GroupDetailViewModel.Event.GoToGroup -> {
+                    if (event.deletedCount > 0) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.delete_success, event.deletedCount),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    val next = event.groupId
+                    if (next != null) onOpenGroup(next) else onBack()
+                }
+                is GroupDetailViewModel.Event.DeleteFailed ->
+                    Toast.makeText(context, context.getString(R.string.delete_failed), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     Scaffold(
+        bottomBar = {
+            val g = group
+            if (g != null) {
+                GroupBottomBar(
+                    markedCount = g.deletionCandidates.size,
+                    markedBytes = g.bytesToFree,
+                    hasNext = viewModel.nextGroupId() != null,
+                    deleting = deleting,
+                    onDelete = { showDeleteConfirm = true },
+                    onNext = viewModel::goToNextGroup
+                )
+            }
+        },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.group_title)) },
@@ -170,7 +328,6 @@ fun GroupDetailScreen(
                     TextButton(onClick = {
                         showIgnoreConfirm = false
                         viewModel.skipGroup()
-                        onBack()
                     }) {
                         Text(stringResource(R.string.group_ignore_confirm_positive))
                     }
@@ -181,6 +338,96 @@ fun GroupDetailScreen(
                     }
                 }
             )
+        }
+
+        if (showDeleteConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirm = false },
+                title = { Text(stringResource(R.string.confirm_delete_title)) },
+                text = {
+                    Column {
+                        Text(
+                            stringResource(
+                                R.string.group_delete_confirm_message,
+                                g.deletionCandidates.size,
+                                formatBytes(g.bytesToFree)
+                            )
+                        )
+                        Text(
+                            text = stringResource(
+                                if (trashMode) R.string.confirm_delete_trash_note else R.string.confirm_delete_permanent_note
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (trashMode) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            },
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showDeleteConfirm = false
+                        viewModel.deleteMarked()
+                    }) {
+                        Text(stringResource(R.string.delete))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirm = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun GroupBottomBar(
+    markedCount: Int,
+    markedBytes: Long,
+    hasNext: Boolean,
+    deleting: Boolean,
+    onDelete: () -> Unit,
+    onNext: () -> Unit
+) {
+    Surface(tonalElevation = 3.dp) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            if (deleting) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = stringResource(R.string.group_deleting),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            Button(
+                onClick = onDelete,
+                enabled = markedCount > 0 && !deleting,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+            ) {
+                Text(stringResource(R.string.group_delete_marked_now, markedCount, formatBytes(markedBytes)))
+            }
+            if (hasNext) {
+                TextButton(
+                    onClick = onNext,
+                    enabled = !deleting,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text(stringResource(R.string.group_next))
+                }
+            }
         }
     }
 }
