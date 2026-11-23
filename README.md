@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.4.0, versionCode 27). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.5.0, versionCode 28). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,14 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.5.0 (versionCode 28)
+- Uygulama adı **"Best Photo Select"** oldu.
+- **Yeni ikon:** lacivert zeminde altı renkli kamera diyaframı, ortada yeşil onay işareti.
+  Android 13+ temalı (tek renk) ikonu da destekleniyor.
+- **Albümler: ızgara / liste görünümü** — üst çubuktaki düğmeyle değiştirilir, seçim saklanır.
+- **"WhatsApp klasörlerini tara" anahtarı** — kapalıyken WhatsApp (ve WhatsApp Business)
+  klasörleri soluk görünür, seçilemez, seçimden çıkarılır ve "Tümünü seç"e dahil edilmez.
 
 ### v2.4.0 (versionCode 27)
 - **Yeni puan ölçütü — kompozisyon temizliği:** cihaz içi görüntü etiketleme (ML Kit
