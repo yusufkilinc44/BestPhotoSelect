@@ -209,4 +209,5 @@
     <string name="settings_developer">开发者</string>
     <string name="settings_developer_info">Yusuf Kılınç · 2026年11月</string>
     <string name="albums_camera_badge">📷 主相册 · 相机照片</string>
+    <string name="results_rescanning">⚙️ 设置已更改——正在按新设置重新扫描…</string>
 </resources>

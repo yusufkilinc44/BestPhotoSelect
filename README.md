@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.10.0, versionCode 35). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.1, versionCode 36). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,12 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.1 (versionCode 36)
+- Benzerlik hassasiyeti, zaman penceresi ya da "en iyi" ağırlıklarından biri değişince
+  (veya yoksayılan gruplar sıfırlanınca) eldeki tarama sonuçları yeni ayarlarla otomatik
+  olarak baştan taranır; sonuç ekranında bu sırada ilerleme gösterilir. Fotoğraf başına
+  ölçümler ayardan bağımsız olduğundan önbellekten gelir, yeniden tarama hızlıdır.
 
 ### v2.10.0 (versionCode 35)
 - **Ana galeri hep en üstte:** kameranın fotoğrafları kaydettiği albüm (DCIM/Camera; yoksa

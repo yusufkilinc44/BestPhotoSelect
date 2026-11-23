@@ -241,4 +241,5 @@
     <string name="settings_developer">Geliştirici</string>
     <string name="settings_developer_info">Yusuf Kılınç · Kasım 2026</string>
     <string name="albums_camera_badge">📷 Ana galeri · kamera fotoğrafları</string>
+    <string name="results_rescanning">⚙️ Ayarlar değişti — yeni ayarlarla baştan taranıyor…</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.results
 
+import androidx.compose.material3.CircularProgressIndicator
 import com.bestphotoselect.ui.theme.accentFor
 import androidx.compose.material3.CardDefaults
 import com.bestphotoselect.ui.theme.appTopBarColors
@@ -122,6 +123,24 @@ fun ResultsScreen(
                         padding = padding,
                         onOpenGroup = onOpenGroup,
                         onDeleteClick = { viewModel.requestDeleteConfirmation() }
+                    )
+                }
+            }
+            is ScanState.Running -> {
+                // Ayar değiştiği için sonuçlar yeniden hesaplanıyor.
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        text = stringResource(R.string.results_rescanning),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(top = 16.dp)
                     )
                 }
             }

@@ -68,7 +68,7 @@ class AutoPilotWorker @AssistedInject constructor(
         }
 
         if (settings.autoScanMode == AutoScanMode.NOTIFY_ONLY) {
-            scanRepository.publishBackgroundResults(groups)
+            scanRepository.publishBackgroundResults(groups, settings.selectedBucketIds)
             notifyFound(groupCount, toDelete.size, bytes)
             return Result.success()
         }
@@ -78,7 +78,7 @@ class AutoPilotWorker @AssistedInject constructor(
             deletionRepository.recordDeletion(toDelete, wasAuto = true, trashed = settings.trashMode)
             notifyDeleted(groupCount, toDelete.size, bytes)
         } else {
-            scanRepository.publishBackgroundResults(groups)
+            scanRepository.publishBackgroundResults(groups, settings.selectedBucketIds)
             notifyPendingApproval(groupCount, toDelete.size, bytes)
         }
         return Result.success()

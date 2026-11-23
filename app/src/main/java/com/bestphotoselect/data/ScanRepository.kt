@@ -3,21 +3,28 @@ package com.bestphotoselect.data
 import com.bestphotoselect.data.model.PhotoGroup
 import com.bestphotoselect.data.model.ScanPhase
 import com.bestphotoselect.data.model.ScanState
+import com.bestphotoselect.data.model.ScoringWeights
 import com.bestphotoselect.di.ApplicationScope
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Etkileşimli tarama oturumunun durumu. Uygulama süreci yaşadığı sürece sonuçlar
  * bellekte tutulur; ekranlar arasında gezinmek taramayı bozmaz.
  */
+@OptIn(FlowPreview::class)
 @Singleton
 class ScanRepository @Inject constructor(
     private val scanEngine: ScanEngine,
@@ -25,12 +32,58 @@ class ScanRepository @Inject constructor(
     private val ignoredGroupsRepository: IgnoredGroupsRepository,
     @ApplicationScope private val scope: CoroutineScope
 ) {
+    private companion object {
+        const val RESCAN_DEBOUNCE_MS = 800L
+    }
+
     private val _state = MutableStateFlow<ScanState>(ScanState.Idle)
     val state: StateFlow<ScanState> = _state.asStateFlow()
 
     private var scanJob: Job? = null
 
+    /** Son taramanın albümleri; ayar değişince aynı albümler yeniden taranır. */
+    private var lastBucketIds: Set<Long>? = null
+
+    init {
+        // Gruplamayı ya da "en iyi" seçimini etkileyen bir ayar değişirse (kaydırıcı
+        // bırakıldıktan kısa süre sonra) eldeki sonuçlar yeni ayarlarla baştan taranır.
+        // Fotoğraf başına ölçümler (parmak izi, netlik, yüz, etiketler) ayarlardan
+        // bağımsız olduğu için önbellekten gelir; tekrar tarama hızlıdır.
+        scope.launch {
+            settingsRepository.settings
+                .map { ScanSettingsKey(it.hammingThreshold, it.timeWindowSec, it.scoringWeights) }
+                .debounce(RESCAN_DEBOUNCE_MS)
+                .distinctUntilChanged()
+                .drop(1)
+                .collect { rescanIfActive() }
+        }
+        // Yoksayılan gruplar sıfırlanınca o gruplar yeniden önerilebilsin.
+        scope.launch {
+            var previous: Int? = null
+            ignoredGroupsRepository.ignoredCount.collect { count ->
+                if (previous != null && count < previous!!) rescanIfActive()
+                previous = count
+            }
+        }
+    }
+
+    private data class ScanSettingsKey(
+        val hamming: Int,
+        val timeWindowSec: Int,
+        val weights: ScoringWeights
+    )
+
+    /** Eldeki (ya da süren) tarama varsa aynı albümlerle yeniden başlatır. */
+    private fun rescanIfActive() {
+        val buckets = lastBucketIds ?: return
+        when (_state.value) {
+            is ScanState.Done, is ScanState.Running, is ScanState.Failed -> startScan(buckets)
+            ScanState.Idle -> Unit
+        }
+    }
+
     fun startScan(bucketIds: Set<Long>) {
+        lastBucketIds = bucketIds
         scanJob?.cancel()
         _state.value = ScanState.Running(ScanPhase.READING, 0, 0)
         scanJob = scope.launch {
@@ -63,8 +116,9 @@ class ScanRepository @Inject constructor(
      * uygulamayı açınca gözden geçirebilsin diye oturuma koyar. O sırada
      * etkileşimli bir tarama sürüyorsa ona dokunulmaz.
      */
-    fun publishBackgroundResults(groups: List<PhotoGroup>) {
+    fun publishBackgroundResults(groups: List<PhotoGroup>, bucketIds: Set<Long>) {
         if (_state.value is ScanState.Running) return
+        lastBucketIds = bucketIds
         _state.value = ScanState.Done(groups)
     }
 
