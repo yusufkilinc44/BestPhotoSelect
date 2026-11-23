@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
@@ -69,6 +70,7 @@ import coil.compose.AsyncImage
 import com.bestphotoselect.R
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.ThemeMode
+import com.bestphotoselect.ui.common.AppLanguage
 import com.bestphotoselect.ui.common.PermissionGate
 import com.bestphotoselect.util.formatBytes
 
@@ -86,6 +88,7 @@ fun AlbumsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.albums_title)) },
                 actions = {
+                    LanguageMenu()
                     ThemeMenu(
                         mode = viewModel.themeMode.collectAsState().value,
                         onSelect = { viewModel.setThemeMode(it) }
@@ -279,6 +282,43 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+            }
+        }
+    }
+}
+
+/** Üst çubukta dil seçimi: bayraklı liste, en üstte telefonun dili. */
+@Composable
+private fun LanguageMenu() {
+    var open by remember { mutableStateOf(false) }
+    val current = remember { AppLanguage.current() }
+    Box {
+        IconButton(onClick = { open = true }) {
+            if (current == null) {
+                Icon(Icons.Default.Language, contentDescription = stringResource(R.string.language))
+            } else {
+                Text(current.flag, style = MaterialTheme.typography.titleLarge)
+            }
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.language_system)) },
+                leadingIcon = { RadioButton(selected = current == null, onClick = null) },
+                trailingIcon = { Icon(Icons.Default.Language, contentDescription = null) },
+                onClick = {
+                    open = false
+                    if (current != null) AppLanguage.set(null)
+                }
+            )
+            AppLanguage.options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text("${option.flag}  ${option.name}") },
+                    leadingIcon = { RadioButton(selected = option == current, onClick = null) },
+                    onClick = {
+                        open = false
+                        if (option != current) AppLanguage.set(option)
+                    }
+                )
             }
         }
     }

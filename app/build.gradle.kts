@@ -16,8 +16,8 @@ android {
         targetSdk = 35
         // Eski lite sürümün son kodu 16'ydı (v1.10.0); üzerine güncelleme olarak
         // kurulabilmesi için bundan büyük olmalı.
-        versionCode = 29
-        versionName = "2.6.0"
+        versionCode = 30
+        versionName = "2.7.0"
 
         // Yalnızca gerçek telefonlarda kullanılan ARM mimarileri; x86/x86_64
         // (emülatör) yerel kütüphaneleri APK boyutunu gereksiz büyütüyordu.
@@ -81,6 +81,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    // Uygulama içi dil seçimi (Android 13 altında da çalışan per-app locale)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
