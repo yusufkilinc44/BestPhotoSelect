@@ -1,5 +1,10 @@
 package com.bestphotoselect.ui.albums
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.provider.Settings as AndroidSettings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +23,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,6 +94,7 @@ private fun AlbumsContent(
     onScanStarted: () -> Unit
 ) {
     LaunchedEffect(Unit) { viewModel.loadAlbums() }
+    ManageMediaPrompt(viewModel)
 
     val albums by viewModel.albums.collectAsState()
     val selected by viewModel.selectedBuckets.collectAsState()
@@ -208,4 +216,39 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
             }
         }
     }
+}
+
+/**
+ * Android, MANAGE_MEDIA ("Medya yönetimi") özel izni yoksa her silmede kendi onay
+ * penceresini gösterir. Bu izin çalışma zamanı penceresiyle verilemez; yalnızca
+ * sistem ayarlarındaki ekrandan açılır. Kurulumdan sonra bir kez açıklanıp o ekran
+ * açılır; kullanıcı ne seçerse seçsin bir daha sorulmaz (Ayarlar'dan yine verilebilir).
+ */
+@Composable
+private fun ManageMediaPrompt(viewModel: AlbumsViewModel) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    val context = LocalContext.current
+    val prompted by viewModel.manageMediaPrompted.collectAsState()
+    if (prompted != false || MediaStore.canManageMedia(context)) return
+
+    AlertDialog(
+        onDismissRequest = { viewModel.markManageMediaPrompted() },
+        title = { Text(stringResource(R.string.manage_media_prompt_title)) },
+        text = { Text(stringResource(R.string.manage_media_prompt_message)) },
+        confirmButton = {
+            TextButton(onClick = {
+                viewModel.markManageMediaPrompted()
+                context.startActivity(
+                    Intent(AndroidSettings.ACTION_REQUEST_MANAGE_MEDIA, Uri.parse("package:${context.packageName}"))
+                )
+            }) {
+                Text(stringResource(R.string.manage_media_prompt_allow))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { viewModel.markManageMediaPrompted() }) {
+                Text(stringResource(R.string.manage_media_prompt_later))
+            }
+        }
+    )
 }

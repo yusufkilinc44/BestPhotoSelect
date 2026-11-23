@@ -30,6 +30,7 @@ class SettingsRepository @Inject constructor(
         val autopilot = booleanPreferencesKey("autopilot_enabled")
         val schedule = stringPreferencesKey("autopilot_schedule")
         val buckets = stringSetPreferencesKey("selected_buckets")
+        val manageMediaPrompted = booleanPreferencesKey("manage_media_prompted")
 
         // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
         val wFaceQuality = intPreferencesKey("w_face_quality")
@@ -68,6 +69,12 @@ class SettingsRepository @Inject constructor(
     }
 
     suspend fun current(): AppSettings = settings.first()
+
+    /** "Medya yönetimi" izni kurulumdan sonra yalnızca bir kez sorulur. */
+    val manageMediaPrompted: Flow<Boolean> = context.dataStore.data.map { it[Keys.manageMediaPrompted] ?: false }
+
+    suspend fun setManageMediaPrompted() =
+        context.dataStore.edit { it[Keys.manageMediaPrompted] = true }
 
     suspend fun setHammingThreshold(value: Int) =
         context.dataStore.edit { it[Keys.hamming] = value.coerceIn(2, 20) }

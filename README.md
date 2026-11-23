@@ -86,7 +86,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.2.0, versionCode 21). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.2.1, versionCode 22). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -120,6 +120,11 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.2.1 (versionCode 22)
+- **Silme onayı bir kez:** kurulumdan sonra ilk açılışta "Medya yönetimi" izni bir
+  kez açıklanıp ilgili sistem ekranı açılır; izin verildikten sonra silmelerde
+  Android'in onay penceresi bir daha çıkmaz. Soru yalnızca bir kez gösterilir.
 
 ### v2.2.0 (versionCode 21)
 - **Grup bazında silme:** grup ekranında "İşaretlileri sil" tuşu yalnızca o gruptaki

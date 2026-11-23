@@ -61,7 +61,7 @@
     <string name="group_tap_hint">Tap a photo to inspect it full screen</string>
 
     <string name="confirm_delete_title">Delete confirmation</string>
-    <string name="confirm_delete_message">%1$d photos will be deleted (%2$s will be freed). The system will ask for confirmation.</string>
+    <string name="confirm_delete_message">%1$d photos will be deleted (%2$s will be freed). Unless Media management is granted, the system will also ask for confirmation.</string>
     <string name="confirm_delete_trash_note">Photos are kept in the trash for 30 days and can be restored.</string>
     <string name="confirm_delete_permanent_note">Photos will be permanently deleted!</string>
     <string name="delete_success">%1$d photos cleaned up</string>
@@ -149,4 +149,10 @@
     <string name="group_delete_confirm_message">%1$d photos in this group will be deleted (%2$s freed). Then you\'ll move on to the next group.</string>
     <string name="group_next">Next group →</string>
     <string name="group_deleting">Deleting…</string>
+
+    <!-- Medya yönetimi izni (bir kez sorulur) -->
+    <string name="manage_media_prompt_title">Stop asking on every delete</string>
+    <string name="manage_media_prompt_message">Android normally asks for confirmation on every delete. Grant \"Media management\" once and BestPhotoSelect won\'t ask again (with trash mode on, deleted photos can still be restored for 30 days).\n\nTurn the permission on for BestPhotoSelect on the next screen and come back. This question won\'t be shown again; you can also grant it later in Settings.</string>
+    <string name="manage_media_prompt_allow">Grant</string>
+    <string name="manage_media_prompt_later">Not now</string>
 </resources>

@@ -30,6 +30,13 @@ class AlbumsViewModel @Inject constructor(
         .map { it.selectedBucketIds }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
+    val manageMediaPrompted: StateFlow<Boolean?> = settingsRepository.manageMediaPrompted
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    fun markManageMediaPrompted() {
+        viewModelScope.launch { settingsRepository.setManageMediaPrompted() }
+    }
+
     fun loadAlbums() {
         viewModelScope.launch {
             _albums.value = mediaStore.queryAlbums()
