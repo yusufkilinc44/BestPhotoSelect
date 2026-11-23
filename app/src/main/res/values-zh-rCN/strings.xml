@@ -69,8 +69,8 @@
     <string name="settings_time_window_value">%1$d 秒</string>
     <string name="settings_trash_mode">移至回收站</string>
     <string name="settings_trash_mode_desc">开启后，照片会在回收站保留 30 天，而不是被永久删除（推荐）。</string>
-    <string name="settings_autopilot">自动驾驶</string>
-    <string name="settings_autopilot_desc">定期扫描所选相册，除最佳照片外的其余照片将被自动清理，无需确认。</string>
+    <string name="settings_autopilot">自动扫描</string>
+    <string name="settings_autopilot_desc">按您选择的频率在后台扫描所选相册，结果以通知形式发送。</string>
     <string name="settings_autopilot_warning">自动驾驶会在未经您确认的情况下删除照片。开启回收站模式后，30 天内可以撤销删除。</string>
     <string name="settings_autopilot_schedule">扫描频率</string>
     <string name="settings_schedule_daily">每天</string>
@@ -120,11 +120,11 @@
     <string name="history_trashed">已移至回收站</string>
     <string name="history_deleted">已永久删除</string>
     <string name="history_clear">清除历史记录</string>
-    <string name="notif_channel_autopilot">自动驾驶</string>
+    <string name="notif_channel_autopilot">自动扫描</string>
     <string name="notif_autopilot_done_title">自动清理已完成</string>
-    <string name="notif_autopilot_done_text">已清理 %1$d 张照片，释放 %2$s</string>
+    <string name="notif_autopilot_done_text">发现 %1$d 个组 · 已删除 %2$d 张照片 · 释放 %3$s</string>
     <string name="notif_autopilot_pending_title">需要您的确认</string>
-    <string name="notif_autopilot_pending_text">%1$d 张照片可以删除。点按进行确认。</string>
+    <string name="notif_autopilot_pending_text">%1$d 个组中的 %2$d 张照片可以删除（%3$s）。点按进行确认。</string>
     <string name="albums_screenshot_badge">📱 屏幕截图 · 仅限完全相同的副本</string>
     <string name="results_screenshot_group_title">📱 %1$d 张相同的屏幕截图</string>
     <string name="results_newest_badge">最新</string>
@@ -151,4 +151,13 @@
     <string name="theme_dark">深色</string>
     <string name="language">语言</string>
     <string name="language_system">手机语言</string>
+    <string name="settings_autoscan_off">关闭</string>
+    <string name="settings_autoscan_notify">扫描并通知</string>
+    <string name="settings_autoscan_notify_desc">不会删除任何内容；只通知发现了多少个相似组和多少张照片。点按通知即可查看。</string>
+    <string name="settings_autoscan_delete">扫描并自动删除</string>
+    <string name="settings_autoscan_delete_desc">每组中除最佳照片外的其余照片将在无需确认的情况下被删除；会通知删除了多少张照片、释放了多少空间。</string>
+    <string name="settings_schedule_3days">每 3 天</string>
+    <string name="notif_autoscan_title">自动扫描已完成</string>
+    <string name="notif_autoscan_found_text">发现 %1$d 个相似组 · 可删除 %2$d 张照片（%3$s）。点按查看。</string>
+    <string name="notif_autoscan_none_text">未发现相似照片 🎉</string>
 </resources>

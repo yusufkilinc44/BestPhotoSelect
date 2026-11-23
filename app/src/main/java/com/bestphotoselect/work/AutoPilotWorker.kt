@@ -16,33 +16,40 @@ import com.bestphotoselect.MainActivity
 import com.bestphotoselect.R
 import com.bestphotoselect.data.DeletionRepository
 import com.bestphotoselect.data.ScanEngine
+import com.bestphotoselect.data.ScanRepository
 import com.bestphotoselect.data.SettingsRepository
+import com.bestphotoselect.data.model.AutoScanMode
 import com.bestphotoselect.util.formatBytes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
 /**
- * Otomatik pilot: seçili albümleri arka planda tarar ve her benzer grupta
- * "en iyi" dışındakileri KULLANICI ONAYI OLMADAN temizler.
+ * Otomatik tarama: seçili albümleri arka planda belirlenen aralıkla tarar ve
+ * sonucu her seferinde bildirir (kaç benzer grup, kaç fotoğraf, kaç MB).
+ *
+ * - [AutoScanMode.NOTIFY_ONLY]: hiçbir şey silinmez; bulunanlar bildirilir ve
+ *   bildirime dokununca uygulama sonuç ekranında açılır.
+ * - [AutoScanMode.AUTO_DELETE]: her grupta "en iyi" dışındakiler KULLANICI ONAYI
+ *   OLMADAN temizlenir; silinen fotoğraf sayısı ve boşalan alan bildirilir.
  *
  * Onaysız silme Android'de yalnızca MANAGE_MEDIA özel izniyle mümkündür
  * (Ayarlar > Özel uygulama erişimi > Medya yönetimi). İzin yoksa ya da sistem
- * işlemi arka planda tamamlamazsa, kullanıcıya sonuçları onaylaması için
- * bildirim gösterilir — fotoğraflar asla sessizce kaybolmaz ama izin varken
- * de onay istenmez.
+ * işlemi arka planda tamamlamazsa, kullanıcıya onay için bildirim gösterilir —
+ * fotoğraflar asla sessizce kaybolmaz ama izin varken de onay istenmez.
  */
 @HiltWorker
 class AutoPilotWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters,
     private val scanEngine: ScanEngine,
+    private val scanRepository: ScanRepository,
     private val settingsRepository: SettingsRepository,
     private val deletionRepository: DeletionRepository
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
         val settings = settingsRepository.current()
-        if (!settings.autopilotEnabled) return Result.success()
+        if (settings.autoScanMode == AutoScanMode.OFF) return Result.success()
         if (settings.selectedBucketIds.isEmpty()) return Result.success()
         if (!hasReadPermission()) return Result.success()
 
@@ -53,17 +60,28 @@ class AutoPilotWorker @AssistedInject constructor(
         }
 
         val toDelete = groups.flatMap { it.deletionCandidates }.map { it.photo }
-        if (toDelete.isEmpty()) return Result.success()
+        val bytes = toDelete.sumOf { it.sizeBytes }
+        val groupCount = groups.count { it.deletionCandidates.isNotEmpty() }
+        if (toDelete.isEmpty()) {
+            notifyNothingFound()
+            return Result.success()
+        }
+
+        if (settings.autoScanMode == AutoScanMode.NOTIFY_ONLY) {
+            scanRepository.publishBackgroundResults(groups)
+            notifyFound(groupCount, toDelete.size, bytes)
+            return Result.success()
+        }
 
         val deleted = deletionRepository.trySilentDelete(toDelete, settings.trashMode)
-        return if (deleted) {
+        if (deleted) {
             deletionRepository.recordDeletion(toDelete, wasAuto = true, trashed = settings.trashMode)
-            notifyDone(toDelete.size, toDelete.sumOf { it.sizeBytes })
-            Result.success()
+            notifyDeleted(groupCount, toDelete.size, bytes)
         } else {
-            notifyPendingApproval(toDelete.size)
-            Result.success()
+            scanRepository.publishBackgroundResults(groups)
+            notifyPendingApproval(groupCount, toDelete.size, bytes)
         }
+        return Result.success()
     }
 
     private fun hasReadPermission(): Boolean {
@@ -75,25 +93,37 @@ class AutoPilotWorker @AssistedInject constructor(
         return applicationContext.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun notifyDone(count: Int, bytes: Long) {
-        notify(
-            NOTIF_ID_DONE,
-            applicationContext.getString(R.string.notif_autopilot_done_title),
-            applicationContext.getString(
-                R.string.notif_autopilot_done_text, count, formatBytes(bytes)
-            )
-        )
-    }
+    private fun notifyNothingFound() = notify(
+        NOTIF_ID_RESULT,
+        str(R.string.notif_autoscan_title),
+        str(R.string.notif_autoscan_none_text),
+        openResults = false
+    )
 
-    private fun notifyPendingApproval(count: Int) {
-        notify(
-            NOTIF_ID_PENDING,
-            applicationContext.getString(R.string.notif_autopilot_pending_title),
-            applicationContext.getString(R.string.notif_autopilot_pending_text, count)
-        )
-    }
+    private fun notifyFound(groups: Int, photos: Int, bytes: Long) = notify(
+        NOTIF_ID_RESULT,
+        str(R.string.notif_autoscan_title),
+        str(R.string.notif_autoscan_found_text, groups, photos, formatBytes(bytes)),
+        openResults = true
+    )
 
-    private fun notify(id: Int, title: String, text: String) {
+    private fun notifyDeleted(groups: Int, photos: Int, bytes: Long) = notify(
+        NOTIF_ID_RESULT,
+        str(R.string.notif_autopilot_done_title),
+        str(R.string.notif_autopilot_done_text, groups, photos, formatBytes(bytes)),
+        openResults = false
+    )
+
+    private fun notifyPendingApproval(groups: Int, photos: Int, bytes: Long) = notify(
+        NOTIF_ID_PENDING,
+        str(R.string.notif_autopilot_pending_title),
+        str(R.string.notif_autopilot_pending_text, groups, photos, formatBytes(bytes)),
+        openResults = true
+    )
+
+    private fun str(id: Int, vararg args: Any): String = applicationContext.getString(id, *args)
+
+    private fun notify(id: Int, title: String, text: String, openResults: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
             PackageManager.PERMISSION_GRANTED
@@ -101,15 +131,17 @@ class AutoPilotWorker @AssistedInject constructor(
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(MainActivity.EXTRA_OPEN_RESULTS, openResults)
         }
         val contentIntent = PendingIntent.getActivity(
-            applicationContext, 0, intent,
+            applicationContext, id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(applicationContext, BestPhotoApp.CHANNEL_AUTOPILOT)
             .setSmallIcon(android.R.drawable.ic_menu_gallery)
             .setContentTitle(title)
             .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
             .build()
@@ -118,7 +150,7 @@ class AutoPilotWorker @AssistedInject constructor(
     }
 
     companion object {
-        private const val NOTIF_ID_DONE = 100
+        private const val NOTIF_ID_RESULT = 100
         private const val NOTIF_ID_PENDING = 101
     }
 }

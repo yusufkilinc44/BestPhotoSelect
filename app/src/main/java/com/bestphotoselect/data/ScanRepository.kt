@@ -58,6 +58,16 @@ class ScanRepository @Inject constructor(
         }
     }
 
+    /**
+     * Arka plandaki otomatik taramanın sonuçlarını, kullanıcı bildirime dokunup
+     * uygulamayı açınca gözden geçirebilsin diye oturuma koyar. O sırada
+     * etkileşimli bir tarama sürüyorsa ona dokunulmaz.
+     */
+    fun publishBackgroundResults(groups: List<PhotoGroup>) {
+        if (_state.value is ScanState.Running) return
+        _state.value = ScanState.Done(groups)
+    }
+
     fun cancelScan() {
         scanJob?.cancel()
         scanJob = null

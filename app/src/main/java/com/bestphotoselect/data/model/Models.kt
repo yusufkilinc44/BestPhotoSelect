@@ -84,7 +84,14 @@ sealed interface ScanState {
     data class Failed(val message: String) : ScanState
 }
 
-enum class AutopilotSchedule { DAILY, WEEKLY }
+enum class AutopilotSchedule { DAILY, EVERY_3_DAYS, WEEKLY }
+
+/**
+ * Otomatik tarama: kapalı (varsayılan), yalnızca tarayıp bildir, ya da tarayıp
+ * her grupta "en iyi" dışındakileri onaysız sil. Açıkken sonuç her seferinde
+ * bildirimle gelir.
+ */
+enum class AutoScanMode { OFF, NOTIFY_ONLY, AUTO_DELETE }
 
 /**
  * "En iyi" seçim puanlamasındaki GÖRECELİ ağırlıklar (bkz. BestPhotoSelector).
@@ -116,7 +123,7 @@ data class AppSettings(
     val hammingThreshold: Int,
     val timeWindowSec: Int,
     val trashMode: Boolean,
-    val autopilotEnabled: Boolean,
+    val autoScanMode: AutoScanMode,
     val autopilotSchedule: AutopilotSchedule,
     val selectedBucketIds: Set<Long>,
     val scoringWeights: ScoringWeights = ScoringWeights()

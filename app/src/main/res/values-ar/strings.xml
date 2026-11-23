@@ -69,8 +69,8 @@
     <string name="settings_time_window_value">%1$d ثانية</string>
     <string name="settings_trash_mode">النقل إلى سلة المحذوفات</string>
     <string name="settings_trash_mode_desc">عند التفعيل، تبقى الصور 30 يومًا في سلة المحذوفات بدلًا من حذفها نهائيًا (موصى به).</string>
-    <string name="settings_autopilot">الطيار الآلي</string>
-    <string name="settings_autopilot_desc">تُفحص الألبومات المحددة دوريًا، ويُنظَّف كل شيء ما عدا أفضل الصور تلقائيًا دون تأكيد.</string>
+    <string name="settings_autopilot">الفحص التلقائي</string>
+    <string name="settings_autopilot_desc">تُفحص الألبومات المحددة في الخلفية بالتكرار الذي تختاره، وتصلك النتيجة كإشعار.</string>
     <string name="settings_autopilot_warning">يحذف الطيار الآلي الصور دون تأكيدك. عند تفعيل سلة المحذوفات، يمكن التراجع عن الحذف لمدة 30 يومًا.</string>
     <string name="settings_autopilot_schedule">تكرار الفحص</string>
     <string name="settings_schedule_daily">يوميًا</string>
@@ -120,11 +120,11 @@
     <string name="history_trashed">نُقلت إلى سلة المحذوفات</string>
     <string name="history_deleted">حُذفت نهائيًا</string>
     <string name="history_clear">مسح السجل</string>
-    <string name="notif_channel_autopilot">الطيار الآلي</string>
+    <string name="notif_channel_autopilot">الفحص التلقائي</string>
     <string name="notif_autopilot_done_title">اكتمل التنظيف التلقائي</string>
-    <string name="notif_autopilot_done_text">تم تنظيف %1$d صورة، وتوفير %2$s</string>
+    <string name="notif_autopilot_done_text">عُثر على %1$d مجموعة · حُذفت %2$d صورة · تم توفير %3$s</string>
     <string name="notif_autopilot_pending_title">مطلوب موافقتك</string>
-    <string name="notif_autopilot_pending_text">%1$d صورة جاهزة للحذف. اضغط للتأكيد.</string>
+    <string name="notif_autopilot_pending_text">%2$d صورة في %1$d مجموعة جاهزة للحذف (%3$s). اضغط للتأكيد.</string>
     <string name="albums_screenshot_badge">📱 لقطات الشاشة · النسخ المطابقة فقط</string>
     <string name="results_screenshot_group_title">📱 %1$d لقطة شاشة متطابقة</string>
     <string name="results_newest_badge">الأحدث</string>
@@ -151,4 +151,13 @@
     <string name="theme_dark">داكن</string>
     <string name="language">اللغة</string>
     <string name="language_system">لغة الهاتف</string>
+    <string name="settings_autoscan_off">متوقف</string>
+    <string name="settings_autoscan_notify">فحص وإشعار</string>
+    <string name="settings_autoscan_notify_desc">لا يُحذف شيء؛ يُخبرك الإشعار بعدد المجموعات والصور المتشابهة التي عُثر عليها. اضغط على الإشعار لمراجعتها.</string>
+    <string name="settings_autoscan_delete">فحص وحذف تلقائي</string>
+    <string name="settings_autoscan_delete_desc">في كل مجموعة يُحذف كل شيء ما عدا أفضل صورة دون تأكيد؛ ويُخبرك الإشعار بعدد الصور المحذوفة والمساحة التي تم توفيرها.</string>
+    <string name="settings_schedule_3days">كل 3 أيام</string>
+    <string name="notif_autoscan_title">اكتمل الفحص التلقائي</string>
+    <string name="notif_autoscan_found_text">عُثر على %1$d مجموعة متشابهة · يمكن حذف %2$d صورة (%3$s). اضغط للمراجعة.</string>
+    <string name="notif_autoscan_none_text">لم يُعثر على صور متشابهة 🎉</string>
 </resources>

@@ -69,8 +69,8 @@
     <string name="settings_time_window_value">%1$d segundos</string>
     <string name="settings_trash_mode">Mover a la papelera</string>
     <string name="settings_trash_mode_desc">Si está activado, las fotos se guardan 30 días en la papelera en lugar de eliminarse de forma permanente (recomendado).</string>
-    <string name="settings_autopilot">Piloto automático</string>
-    <string name="settings_autopilot_desc">Los álbumes seleccionados se analizan periódicamente y todo excepto las mejores fotos se limpia automáticamente sin pedir confirmación.</string>
+    <string name="settings_autopilot">Análisis automático</string>
+    <string name="settings_autopilot_desc">Los álbumes seleccionados se analizan en segundo plano con la frecuencia que elijas y el resultado llega como notificación.</string>
     <string name="settings_autopilot_warning">El piloto automático elimina fotos sin tu confirmación. Con la papelera activada, puedes deshacer las eliminaciones durante 30 días.</string>
     <string name="settings_autopilot_schedule">Frecuencia de análisis</string>
     <string name="settings_schedule_daily">Diaria</string>
@@ -120,11 +120,11 @@
     <string name="history_trashed">Movida a la papelera</string>
     <string name="history_deleted">Eliminada definitivamente</string>
     <string name="history_clear">Borrar historial</string>
-    <string name="notif_channel_autopilot">Piloto automático</string>
+    <string name="notif_channel_autopilot">Análisis automático</string>
     <string name="notif_autopilot_done_title">Limpieza automática terminada</string>
-    <string name="notif_autopilot_done_text">%1$d fotos limpiadas, %2$s liberados</string>
+    <string name="notif_autopilot_done_text">%1$d grupos encontrados · %2$d fotos eliminadas · %3$s liberados</string>
     <string name="notif_autopilot_pending_title">Se necesita tu aprobación</string>
-    <string name="notif_autopilot_pending_text">%1$d fotos listas para eliminar. Toca para confirmar.</string>
+    <string name="notif_autopilot_pending_text">%2$d fotos de %1$d grupos están listas para eliminar (%3$s). Toca para confirmar.</string>
     <string name="albums_screenshot_badge">📱 Capturas de pantalla · solo copias exactas</string>
     <string name="results_screenshot_group_title">📱 %1$d capturas de pantalla idénticas</string>
     <string name="results_newest_badge">MÁS RECIENTE</string>
@@ -151,4 +151,13 @@
     <string name="theme_dark">Oscuro</string>
     <string name="language">Idioma</string>
     <string name="language_system">Idioma del teléfono</string>
+    <string name="settings_autoscan_off">Desactivado</string>
+    <string name="settings_autoscan_notify">Analizar y avisar</string>
+    <string name="settings_autoscan_notify_desc">No se elimina nada; se te indica cuántos grupos y fotos similares se encontraron. Toca la notificación para revisarlos.</string>
+    <string name="settings_autoscan_delete">Analizar y eliminar automáticamente</string>
+    <string name="settings_autoscan_delete_desc">En cada grupo se elimina todo excepto la mejor foto sin pedir confirmación; se te indica cuántas fotos se eliminaron y cuánto espacio se liberó.</string>
+    <string name="settings_schedule_3days">Cada 3 días</string>
+    <string name="notif_autoscan_title">Análisis automático terminado</string>
+    <string name="notif_autoscan_found_text">%1$d grupos similares encontrados · %2$d fotos se pueden eliminar (%3$s). Toca para revisar.</string>
+    <string name="notif_autoscan_none_text">No se encontraron fotos similares 🎉</string>
 </resources>

@@ -69,8 +69,8 @@
     <string name="settings_time_window_value">%1$d secondes</string>
     <string name="settings_trash_mode">Mettre à la corbeille</string>
     <string name="settings_trash_mode_desc">Si activé, les photos restent 30 jours dans la corbeille au lieu d\'être supprimées définitivement (recommandé).</string>
-    <string name="settings_autopilot">Pilote automatique</string>
-    <string name="settings_autopilot_desc">Les albums sélectionnés sont analysés régulièrement et tout sauf les meilleures photos est nettoyé automatiquement, sans confirmation.</string>
+    <string name="settings_autopilot">Analyse automatique</string>
+    <string name="settings_autopilot_desc">Les albums sélectionnés sont analysés en arrière-plan à la fréquence choisie, et le résultat arrive par notification.</string>
     <string name="settings_autopilot_warning">Le pilote automatique supprime des photos sans votre confirmation. Avec la corbeille activée, les suppressions peuvent être annulées pendant 30 jours.</string>
     <string name="settings_autopilot_schedule">Fréquence d\'analyse</string>
     <string name="settings_schedule_daily">Quotidienne</string>
@@ -120,11 +120,11 @@
     <string name="history_trashed">Mise à la corbeille</string>
     <string name="history_deleted">Supprimée définitivement</string>
     <string name="history_clear">Effacer l\'historique</string>
-    <string name="notif_channel_autopilot">Pilote automatique</string>
+    <string name="notif_channel_autopilot">Analyse automatique</string>
     <string name="notif_autopilot_done_title">Nettoyage automatique terminé</string>
-    <string name="notif_autopilot_done_text">%1$d photos nettoyées, %2$s libérés</string>
+    <string name="notif_autopilot_done_text">%1$d groupes trouvés · %2$d photos supprimées · %3$s libérés</string>
     <string name="notif_autopilot_pending_title">Votre accord est nécessaire</string>
-    <string name="notif_autopilot_pending_text">%1$d photos sont prêtes à être supprimées. Touchez pour confirmer.</string>
+    <string name="notif_autopilot_pending_text">%2$d photos dans %1$d groupes sont prêtes à être supprimées (%3$s). Touchez pour confirmer.</string>
     <string name="albums_screenshot_badge">📱 Captures d\'écran · copies exactes uniquement</string>
     <string name="results_screenshot_group_title">📱 %1$d captures d\'écran identiques</string>
     <string name="results_newest_badge">PLUS RÉCENTE</string>
@@ -151,4 +151,13 @@
     <string name="theme_dark">Sombre</string>
     <string name="language">Langue</string>
     <string name="language_system">Langue du téléphone</string>
+    <string name="settings_autoscan_off">Désactivée</string>
+    <string name="settings_autoscan_notify">Analyser et prévenir</string>
+    <string name="settings_autoscan_notify_desc">Rien n\'est supprimé ; vous êtes informé du nombre de groupes et de photos similaires trouvés. Touchez la notification pour les examiner.</string>
+    <string name="settings_autoscan_delete">Analyser et supprimer automatiquement</string>
+    <string name="settings_autoscan_delete_desc">Dans chaque groupe, tout sauf la meilleure photo est supprimé sans confirmation ; vous êtes informé du nombre de photos supprimées et de l\'espace libéré.</string>
+    <string name="settings_schedule_3days">Tous les 3 jours</string>
+    <string name="notif_autoscan_title">Analyse automatique terminée</string>
+    <string name="notif_autoscan_found_text">%1$d groupes similaires trouvés · %2$d photos peuvent être supprimées (%3$s). Touchez pour examiner.</string>
+    <string name="notif_autoscan_none_text">Aucune photo similaire trouvée 🎉</string>
 </resources>

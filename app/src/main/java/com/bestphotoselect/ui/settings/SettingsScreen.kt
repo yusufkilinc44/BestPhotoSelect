@@ -7,6 +7,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -47,6 +49,7 @@ import com.bestphotoselect.R
 import com.bestphotoselect.data.IgnoredGroupsRepository
 import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.data.model.AppSettings
+import com.bestphotoselect.data.model.AutoScanMode
 import com.bestphotoselect.data.model.AutopilotSchedule
 import com.bestphotoselect.data.model.ScoringWeights
 import com.bestphotoselect.work.AutoPilotScheduler
@@ -91,20 +94,20 @@ class SettingsViewModel @Inject constructor(
         settingsRepository.setTrashMode(value)
     }
 
-    fun setAutopilot(enabled: Boolean) = viewModelScope.launch {
-        settingsRepository.setAutopilotEnabled(enabled)
-        if (enabled) {
+    fun setAutoScanMode(mode: AutoScanMode) = viewModelScope.launch {
+        settingsRepository.setAutoScanMode(mode)
+        if (mode == AutoScanMode.OFF) {
+            autoPilotScheduler.cancel()
+        } else {
             autoPilotScheduler.schedule(
                 settings.value?.autopilotSchedule ?: AutopilotSchedule.DAILY
             )
-        } else {
-            autoPilotScheduler.cancel()
         }
     }
 
     fun setSchedule(schedule: AutopilotSchedule) = viewModelScope.launch {
         settingsRepository.setAutopilotSchedule(schedule)
-        if (settings.value?.autopilotEnabled == true) {
+        if (settings.value?.autoScanMode != AutoScanMode.OFF) {
             autoPilotScheduler.schedule(schedule)
         }
     }
@@ -195,27 +198,41 @@ fun SettingsScreen(
                 onCheckedChange = { viewModel.setTrashMode(it) }
             )
 
-            // Otomatik pilot
-            SwitchRow(
+            // Otomatik tarama: kapalı / tara ve bildir / tara ve otomatik sil
+            SettingHeader(
                 title = stringResource(R.string.settings_autopilot),
-                description = stringResource(R.string.settings_autopilot_desc),
-                checked = s.autopilotEnabled,
-                onCheckedChange = { enabled ->
-                    viewModel.setAutopilot(enabled)
-                    if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                }
+                description = stringResource(R.string.settings_autopilot_desc)
             )
+            listOf(
+                Triple(AutoScanMode.OFF, R.string.settings_autoscan_off, null),
+                Triple(AutoScanMode.NOTIFY_ONLY, R.string.settings_autoscan_notify, R.string.settings_autoscan_notify_desc),
+                Triple(AutoScanMode.AUTO_DELETE, R.string.settings_autoscan_delete, R.string.settings_autoscan_delete_desc)
+            ).forEach { (mode, titleRes, descRes) ->
+                RadioRow(
+                    title = stringResource(titleRes),
+                    description = descRes?.let { stringResource(it) },
+                    selected = s.autoScanMode == mode,
+                    onClick = {
+                        if (s.autoScanMode == AutoScanMode.OFF && mode != AutoScanMode.OFF &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                        ) {
+                            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                        viewModel.setAutoScanMode(mode)
+                    }
+                )
+            }
 
-            if (s.autopilotEnabled) {
+            if (s.autoScanMode == AutoScanMode.AUTO_DELETE) {
                 Text(
                     text = stringResource(R.string.settings_autopilot_warning),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
+            }
 
+            if (s.autoScanMode != AutoScanMode.OFF) {
                 // Tarama sıklığı
                 Text(
                     text = stringResource(R.string.settings_autopilot_schedule),
@@ -223,17 +240,18 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 8.dp)
                 )
                 Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                    FilterChip(
-                        selected = s.autopilotSchedule == AutopilotSchedule.DAILY,
-                        onClick = { viewModel.setSchedule(AutopilotSchedule.DAILY) },
-                        label = { Text(stringResource(R.string.settings_schedule_daily)) },
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    FilterChip(
-                        selected = s.autopilotSchedule == AutopilotSchedule.WEEKLY,
-                        onClick = { viewModel.setSchedule(AutopilotSchedule.WEEKLY) },
-                        label = { Text(stringResource(R.string.settings_schedule_weekly)) }
-                    )
+                    listOf(
+                        AutopilotSchedule.DAILY to R.string.settings_schedule_daily,
+                        AutopilotSchedule.EVERY_3_DAYS to R.string.settings_schedule_3days,
+                        AutopilotSchedule.WEEKLY to R.string.settings_schedule_weekly
+                    ).forEach { (schedule, labelRes) ->
+                        FilterChip(
+                            selected = s.autopilotSchedule == schedule,
+                            onClick = { viewModel.setSchedule(schedule) },
+                            label = { Text(stringResource(labelRes)) },
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
                 }
             }
 
@@ -460,6 +478,34 @@ private fun SettingHeader(title: String, description: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(bottom = 4.dp)
     )
+}
+
+@Composable
+private fun RadioRow(
+    title: String,
+    description: String?,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp)
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Column(Modifier.weight(1f).padding(start = 4.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (description != null) {
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
 }
 
 @Composable

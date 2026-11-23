@@ -78,8 +78,8 @@
     <string name="settings_time_window_value">%1$d seconds</string>
     <string name="settings_trash_mode">Move to trash</string>
     <string name="settings_trash_mode_desc">When enabled, photos are kept in the trash for 30 days instead of being permanently deleted (recommended).</string>
-    <string name="settings_autopilot">Autopilot</string>
-    <string name="settings_autopilot_desc">Selected albums are scanned periodically and everything except the best shots is cleaned up automatically without confirmation.</string>
+    <string name="settings_autopilot">Automatic scan</string>
+    <string name="settings_autopilot_desc">Selected albums are scanned in the background at the interval you choose, and the result arrives as a notification.</string>
     <string name="settings_autopilot_warning">Autopilot deletes photos without your confirmation. With trash mode on, deletions can be undone for 30 days.</string>
     <string name="settings_autopilot_schedule">Scan frequency</string>
     <string name="settings_schedule_daily">Daily</string>
@@ -133,11 +133,11 @@
     <string name="history_deleted">Permanently deleted</string>
     <string name="history_clear">Clear history</string>
 
-    <string name="notif_channel_autopilot">Autopilot</string>
+    <string name="notif_channel_autopilot">Automatic scan</string>
     <string name="notif_autopilot_done_title">Automatic cleanup finished</string>
-    <string name="notif_autopilot_done_text">%1$d photos cleaned, %2$s freed</string>
+    <string name="notif_autopilot_done_text">%1$d groups found · %2$d photos deleted · %3$s freed</string>
     <string name="notif_autopilot_pending_title">Your approval is needed</string>
-    <string name="notif_autopilot_pending_text">%1$d photos are ready to delete. Tap to confirm.</string>
+    <string name="notif_autopilot_pending_text">%2$d photos in %1$d groups are ready to delete (%3$s). Tap to confirm.</string>
 
     <!-- Ekran görüntüleri -->
     <string name="albums_screenshot_badge">📱 Screenshots · exact copies only</string>
@@ -170,4 +170,13 @@
     <string name="theme_dark">Dark</string>
     <string name="language">Language</string>
     <string name="language_system">Phone language</string>
+    <string name="settings_autoscan_off">Off</string>
+    <string name="settings_autoscan_notify">Scan and notify</string>
+    <string name="settings_autoscan_notify_desc">Nothing is deleted; you\'re told how many similar groups and photos were found. Tap the notification to review them.</string>
+    <string name="settings_autoscan_delete">Scan and delete automatically</string>
+    <string name="settings_autoscan_delete_desc">In each group everything except the best shot is deleted without confirmation; you\'re told how many photos were deleted and how much space was freed.</string>
+    <string name="settings_schedule_3days">Every 3 days</string>
+    <string name="notif_autoscan_title">Automatic scan finished</string>
+    <string name="notif_autoscan_found_text">%1$d similar groups found · %2$d photos can be deleted (%3$s). Tap to review.</string>
+    <string name="notif_autoscan_none_text">No similar photos found 🎉</string>
 </resources>

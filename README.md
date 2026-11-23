@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.7.0, versionCode 30). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.8.0, versionCode 31). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,15 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.8.0 (versionCode 31)
+- Otomatik pilot **"Otomatik tarama"** oldu ve üç seçenekli: **Kapalı** (varsayılan),
+  **Tara ve bildir** (silmez) ve **Tara ve otomatik sil**.
+- Tarama sıklığı: günlük, 3 günde bir ya da haftalık.
+- Her taramadan sonra bildirim: kaç benzer grup bulundu, kaç fotoğraf silinebilir/silindi
+  ve ne kadar yer açılabilir/açıldı. "Tara ve bildir" bildirimine dokununca uygulama
+  doğrudan sonuç ekranında açılır.
+- Eski otomatik pilotu açık olanlar "Tara ve otomatik sil" modunda devam eder.
 
 ### v2.7.0 (versionCode 30)
 - **7 dil:** Türkçe, English, 中文（简体）, हिन्दी, Español, Français, العربية (Arapçada

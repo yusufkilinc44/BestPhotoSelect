@@ -87,8 +87,8 @@
     <string name="settings_time_window_value">%1$d saniye</string>
     <string name="settings_trash_mode">Çöp kutusuna taşı</string>
     <string name="settings_trash_mode_desc">Açıkken fotoğraflar kalıcı silinmek yerine 30 gün çöp kutusunda bekletilir (önerilir).</string>
-    <string name="settings_autopilot">Otomatik pilot</string>
-    <string name="settings_autopilot_desc">Seçili albümler periyodik taranır ve en iyiler dışındakiler onay istenmeden otomatik temizlenir.</string>
+    <string name="settings_autopilot">Otomatik tarama</string>
+    <string name="settings_autopilot_desc">Seçili albümler arka planda seçtiğiniz aralıkla taranır, sonuç bildirimle gelir.</string>
     <string name="settings_autopilot_warning">Otomatik pilot, sizin onayınız olmadan fotoğraf siler. Çöp kutusu modu açıkken silinenler 30 gün geri alınabilir.</string>
     <string name="settings_autopilot_schedule">Tarama sıklığı</string>
     <string name="settings_schedule_daily">Günlük</string>
@@ -146,11 +146,11 @@
     <string name="history_clear">Geçmişi temizle</string>
 
     <!-- Bildirimler -->
-    <string name="notif_channel_autopilot">Otomatik pilot</string>
+    <string name="notif_channel_autopilot">Otomatik tarama</string>
     <string name="notif_autopilot_done_title">Otomatik temizlik tamamlandı</string>
-    <string name="notif_autopilot_done_text">%1$d fotoğraf temizlendi, %2$s yer açıldı</string>
+    <string name="notif_autopilot_done_text">%1$d grup bulundu · %2$d fotoğraf silindi · %3$s yer açıldı</string>
     <string name="notif_autopilot_pending_title">Onayınız gerekiyor</string>
-    <string name="notif_autopilot_pending_text">%1$d fotoğraf silinmeye hazır. Onaylamak için dokunun.</string>
+    <string name="notif_autopilot_pending_text">%1$d gruptaki %2$d fotoğraf silinmeye hazır (%3$s). Onaylamak için dokunun.</string>
 
     <!-- Ekran görüntüleri -->
     <string name="albums_screenshot_badge">📱 Ekran görüntüsü · yalnızca birebir kopyalar</string>
@@ -183,4 +183,13 @@
     <string name="theme_dark">Koyu</string>
     <string name="language">Dil</string>
     <string name="language_system">Telefonun dili</string>
+    <string name="settings_autoscan_off">Kapalı</string>
+    <string name="settings_autoscan_notify">Tara ve bildir</string>
+    <string name="settings_autoscan_notify_desc">Hiçbir şey silinmez; kaç benzer grup ve fotoğraf bulunduğu bildirilir. Bildirime dokunarak gözden geçirebilirsiniz.</string>
+    <string name="settings_autoscan_delete">Tara ve otomatik sil</string>
+    <string name="settings_autoscan_delete_desc">Her grupta en iyisi dışındakiler onay beklemeden silinir; kaç fotoğraf silindiği ve ne kadar yer açıldığı bildirilir.</string>
+    <string name="settings_schedule_3days">3 günde bir</string>
+    <string name="notif_autoscan_title">Otomatik tarama tamamlandı</string>
+    <string name="notif_autoscan_found_text">%1$d benzer grup bulundu · %2$d fotoğraf silinebilir (%3$s). Gözden geçirmek için dokunun.</string>
+    <string name="notif_autoscan_none_text">Benzer fotoğraf bulunamadı 🎉</string>
 </resources>

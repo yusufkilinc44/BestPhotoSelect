@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bestphotoselect.data.model.AppSettings
+import com.bestphotoselect.data.model.AutoScanMode
 import com.bestphotoselect.data.model.AutopilotSchedule
 import com.bestphotoselect.data.model.ScoringWeights
 import com.bestphotoselect.data.model.ThemeMode
@@ -30,6 +31,7 @@ class SettingsRepository @Inject constructor(
         val trashMode = booleanPreferencesKey("trash_mode")
         val autopilot = booleanPreferencesKey("autopilot_enabled")
         val schedule = stringPreferencesKey("autopilot_schedule")
+        val autoScanMode = stringPreferencesKey("auto_scan_mode")
         val buckets = stringSetPreferencesKey("selected_buckets")
         val manageMediaPrompted = booleanPreferencesKey("manage_media_prompted")
         val timeWindowDefaultV2 = booleanPreferencesKey("time_window_default_v2")
@@ -57,7 +59,11 @@ class SettingsRepository @Inject constructor(
             hammingThreshold = p[Keys.hamming] ?: DEFAULT_HAMMING,
             timeWindowSec = p[Keys.timeWindow] ?: DEFAULT_TIME_WINDOW_SEC,
             trashMode = p[Keys.trashMode] ?: true,
-            autopilotEnabled = p[Keys.autopilot] ?: false,
+            // Eski tek anahtarlı otomatik pilot (açıksa tarayıp siliyordu) yeni
+            // moda karşılık gelecek şekilde okunur.
+            autoScanMode = p[Keys.autoScanMode]
+                ?.let { runCatching { AutoScanMode.valueOf(it) }.getOrNull() }
+                ?: if (p[Keys.autopilot] == true) AutoScanMode.AUTO_DELETE else AutoScanMode.OFF,
             autopilotSchedule = p[Keys.schedule]
                 ?.let { runCatching { AutopilotSchedule.valueOf(it) }.getOrNull() }
                 ?: AutopilotSchedule.DAILY,
@@ -125,8 +131,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setTrashMode(value: Boolean) =
         context.dataStore.edit { it[Keys.trashMode] = value }
 
-    suspend fun setAutopilotEnabled(value: Boolean) =
-        context.dataStore.edit { it[Keys.autopilot] = value }
+    suspend fun setAutoScanMode(value: AutoScanMode) =
+        context.dataStore.edit { it[Keys.autoScanMode] = value.name }
 
     suspend fun setAutopilotSchedule(value: AutopilotSchedule) =
         context.dataStore.edit { it[Keys.schedule] = value.name }

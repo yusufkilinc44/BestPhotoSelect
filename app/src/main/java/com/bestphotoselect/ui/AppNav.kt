@@ -1,6 +1,7 @@
 package com.bestphotoselect.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,8 +16,17 @@ import com.bestphotoselect.ui.scan.ScanScreen
 import com.bestphotoselect.ui.settings.SettingsScreen
 
 @Composable
-fun AppNav() {
+fun AppNav(openResultsRequest: Int = 0) {
     val nav = rememberNavController()
+    // Otomatik tarama bildirimine dokunulduysa sonuç ekranını aç.
+    LaunchedEffect(openResultsRequest) {
+        if (openResultsRequest > 0) {
+            nav.navigate("results") {
+                popUpTo("albums")
+                launchSingleTop = true
+            }
+        }
+    }
     NavHost(navController = nav, startDestination = "albums") {
         composable("albums") {
             AlbumsScreen(

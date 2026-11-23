@@ -69,8 +69,8 @@
     <string name="settings_time_window_value">%1$d सेकंड</string>
     <string name="settings_trash_mode">ट्रैश में भेजें</string>
     <string name="settings_trash_mode_desc">चालू होने पर फ़ोटो हमेशा के लिए हटने के बजाय 30 दिनों तक ट्रैश में रहती हैं (अनुशंसित)।</string>
-    <string name="settings_autopilot">ऑटोपायलट</string>
-    <string name="settings_autopilot_desc">चुने गए एल्बम समय-समय पर स्कैन होते हैं और सबसे अच्छी फ़ोटो को छोड़कर बाकी सब बिना पुष्टि के अपने-आप हटा दी जाती हैं।</string>
+    <string name="settings_autopilot">अपने-आप स्कैन</string>
+    <string name="settings_autopilot_desc">चुने गए एल्बम आपकी चुनी हुई अवधि पर बैकग्राउंड में स्कैन होते हैं और नतीजा सूचना के रूप में आता है।</string>
     <string name="settings_autopilot_warning">ऑटोपायलट आपकी पुष्टि के बिना फ़ोटो हटाता है। ट्रैश मोड चालू होने पर 30 दिनों तक हटाना वापस लिया जा सकता है।</string>
     <string name="settings_autopilot_schedule">स्कैन की आवृत्ति</string>
     <string name="settings_schedule_daily">रोज़</string>
@@ -120,11 +120,11 @@
     <string name="history_trashed">ट्रैश में भेजी गई</string>
     <string name="history_deleted">हमेशा के लिए हटाई गई</string>
     <string name="history_clear">इतिहास साफ़ करें</string>
-    <string name="notif_channel_autopilot">ऑटोपायलट</string>
+    <string name="notif_channel_autopilot">अपने-आप स्कैन</string>
     <string name="notif_autopilot_done_title">अपने-आप सफ़ाई पूरी हुई</string>
-    <string name="notif_autopilot_done_text">%1$d फ़ोटो हटाई गईं, %2$s जगह खाली हुई</string>
+    <string name="notif_autopilot_done_text">%1$d समूह मिले · %2$d फ़ोटो हटाई गईं · %3$s जगह खाली हुई</string>
     <string name="notif_autopilot_pending_title">आपकी स्वीकृति चाहिए</string>
-    <string name="notif_autopilot_pending_text">%1$d फ़ोटो हटाने के लिए तैयार हैं। पुष्टि के लिए टैप करें।</string>
+    <string name="notif_autopilot_pending_text">%1$d समूहों की %2$d फ़ोटो हटाने के लिए तैयार हैं (%3$s)। पुष्टि के लिए टैप करें।</string>
     <string name="albums_screenshot_badge">📱 स्क्रीनशॉट · केवल हूबहू कॉपी</string>
     <string name="results_screenshot_group_title">📱 %1$d एक जैसे स्क्रीनशॉट</string>
     <string name="results_newest_badge">सबसे नई</string>
@@ -151,4 +151,13 @@
     <string name="theme_dark">डार्क</string>
     <string name="language">भाषा</string>
     <string name="language_system">फ़ोन की भाषा</string>
+    <string name="settings_autoscan_off">बंद</string>
+    <string name="settings_autoscan_notify">स्कैन करें और बताएं</string>
+    <string name="settings_autoscan_notify_desc">कुछ भी हटाया नहीं जाता; बताया जाता है कि कितने मिलते-जुलते समूह और फ़ोटो मिलीं। देखने के लिए सूचना पर टैप करें।</string>
+    <string name="settings_autoscan_delete">स्कैन करें और अपने-आप हटाएं</string>
+    <string name="settings_autoscan_delete_desc">हर समूह में सबसे अच्छी फ़ोटो को छोड़कर बाकी सब बिना पुष्टि के हटा दी जाती हैं; बताया जाता है कि कितनी फ़ोटो हटीं और कितनी जगह खाली हुई।</string>
+    <string name="settings_schedule_3days">हर 3 दिन</string>
+    <string name="notif_autoscan_title">अपने-आप स्कैन पूरा हुआ</string>
+    <string name="notif_autoscan_found_text">%1$d मिलते-जुलते समूह मिले · %2$d फ़ोटो हटाई जा सकती हैं (%3$s)। देखने के लिए टैप करें।</string>
+    <string name="notif_autoscan_none_text">कोई मिलती-जुलती फ़ोटो नहीं मिली 🎉</string>
 </resources>

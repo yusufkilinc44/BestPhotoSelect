@@ -18,6 +18,7 @@ class AutoPilotScheduler @Inject constructor(
     fun schedule(schedule: AutopilotSchedule) {
         val interval = when (schedule) {
             AutopilotSchedule.DAILY -> 1L to TimeUnit.DAYS
+            AutopilotSchedule.EVERY_3_DAYS -> 3L to TimeUnit.DAYS
             AutopilotSchedule.WEEKLY -> 7L to TimeUnit.DAYS
         }
         val request = PeriodicWorkRequestBuilder<AutoPilotWorker>(interval.first, interval.second)

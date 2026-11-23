@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.bestphotoselect.data.db.HistoryDao
 import com.bestphotoselect.data.db.HistoryEntity
+import com.bestphotoselect.data.model.AutoScanMode
 import com.bestphotoselect.data.model.AutopilotSchedule
 import com.bestphotoselect.data.model.ScoringWeights
 import com.bestphotoselect.work.AutoPilotScheduler
@@ -73,7 +74,7 @@ class LegacyLiteMigration @Inject constructor(
         val schedule = if (sp.getBoolean("autopilot_daily", true)) AutopilotSchedule.DAILY else AutopilotSchedule.WEEKLY
         settingsRepository.setAutopilotSchedule(schedule)
         if (sp.getBoolean("autopilot", false)) {
-            settingsRepository.setAutopilotEnabled(true)
+            settingsRepository.setAutoScanMode(AutoScanMode.AUTO_DELETE)
             autoPilotScheduler.schedule(schedule)
         }
     }
