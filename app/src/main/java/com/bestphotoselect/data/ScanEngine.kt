@@ -15,16 +15,19 @@ import com.bestphotoselect.domain.ImageLabeler
 import com.bestphotoselect.domain.PhotoGrouper
 import com.bestphotoselect.domain.QualityScorer
 import com.bestphotoselect.domain.ScreenshotMatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
 
 /**
  * Tarama hattının tamamı: MediaStore okuma -> dHash -> gruplama -> AI puanlama.
@@ -64,7 +67,8 @@ class ScanEngine @Inject constructor(
         val hashes = HashMap<Long, Long>(photos.size)
         val newEntries = HashMap<Long, PhotoCacheEntity>()
         val hashDone = AtomicInteger(0)
-        coroutineScope {
+        val hashWriter = BatchWriter()
+        hashWriter.runAndFlush { coroutineScope {
             val semaphore = Semaphore(PARALLELISM)
             photos.map { photo ->
                 async(Dispatchers.Default) {
@@ -76,7 +80,9 @@ class ScanEngine @Inject constructor(
                                 try { DHash.compute(b) } catch (t: Throwable) { null } finally { b.recycle() }
                             }
                             if (h != null) {
-                                synchronized(newEntries) { newEntries[photo.id] = emptyEntity(photo, h) }
+                                val entry = emptyEntity(photo, h)
+                                synchronized(newEntries) { newEntries[photo.id] = entry }
+                                hashWriter.add(entry)
                             }
                             h
                         }
@@ -85,8 +91,7 @@ class ScanEngine @Inject constructor(
                     }
                 }
             }.awaitAll()
-        }
-        persistCache(newEntries.values.toList())
+        } }
 
         // 2) Kişi sayısı: dHash arka planı hakim sahnelerde farklı kişi sayısını
         // ayırt edemeyebildiğinden gruplamada ek bir kontrol olarak kullanılır
@@ -105,9 +110,9 @@ class ScanEngine @Inject constructor(
                 ?.faceCount
             if (known != null) faceCounts[id] = known else toCount += id
         }
-        val countedEntries = ArrayList<PhotoCacheEntity>()
+        val countWriter = BatchWriter()
         val countTotal = photos.size + toCount.size
-        coroutineScope {
+        countWriter.runAndFlush { coroutineScope {
             val semaphore = Semaphore(PARALLELISM)
             toCount.map { id ->
                 async(Dispatchers.Default) {
@@ -121,14 +126,13 @@ class ScanEngine @Inject constructor(
                                 ?: cache[id]?.takeIf { it.dateModified == photo.dateModified }
                                 ?: emptyEntity(photo, hashes.getValue(id))
                             synchronized(faceCounts) { faceCounts[id] = count }
-                            synchronized(countedEntries) { countedEntries += base.copy(faceCount = count) }
+                            countWriter.add(base.copy(faceCount = count))
                         }
                         onProgress(Progress.Hashing(hashDone.incrementAndGet(), countTotal))
                     }
                 }
             }.awaitAll()
-        }
-        persistCache(countedEntries)
+        } }
 
         // 3) Gruplama — ekran görüntüleri normal fotoğraflarla asla karışmaz;
         // ayrı ve çok daha sıkı kurallarla gruplanır (bkz. groupScreenshots).
@@ -148,8 +152,8 @@ class ScanEngine @Inject constructor(
         val scoreCache = loadCache(memberIds.mapNotNull { photoById[it] })
         val analyses = HashMap<Long, PhotoAnalysis>(memberIds.size)
         val scoreDone = AtomicInteger(0)
-        val scoredCacheEntries = ArrayList<PhotoCacheEntity>()
-        coroutineScope {
+        val scoreWriter = BatchWriter()
+        scoreWriter.runAndFlush { coroutineScope {
             val semaphore = Semaphore(PARALLELISM)
             memberIds.map { id ->
                 async(Dispatchers.Default) {
@@ -164,16 +168,13 @@ class ScanEngine @Inject constructor(
                         }
                         if (analysis != null) {
                             synchronized(analyses) { analyses[id] = analysis }
-                            synchronized(scoredCacheEntries) {
-                                scoredCacheEntries += analysis.toCacheEntity()
-                            }
+                            scoreWriter.add(analysis.toCacheEntity())
                         }
                         onProgress(Progress.Scoring(scoreDone.incrementAndGet(), memberIds.size))
                     }
                 }
             }.awaitAll()
-        }
-        persistCache(scoredCacheEntries)
+        } }
 
         // 5) En iyiyi seç, grupları kur — kullanıcının kalıcı olarak yoksaydığı
         // (bkz. IgnoredGroupsRepository) gruplar sonuçlara asla girmez.
@@ -316,6 +317,36 @@ class ScanEngine @Inject constructor(
                 .associateBy { it.mediaId }
         }
 
+    /**
+     * Önbellek kayıtlarını [BATCH_SIZE]'lık parçalar hâlinde yazar. Tarama yarıda
+     * kesilse (uygulama kapanır, otomatik taramanın süresi dolar) bile o ana kadar
+     * analiz edilenler kaybolmaz; sonraki tarama kaldığı yerden devam eder.
+     */
+    private inner class BatchWriter {
+        private val buffer = ArrayList<PhotoCacheEntity>()
+        private val mutex = Mutex()
+
+        suspend fun add(entry: PhotoCacheEntity) {
+            val batch = mutex.withLock {
+                buffer += entry
+                if (buffer.size >= BATCH_SIZE) ArrayList(buffer).also { buffer.clear() } else null
+            }
+            if (batch != null) persistCache(batch)
+        }
+
+        /** [block] bitince ya da iptal/hata ile kesilince kalanlar da yazılır. */
+        suspend fun <T> runAndFlush(block: suspend () -> T): T {
+            try {
+                return block()
+            } finally {
+                withContext(NonCancellable) {
+                    val rest = mutex.withLock { ArrayList(buffer).also { buffer.clear() } }
+                    persistCache(rest)
+                }
+            }
+        }
+    }
+
     private suspend fun persistCache(entries: List<PhotoCacheEntity>) {
         if (entries.isEmpty()) return
         withContext(Dispatchers.IO) {
@@ -331,6 +362,7 @@ class ScanEngine @Inject constructor(
         private const val HASH_THUMB_SIZE = 384
         private const val SCORE_THUMB_SIZE = 640
         private const val SQL_CHUNK = 500
+        private const val BATCH_SIZE = 100
         // Ekran görüntüleri için ön eleme eşiği (64 bit üzerinden); asıl karar
         // ScreenshotMatcher'ın piksel karşılaştırmasındadır.
         private const val SCREENSHOT_MAX_HAMMING = 4

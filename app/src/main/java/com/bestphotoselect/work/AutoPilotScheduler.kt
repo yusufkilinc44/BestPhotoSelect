@@ -3,8 +3,11 @@ package com.bestphotoselect.work
 import android.content.Context
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.bestphotoselect.data.model.AutopilotSchedule
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
@@ -33,11 +36,31 @@ class AutoPilotScheduler @Inject constructor(
         )
     }
 
+    /**
+     * Süresi dolan otomatik taramanın devamını hemen kuyruğa ekler. Tarama
+     * önbelleği parça parça yazdığı için devam işi kaldığı yerden sürer.
+     */
+    fun enqueueContinuation(chain: Int) {
+        val request = OneTimeWorkRequestBuilder<AutoPilotWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .build()
+            )
+            .setInputData(workDataOf(AutoPilotWorker.KEY_CHAIN to chain))
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            CONTINUE_WORK_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request
+        )
+    }
+
     fun cancel() {
         WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+        WorkManager.getInstance(context).cancelUniqueWork(CONTINUE_WORK_NAME)
     }
 
     companion object {
         private const val WORK_NAME = "autopilot_scan"
+        private const val CONTINUE_WORK_NAME = "autopilot_scan_continue"
     }
 }

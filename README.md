@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.10.4, versionCode 39). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.5, versionCode 40). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,14 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.5 (versionCode 40)
+- **Yarıda kalan tarama boşa gitmez:** analiz sonuçları her 100 fotoğrafta bir önbelleğe
+  yazılıyor (önceden her aşamanın sonunda tek seferde); uygulama kapansa ya da tarama
+  kesilse bile sonraki tarama kaldığı yerden devam eder.
+- **Otomatik tarama büyük kütüphanelerde de biter:** Android'in ~10 dakikalık arka plan
+  sınırına takılmadan önce tarama kendini durdurup hemen bir devam işi kurar; iş birkaç
+  parçada tamamlanır (en fazla ~2,5 saatlik tarama).
 
 ### v2.10.4 (versionCode 39)
 - **Kısmi galeri erişimi (Android 14+ "Fotoğrafları seç"):** uygulama artık izin ekranında

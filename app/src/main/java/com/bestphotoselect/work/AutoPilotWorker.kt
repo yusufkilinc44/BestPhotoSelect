@@ -23,6 +23,8 @@ import com.bestphotoselect.util.GalleryAccess
 import com.bestphotoselect.util.formatBytes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Otomatik tarama: seçili albümleri arka planda belirlenen aralıkla tarar ve
@@ -45,7 +47,8 @@ class AutoPilotWorker @AssistedInject constructor(
     private val scanEngine: ScanEngine,
     private val scanRepository: ScanRepository,
     private val settingsRepository: SettingsRepository,
-    private val deletionRepository: DeletionRepository
+    private val deletionRepository: DeletionRepository,
+    private val autoPilotScheduler: AutoPilotScheduler
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
@@ -54,10 +57,20 @@ class AutoPilotWorker @AssistedInject constructor(
         if (settings.selectedBucketIds.isEmpty()) return Result.success()
         if (!hasReadPermission()) return Result.success()
 
+        // Android arka plan işlerini ~10 dakikada durdurur. Süre dolmadan tarama
+        // kendini keser (o ana kadarki analizler önbelleğe yazılmıştır) ve hemen bir
+        // devam işi kurar; büyük kütüphaneler birkaç parçada tamamlanır.
         val groups = try {
-            scanEngine.scan(settings.selectedBucketIds, settings)
+            withTimeoutOrNull(TIME_BUDGET_MS) { scanEngine.scan(settings.selectedBucketIds, settings) }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             return Result.retry()
+        }
+        if (groups == null) {
+            val chain = inputData.getInt(KEY_CHAIN, 0)
+            if (chain < MAX_CHAIN) autoPilotScheduler.enqueueContinuation(chain + 1)
+            return Result.success()
         }
 
         val toDelete = groups.flatMap { it.deletionCandidates }.map { it.photo }
@@ -146,6 +159,10 @@ class AutoPilotWorker @AssistedInject constructor(
     }
 
     companion object {
+        const val KEY_CHAIN = "chain"
+        private const val TIME_BUDGET_MS = 8L * 60 * 1000
+        /** Sonsuz döngüye karşı: en fazla bu kadar devam işi (yaklaşık 2,5 saatlik tarama). */
+        private const val MAX_CHAIN = 20
         private const val NOTIF_ID_RESULT = 100
         private const val NOTIF_ID_PENDING = 101
     }
