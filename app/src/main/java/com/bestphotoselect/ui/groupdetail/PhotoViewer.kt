@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -73,7 +74,10 @@ fun PhotoViewerOverlay(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        // Android 15 (targetSdk 35) pencereyi sistem çubuklarının arkasına uzatır.
+        // Fotoğraf tam ekran kalır; kontroller yalnızca güvenli alana yerleşir,
+        // gezinme çubuğuyla çakışmaz.
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
     ) {
         Box(
             modifier = Modifier
@@ -95,6 +99,7 @@ fun PhotoViewerOverlay(
                 onClick = onDismiss,
                 modifier = Modifier
                     .align(Alignment.TopStart)
+                    .safeDrawingPadding()
                     .padding(8.dp)
             ) {
                 Icon(
@@ -113,6 +118,7 @@ fun PhotoViewerOverlay(
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
+                    .safeDrawingPadding()
                     .padding(16.dp)
             )
 
@@ -125,6 +131,8 @@ fun PhotoViewerOverlay(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .background(Color(0x99000000))
+                    .safeDrawingPadding()
                     .padding(16.dp)
             )
         }
