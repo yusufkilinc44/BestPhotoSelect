@@ -211,4 +211,8 @@
     <string name="albums_camera_badge">📷 Galerie principale · photos de l\'appareil</string>
     <string name="results_rescanning">⚙️ Paramètres modifiés : nouvelle analyse avec les nouveaux paramètres…</string>
     <string name="app_version">Version %1$s</string>
+    <string name="permission_open_settings">Ouvrir les paramètres</string>
+    <string name="permission_denied_message">L\'accès à la galerie est désactivé. Dans Paramètres &gt; Autorisations &gt; Photos et vidéos, choisissez « Autoriser » puis revenez.</string>
+    <string name="permission_partial_banner">L\'application ne voit que les photos sélectionnées ; certaines photos similaires peuvent être manquées.</string>
+    <string name="permission_partial_allow_all">Tout autoriser</string>
 </resources>

@@ -211,4 +211,8 @@
     <string name="albums_camera_badge">📷 मुख्य गैलरी · कैमरा फ़ोटो</string>
     <string name="results_rescanning">⚙️ सेटिंग्स बदलीं — नई सेटिंग्स से फिर से स्कैन हो रहा है…</string>
     <string name="app_version">संस्करण %1$s</string>
+    <string name="permission_open_settings">सेटिंग्स खोलें</string>
+    <string name="permission_denied_message">गैलरी की अनुमति बंद है। सेटिंग्स &gt; अनुमतियां &gt; फ़ोटो और वीडियो में \"अनुमति दें\" चुनें और वापस आएं।</string>
+    <string name="permission_partial_banner">ऐप केवल आपकी चुनी हुई फ़ोटो देख सकता है, इसलिए कुछ मिलती-जुलती फ़ोटो छूट सकती हैं।</string>
+    <string name="permission_partial_allow_all">सभी की अनुमति दें</string>
 </resources>

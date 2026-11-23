@@ -211,4 +211,8 @@
     <string name="albums_camera_badge">📷 المعرض الرئيسي · صور الكاميرا</string>
     <string name="results_rescanning">⚙️ تغيّرت الإعدادات — جارٍ الفحص من جديد بالإعدادات الجديدة…</string>
     <string name="app_version">الإصدار %1$s</string>
+    <string name="permission_open_settings">فتح الإعدادات</string>
+    <string name="permission_denied_message">إذن الوصول إلى المعرض متوقف. من الإعدادات &gt; الأذونات &gt; الصور والفيديوهات اختر «السماح» ثم عُد.</string>
+    <string name="permission_partial_banner">لا يرى التطبيق إلا الصور التي اخترتها، لذا قد تفوته بعض الصور المتشابهة.</string>
+    <string name="permission_partial_allow_all">السماح بالكل</string>
 </resources>

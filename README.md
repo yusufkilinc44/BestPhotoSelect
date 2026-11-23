@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.10.3, versionCode 38). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.4, versionCode 39). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,13 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.4 (versionCode 39)
+- **Kısmi galeri erişimi (Android 14+ "Fotoğrafları seç"):** uygulama artık izin ekranında
+  takılmıyor; seçilen fotoğraflarla çalışır ve üstte "Tümüne izin ver" uyarısı gösterir.
+  Otomatik tarama da kısmi erişimde seçilen fotoğrafları tarar.
+- **Kalıcı olarak reddedilen izin:** düğme artık uygulamanın izin ayarlarını açar; ayarlardan
+  dönünce izin durumu yeniden okunur.
 
 ### v2.10.3 (versionCode 38)
 - **Düzeltme:** kişi sayısı kontrolü (farklı sayıda kişi olan kareler aynı gruba girmez)

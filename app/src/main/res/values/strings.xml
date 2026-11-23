@@ -231,4 +231,8 @@
     <string name="albums_camera_badge">📷 Main gallery · camera photos</string>
     <string name="results_rescanning">⚙️ Settings changed — rescanning with the new settings…</string>
     <string name="app_version">Version %1$s</string>
+    <string name="permission_open_settings">Open settings</string>
+    <string name="permission_denied_message">Gallery access is turned off. In Settings &gt; Permissions &gt; Photos and videos, choose \"Allow\" and come back.</string>
+    <string name="permission_partial_banner">The app can only see the photos you selected, so some similar photos may be missed.</string>
+    <string name="permission_partial_allow_all">Allow all</string>
 </resources>

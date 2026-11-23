@@ -243,4 +243,8 @@
     <string name="albums_camera_badge">📷 Ana galeri · kamera fotoğrafları</string>
     <string name="results_rescanning">⚙️ Ayarlar değişti — yeni ayarlarla baştan taranıyor…</string>
     <string name="app_version">Sürüm %1$s</string>
+    <string name="permission_open_settings">Ayarları aç</string>
+    <string name="permission_denied_message">Galeri izni kapalı. Ayarlar &gt; İzinler &gt; Fotoğraflar ve videolar bölümünden \"İzin ver\"i seçip geri dönün.</string>
+    <string name="permission_partial_banner">Uygulama yalnızca seçtiğiniz fotoğrafları görebiliyor; bazı benzer fotoğraflar bulunamayabilir.</string>
+    <string name="permission_partial_allow_all">Tümüne izin ver</string>
 </resources>

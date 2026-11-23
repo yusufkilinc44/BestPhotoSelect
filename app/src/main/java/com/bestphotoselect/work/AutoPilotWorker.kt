@@ -19,6 +19,7 @@ import com.bestphotoselect.data.ScanEngine
 import com.bestphotoselect.data.ScanRepository
 import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.data.model.AutoScanMode
+import com.bestphotoselect.util.GalleryAccess
 import com.bestphotoselect.util.formatBytes
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -84,14 +85,9 @@ class AutoPilotWorker @AssistedInject constructor(
         return Result.success()
     }
 
-    private fun hasReadPermission(): Boolean {
-        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Manifest.permission.READ_MEDIA_IMAGES
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-        return applicationContext.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-    }
+    /** Kısmi erişimde (Android 14+) yalnızca kullanıcının seçtiği fotoğraflar taranır. */
+    private fun hasReadPermission(): Boolean =
+        GalleryAccess.current(applicationContext) != GalleryAccess.Access.NONE
 
     private fun notifyNothingFound() = notify(
         NOTIF_ID_RESULT,
