@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">BestPhotoSelect</string>
+    <string name="app_name">Best Photo Select</string>
 
     <string name="back">Back</string>
     <string name="cancel">Cancel</string>
@@ -155,7 +155,13 @@
 
     <!-- Medya yönetimi izni (bir kez sorulur) -->
     <string name="manage_media_prompt_title">Stop asking on every delete</string>
-    <string name="manage_media_prompt_message">Android normally asks for confirmation on every delete. Grant \"Media management\" once and BestPhotoSelect won\'t ask again (with trash mode on, deleted photos can still be restored for 30 days).\n\nTurn the permission on for BestPhotoSelect on the next screen and come back. This question won\'t be shown again; you can also grant it later in Settings.</string>
+    <string name="manage_media_prompt_message">Android normally asks for confirmation on every delete. Grant \"Media management\" once and Best Photo Select won\'t ask again (with trash mode on, deleted photos can still be restored for 30 days).\n\nTurn the permission on for Best Photo Select on the next screen and come back. This question won\'t be shown again; you can also grant it later in Settings.</string>
     <string name="manage_media_prompt_allow">Grant</string>
     <string name="manage_media_prompt_later">Not now</string>
+    <string name="albums_view_list">List view</string>
+    <string name="albums_view_grid">Grid view</string>
+    <string name="albums_whatsapp_toggle">Scan WhatsApp folders</string>
+    <string name="albums_whatsapp_toggle_off">Off: WhatsApp folders can\'t be selected or scanned</string>
+    <string name="albums_whatsapp_badge">💬 WhatsApp</string>
+    <string name="albums_whatsapp_excluded">💬 WhatsApp · not scanned</string>
 </resources>

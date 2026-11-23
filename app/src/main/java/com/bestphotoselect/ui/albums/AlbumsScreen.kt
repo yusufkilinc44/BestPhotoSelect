@@ -14,11 +14,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items as listItems
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -32,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -42,6 +49,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -62,11 +70,19 @@ fun AlbumsScreen(
     onOpenHistory: () -> Unit,
     viewModel: AlbumsViewModel = hiltViewModel()
 ) {
+    val asList by viewModel.albumsAsList.collectAsState()
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.albums_title)) },
                 actions = {
+                    IconButton(onClick = { viewModel.setAlbumsAsList(!asList) }) {
+                        if (asList) {
+                            Icon(Icons.Default.GridView, contentDescription = stringResource(R.string.albums_view_grid))
+                        } else {
+                            Icon(Icons.AutoMirrored.Filled.ViewList, contentDescription = stringResource(R.string.albums_view_list))
+                        }
+                    }
                     IconButton(onClick = onOpenHistory) {
                         Icon(Icons.Default.History, contentDescription = stringResource(R.string.history))
                     }
@@ -98,6 +114,8 @@ private fun AlbumsContent(
 
     val albums by viewModel.albums.collectAsState()
     val selected by viewModel.selectedBuckets.collectAsState()
+    val asList by viewModel.albumsAsList.collectAsState()
+    val includeWhatsApp by viewModel.includeWhatsApp.collectAsState()
 
     when {
         albums == null -> {
@@ -135,19 +153,44 @@ private fun AlbumsContent(
                     }
                 }
 
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 150.dp),
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(albums!!, key = { it.bucketId }) { album ->
-                        AlbumCard(
-                            album = album,
-                            selected = album.bucketId in selected,
-                            onClick = { viewModel.toggleAlbum(album.bucketId) }
-                        )
+                if (albums!!.any { it.isWhatsApp }) {
+                    WhatsAppToggle(
+                        checked = includeWhatsApp,
+                        onCheckedChange = { viewModel.setIncludeWhatsApp(it) }
+                    )
+                }
+
+                if (asList) {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listItems(albums!!, key = { it.bucketId }) { album ->
+                            AlbumRow(
+                                album = album,
+                                selected = album.bucketId in selected,
+                                excluded = album.isWhatsApp && !includeWhatsApp,
+                                onClick = { viewModel.toggleAlbum(album.bucketId) }
+                            )
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 150.dp),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(albums!!, key = { it.bucketId }) { album ->
+                            AlbumCard(
+                                album = album,
+                                selected = album.bucketId in selected,
+                                excluded = album.isWhatsApp && !includeWhatsApp,
+                                onClick = { viewModel.toggleAlbum(album.bucketId) }
+                            )
+                        }
                     }
                 }
 
@@ -169,8 +212,8 @@ private fun AlbumsContent(
 }
 
 @Composable
-private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
-    Card(modifier = Modifier.clickable(onClick = onClick)) {
+private fun AlbumCard(album: Album, selected: Boolean, excluded: Boolean, onClick: () -> Unit) {
+    Card(modifier = Modifier.alpha(if (excluded) 0.45f else 1f).clickable(enabled = !excluded, onClick = onClick)) {
         Column {
             Box {
                 AsyncImage(
@@ -213,7 +256,106 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
                         overflow = TextOverflow.Ellipsis
                     )
                 }
+                if (album.isWhatsApp) {
+                    Text(
+                        text = stringResource(
+                            if (excluded) R.string.albums_whatsapp_excluded else R.string.albums_whatsapp_badge
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
+        }
+    }
+}
+
+/** WhatsApp klasörlerini taramaya dahil eden/dışarıda bırakan anahtar. */
+@Composable
+private fun WhatsAppToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.albums_whatsapp_toggle),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            if (!checked) {
+                Text(
+                    text = stringResource(R.string.albums_whatsapp_toggle_off),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+/** Liste görünümünde albüm satırı: küçük kapak, ad, sayı/boyut, seçim işareti. */
+@Composable
+private fun AlbumRow(album: Album, selected: Boolean, excluded: Boolean, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().alpha(if (excluded) 0.45f else 1f).clickable(enabled = !excluded, onClick = onClick)) {
+        Row(
+            modifier = Modifier.padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            AsyncImage(
+                model = album.coverUri,
+                contentDescription = album.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .alpha(if (selected) 0.75f else 1f)
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = album.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = stringResource(R.string.photos_count, album.photoCount) +
+                        " · " + formatBytes(album.totalBytes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (album.isScreenshots) {
+                    Text(
+                        text = stringResource(R.string.albums_screenshot_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (album.isWhatsApp) {
+                    Text(
+                        text = stringResource(
+                            if (excluded) R.string.albums_whatsapp_excluded else R.string.albums_whatsapp_badge
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+            Icon(
+                imageVector = if (selected) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                contentDescription = null,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            )
         }
     }
 }

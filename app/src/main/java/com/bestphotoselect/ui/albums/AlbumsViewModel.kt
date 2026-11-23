@@ -33,6 +33,29 @@ class AlbumsViewModel @Inject constructor(
     val manageMediaPrompted: StateFlow<Boolean?> = settingsRepository.manageMediaPrompted
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val albumsAsList: StateFlow<Boolean> = settingsRepository.albumsAsList
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val includeWhatsApp: StateFlow<Boolean> = settingsRepository.includeWhatsApp
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
+
+    private val whatsAppBuckets: Set<Long>
+        get() = _albums.value.orEmpty().filter { it.isWhatsApp }.map { it.bucketId }.toSet()
+
+    /** Kapatılınca WhatsApp klasörleri seçimden çıkarılır ve seçilemez. */
+    fun setIncludeWhatsApp(value: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setIncludeWhatsApp(value)
+            if (!value) {
+                settingsRepository.setSelectedBuckets(selectedBuckets.value - whatsAppBuckets)
+            }
+        }
+    }
+
+    fun setAlbumsAsList(value: Boolean) {
+        viewModelScope.launch { settingsRepository.setAlbumsAsList(value) }
+    }
+
     fun markManageMediaPrompted() {
         viewModelScope.launch { settingsRepository.setManageMediaPrompted() }
     }
@@ -45,6 +68,7 @@ class AlbumsViewModel @Inject constructor(
 
     fun toggleAlbum(bucketId: Long) {
         viewModelScope.launch {
+            if (!includeWhatsApp.value && bucketId in whatsAppBuckets) return@launch
             val current = selectedBuckets.value
             val next = if (bucketId in current) current - bucketId else current + bucketId
             settingsRepository.setSelectedBuckets(next)
@@ -53,8 +77,12 @@ class AlbumsViewModel @Inject constructor(
 
     fun selectAll() {
         viewModelScope.launch {
+            val includeWa = includeWhatsApp.value
             settingsRepository.setSelectedBuckets(
-                _albums.value?.map { it.bucketId }?.toSet() ?: emptySet()
+                _albums.value.orEmpty()
+                    .filter { includeWa || !it.isWhatsApp }
+                    .map { it.bucketId }
+                    .toSet()
             )
         }
     }

@@ -11,6 +11,7 @@ import android.util.Size
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.PhotoItem
 import com.bestphotoselect.domain.ScreenshotDetector
+import com.bestphotoselect.domain.WhatsAppDetector
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,7 +41,7 @@ class MediaStoreDataSource @Inject constructor(
     suspend fun queryAlbums(): List<Album> = withContext(Dispatchers.IO) {
         data class Acc(
             var count: Int, var bytes: Long, var coverId: Long, var coverDate: Long,
-            var name: String, var isScreenshots: Boolean
+            var name: String, var isScreenshots: Boolean, var isWhatsApp: Boolean
         )
 
         val albums = LinkedHashMap<Long, Acc>()
@@ -60,7 +61,12 @@ class MediaStoreDataSource @Inject constructor(
                 val date = c.getLong(dateCol)
                 val acc = albums.getOrPut(bucket) {
                     val name = c.getString(nameCol) ?: "?"
-                    Acc(0, 0, id, date, name, ScreenshotDetector.isScreenshot(name, c.getString(pathCol)))
+                    val path = c.getString(pathCol)
+                    Acc(
+                        0, 0, id, date, name,
+                        ScreenshotDetector.isScreenshot(name, path),
+                        WhatsAppDetector.isWhatsApp(name, path)
+                    )
                 }
                 acc.count++
                 acc.bytes += c.getLong(sizeCol)
@@ -77,7 +83,8 @@ class MediaStoreDataSource @Inject constructor(
                 photoCount = acc.count,
                 coverUri = ContentUris.withAppendedId(collection, acc.coverId),
                 totalBytes = acc.bytes,
-                isScreenshots = acc.isScreenshots
+                isScreenshots = acc.isScreenshots,
+                isWhatsApp = acc.isWhatsApp
             )
         }.sortedByDescending { it.photoCount }
     }

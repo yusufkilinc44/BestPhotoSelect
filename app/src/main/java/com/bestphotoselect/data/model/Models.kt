@@ -10,7 +10,8 @@ data class Album(
     val photoCount: Int,
     val coverUri: Uri,
     val totalBytes: Long,
-    val isScreenshots: Boolean = false
+    val isScreenshots: Boolean = false,
+    val isWhatsApp: Boolean = false
 )
 
 data class PhotoItem(

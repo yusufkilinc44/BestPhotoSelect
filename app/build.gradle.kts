@@ -16,8 +16,8 @@ android {
         targetSdk = 35
         // Eski lite sürümün son kodu 16'ydı (v1.10.0); üzerine güncelleme olarak
         // kurulabilmesi için bundan büyük olmalı.
-        versionCode = 27
-        versionName = "2.4.0"
+        versionCode = 28
+        versionName = "2.5.0"
 
         // Yalnızca gerçek telefonlarda kullanılan ARM mimarileri; x86/x86_64
         // (emülatör) yerel kütüphaneleri APK boyutunu gereksiz büyütüyordu.

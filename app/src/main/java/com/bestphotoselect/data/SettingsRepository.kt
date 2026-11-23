@@ -32,6 +32,8 @@ class SettingsRepository @Inject constructor(
         val buckets = stringSetPreferencesKey("selected_buckets")
         val manageMediaPrompted = booleanPreferencesKey("manage_media_prompted")
         val timeWindowDefaultV2 = booleanPreferencesKey("time_window_default_v2")
+        val albumsAsList = booleanPreferencesKey("albums_as_list")
+        val includeWhatsApp = booleanPreferencesKey("include_whatsapp")
 
         // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
         val wFaceQuality = intPreferencesKey("w_face_quality")
@@ -77,6 +79,18 @@ class SettingsRepository @Inject constructor(
 
     /** "Medya yönetimi" izni kurulumdan sonra yalnızca bir kez sorulur. */
     val manageMediaPrompted: Flow<Boolean> = context.dataStore.data.map { it[Keys.manageMediaPrompted] ?: false }
+
+    /** Albümler ekranı: true = liste, false = ızgara (varsayılan). */
+    val albumsAsList: Flow<Boolean> = context.dataStore.data.map { it[Keys.albumsAsList] ?: false }
+
+    /** WhatsApp klasörleri taramaya dahil mi (varsayılan: evet). */
+    val includeWhatsApp: Flow<Boolean> = context.dataStore.data.map { it[Keys.includeWhatsApp] ?: true }
+
+    suspend fun setIncludeWhatsApp(value: Boolean) =
+        context.dataStore.edit { it[Keys.includeWhatsApp] = value }
+
+    suspend fun setAlbumsAsList(value: Boolean) =
+        context.dataStore.edit { it[Keys.albumsAsList] = value }
 
     /**
      * Varsayılan zaman penceresi 60 sn'den 3 dk'ya çıktı. Kayıtlı değer tam eski

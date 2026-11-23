@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Varsayılan dil: Türkçe -->
 <resources>
-    <string name="app_name">BestPhotoSelect</string>
+    <string name="app_name">Best Photo Select</string>
 
     <!-- Genel -->
     <string name="back">Geri</string>
@@ -169,7 +169,13 @@
 
     <!-- Medya yönetimi izni (bir kez sorulur) -->
     <string name="manage_media_prompt_title">Silerken her seferinde sorulmasın</string>
-    <string name="manage_media_prompt_message">Android normalde her silmede ayrıca onay ister. Bir kez \"Medya yönetimi\" izni verirseniz BestPhotoSelect silerken bir daha sormaz (çöp kutusu modu açıksa silinenler yine 30 gün geri alınabilir).\n\nAçılacak ekranda BestPhotoSelect için izni açıp geri dönün. Bu soru bir daha gösterilmeyecek; izni daha sonra Ayarlar\'dan da verebilirsiniz.</string>
+    <string name="manage_media_prompt_message">Android normalde her silmede ayrıca onay ister. Bir kez \"Medya yönetimi\" izni verirseniz Best Photo Select silerken bir daha sormaz (çöp kutusu modu açıksa silinenler yine 30 gün geri alınabilir).\n\nAçılacak ekranda Best Photo Select için izni açıp geri dönün. Bu soru bir daha gösterilmeyecek; izni daha sonra Ayarlar\'dan da verebilirsiniz.</string>
     <string name="manage_media_prompt_allow">İzni ver</string>
     <string name="manage_media_prompt_later">Şimdi değil</string>
+    <string name="albums_view_list">Liste görünümü</string>
+    <string name="albums_view_grid">Izgara görünümü</string>
+    <string name="albums_whatsapp_toggle">WhatsApp klasörlerini tara</string>
+    <string name="albums_whatsapp_toggle_off">Kapalı: WhatsApp klasörleri seçilemez ve taranmaz</string>
+    <string name="albums_whatsapp_badge">💬 WhatsApp</string>
+    <string name="albums_whatsapp_excluded">💬 WhatsApp · taramaya dahil değil</string>
 </resources>
