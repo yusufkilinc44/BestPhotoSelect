@@ -227,4 +227,5 @@
     <string name="settings_reset_all_done">✅ All settings are back to their defaults.</string>
     <string name="settings_developer">Developer</string>
     <string name="settings_developer_info">Yusuf Kılınç · November 2026</string>
+    <string name="settings_developer_email" translatable="false">yusuf.kilinc@hotmail.com</string>
 </resources>

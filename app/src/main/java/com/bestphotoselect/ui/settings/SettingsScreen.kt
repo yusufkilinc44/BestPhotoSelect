@@ -356,6 +356,22 @@ private fun DeveloperFooter() {
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary
         )
+        // Dokununca e-posta uygulaması açılır; yoksa sessizce yok sayılır.
+        val context = LocalContext.current
+        val email = stringResource(R.string.settings_developer_email)
+        Text(
+            text = email,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .clickable {
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email")))
+                    }
+                }
+                .padding(4.dp)
+        )
     }
 }
 
