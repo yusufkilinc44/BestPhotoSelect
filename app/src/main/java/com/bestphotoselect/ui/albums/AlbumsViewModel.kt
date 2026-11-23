@@ -6,6 +6,7 @@ import com.bestphotoselect.data.MediaStoreDataSource
 import com.bestphotoselect.data.ScanRepository
 import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.data.model.Album
+import com.bestphotoselect.data.model.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,13 +37,20 @@ class AlbumsViewModel @Inject constructor(
     val albumsAsList: StateFlow<Boolean> = settingsRepository.albumsAsList
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    val themeMode: StateFlow<ThemeMode> = settingsRepository.themeMode
+        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
     val includeWhatsApp: StateFlow<Boolean> = settingsRepository.includeWhatsApp
         .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     private val whatsAppBuckets: Set<Long>
         get() = _albums.value.orEmpty().filter { it.isWhatsApp }.map { it.bucketId }.toSet()
 
-    /** Kapatılınca WhatsApp klasörleri seçimden çıkarılır ve seçilemez. */
+    /** Kapatılınca WhatsApp klasörleri listeden gizlenir ve seçimden çıkarılır. */
     fun setIncludeWhatsApp(value: Boolean) {
         viewModelScope.launch {
             settingsRepository.setIncludeWhatsApp(value)

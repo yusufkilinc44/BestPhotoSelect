@@ -174,8 +174,11 @@
     <string name="manage_media_prompt_later">Şimdi değil</string>
     <string name="albums_view_list">Liste görünümü</string>
     <string name="albums_view_grid">Izgara görünümü</string>
-    <string name="albums_whatsapp_toggle">WhatsApp klasörlerini tara</string>
-    <string name="albums_whatsapp_toggle_off">Kapalı: WhatsApp klasörleri seçilemez ve taranmaz</string>
+    <string name="albums_whatsapp_toggle">WhatsApp klasörlerini göster</string>
+    <string name="albums_whatsapp_toggle_off">Kapalı: WhatsApp klasörleri listede gösterilmez, seçilemez ve taranmaz</string>
     <string name="albums_whatsapp_badge">💬 WhatsApp</string>
-    <string name="albums_whatsapp_excluded">💬 WhatsApp · taramaya dahil değil</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistem varsayılanı</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
 </resources>

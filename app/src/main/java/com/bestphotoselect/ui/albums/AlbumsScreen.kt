@@ -24,7 +24,10 @@ import androidx.compose.foundation.lazy.items as listItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -33,10 +36,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -46,6 +52,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -59,6 +68,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.bestphotoselect.R
 import com.bestphotoselect.data.model.Album
+import com.bestphotoselect.data.model.ThemeMode
 import com.bestphotoselect.ui.common.PermissionGate
 import com.bestphotoselect.util.formatBytes
 
@@ -76,6 +86,10 @@ fun AlbumsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.albums_title)) },
                 actions = {
+                    ThemeMenu(
+                        mode = viewModel.themeMode.collectAsState().value,
+                        onSelect = { viewModel.setThemeMode(it) }
+                    )
                     IconButton(onClick = { viewModel.setAlbumsAsList(!asList) }) {
                         if (asList) {
                             Icon(Icons.Default.GridView, contentDescription = stringResource(R.string.albums_view_grid))
@@ -116,6 +130,8 @@ private fun AlbumsContent(
     val selected by viewModel.selectedBuckets.collectAsState()
     val asList by viewModel.albumsAsList.collectAsState()
     val includeWhatsApp by viewModel.includeWhatsApp.collectAsState()
+
+    val visibleAlbums = albums?.let { all -> if (includeWhatsApp) all else all.filter { !it.isWhatsApp } }
 
     when {
         albums == null -> {
@@ -166,11 +182,10 @@ private fun AlbumsContent(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listItems(albums!!, key = { it.bucketId }) { album ->
+                        listItems(visibleAlbums!!, key = { it.bucketId }) { album ->
                             AlbumRow(
                                 album = album,
                                 selected = album.bucketId in selected,
-                                excluded = album.isWhatsApp && !includeWhatsApp,
                                 onClick = { viewModel.toggleAlbum(album.bucketId) }
                             )
                         }
@@ -183,11 +198,10 @@ private fun AlbumsContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(albums!!, key = { it.bucketId }) { album ->
+                        items(visibleAlbums!!, key = { it.bucketId }) { album ->
                             AlbumCard(
                                 album = album,
                                 selected = album.bucketId in selected,
-                                excluded = album.isWhatsApp && !includeWhatsApp,
                                 onClick = { viewModel.toggleAlbum(album.bucketId) }
                             )
                         }
@@ -212,8 +226,8 @@ private fun AlbumsContent(
 }
 
 @Composable
-private fun AlbumCard(album: Album, selected: Boolean, excluded: Boolean, onClick: () -> Unit) {
-    Card(modifier = Modifier.alpha(if (excluded) 0.45f else 1f).clickable(enabled = !excluded, onClick = onClick)) {
+private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
+    Card(modifier = Modifier.clickable(onClick = onClick)) {
         Column {
             Box {
                 AsyncImage(
@@ -258,9 +272,7 @@ private fun AlbumCard(album: Album, selected: Boolean, excluded: Boolean, onClic
                 }
                 if (album.isWhatsApp) {
                     Text(
-                        text = stringResource(
-                            if (excluded) R.string.albums_whatsapp_excluded else R.string.albums_whatsapp_badge
-                        ),
+                        text = stringResource(R.string.albums_whatsapp_badge),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
@@ -272,7 +284,41 @@ private fun AlbumCard(album: Album, selected: Boolean, excluded: Boolean, onClic
     }
 }
 
-/** WhatsApp klasörlerini taramaya dahil eden/dışarıda bırakan anahtar. */
+/** Üst çubukta tema seçimi: sistem varsayılanı, açık ya da koyu. */
+@Composable
+private fun ThemeMenu(mode: ThemeMode, onSelect: (ThemeMode) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(
+                imageVector = when (mode) {
+                    ThemeMode.SYSTEM -> Icons.Default.BrightnessAuto
+                    ThemeMode.LIGHT -> Icons.Default.LightMode
+                    ThemeMode.DARK -> Icons.Default.DarkMode
+                },
+                contentDescription = stringResource(R.string.theme)
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            listOf(
+                ThemeMode.SYSTEM to R.string.theme_system,
+                ThemeMode.LIGHT to R.string.theme_light,
+                ThemeMode.DARK to R.string.theme_dark
+            ).forEach { (option, label) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(label)) },
+                    leadingIcon = { RadioButton(selected = option == mode, onClick = null) },
+                    onClick = {
+                        onSelect(option)
+                        open = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+/** WhatsApp klasörlerini listede gösteren/gizleyen anahtar; gizliyken seçilemez ve taranmaz. */
 @Composable
 private fun WhatsAppToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
@@ -301,8 +347,8 @@ private fun WhatsAppToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit)
 
 /** Liste görünümünde albüm satırı: küçük kapak, ad, sayı/boyut, seçim işareti. */
 @Composable
-private fun AlbumRow(album: Album, selected: Boolean, excluded: Boolean, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().alpha(if (excluded) 0.45f else 1f).clickable(enabled = !excluded, onClick = onClick)) {
+private fun AlbumRow(album: Album, selected: Boolean, onClick: () -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -341,9 +387,7 @@ private fun AlbumRow(album: Album, selected: Boolean, excluded: Boolean, onClick
                 }
                 if (album.isWhatsApp) {
                     Text(
-                        text = stringResource(
-                            if (excluded) R.string.albums_whatsapp_excluded else R.string.albums_whatsapp_badge
-                        ),
+                        text = stringResource(R.string.albums_whatsapp_badge),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,

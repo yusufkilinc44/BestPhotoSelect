@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.bestphotoselect.data.model.AppSettings
 import com.bestphotoselect.data.model.AutopilotSchedule
 import com.bestphotoselect.data.model.ScoringWeights
+import com.bestphotoselect.data.model.ThemeMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -34,6 +35,7 @@ class SettingsRepository @Inject constructor(
         val timeWindowDefaultV2 = booleanPreferencesKey("time_window_default_v2")
         val albumsAsList = booleanPreferencesKey("albums_as_list")
         val includeWhatsApp = booleanPreferencesKey("include_whatsapp")
+        val themeMode = stringPreferencesKey("theme_mode")
 
         // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
         val wFaceQuality = intPreferencesKey("w_face_quality")
@@ -83,7 +85,14 @@ class SettingsRepository @Inject constructor(
     /** Albümler ekranı: true = liste, false = ızgara (varsayılan). */
     val albumsAsList: Flow<Boolean> = context.dataStore.data.map { it[Keys.albumsAsList] ?: false }
 
-    /** WhatsApp klasörleri taramaya dahil mi (varsayılan: evet). */
+    val themeMode: Flow<ThemeMode> = context.dataStore.data.map { p ->
+        p[Keys.themeMode]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM
+    }
+
+    suspend fun setThemeMode(mode: ThemeMode) =
+        context.dataStore.edit { it[Keys.themeMode] = mode.name }
+
+    /** WhatsApp klasörleri albümler listesinde gösterilsin mi (varsayılan: evet). */
     val includeWhatsApp: Flow<Boolean> = context.dataStore.data.map { it[Keys.includeWhatsApp] ?: true }
 
     suspend fun setIncludeWhatsApp(value: Boolean) =

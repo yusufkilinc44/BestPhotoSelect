@@ -121,3 +121,6 @@ data class AppSettings(
     val selectedBucketIds: Set<Long>,
     val scoringWeights: ScoringWeights = ScoringWeights()
 )
+
+/** Uygulama teması: telefonun ayarını izle ya da açık/koyu sabitle. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }

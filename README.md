@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.5.0, versionCode 28). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.6.0, versionCode 29). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,13 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.6.0 (versionCode 29)
+- **Tema seçimi:** Albümler ekranının üst çubuğundan Sistem varsayılanı / Açık / Koyu;
+  durum ve gezinme çubuğu simgeleri de seçilen temaya uyar.
+- **"WhatsApp klasörlerini göster"** (eski "tara" anahtarının yerine): kapalıyken WhatsApp
+  klasörleri listede hiç görünmez, seçimden çıkarılır ve taranmaz; açıkken gösterilir ve
+  istenirse seçilebilir.
 
 ### v2.5.0 (versionCode 28)
 - Uygulama adı **"Best Photo Select"** oldu.

@@ -160,8 +160,11 @@
     <string name="manage_media_prompt_later">Not now</string>
     <string name="albums_view_list">List view</string>
     <string name="albums_view_grid">Grid view</string>
-    <string name="albums_whatsapp_toggle">Scan WhatsApp folders</string>
-    <string name="albums_whatsapp_toggle_off">Off: WhatsApp folders can\'t be selected or scanned</string>
+    <string name="albums_whatsapp_toggle">Show WhatsApp folders</string>
+    <string name="albums_whatsapp_toggle_off">Off: WhatsApp folders are hidden, can\'t be selected and aren\'t scanned</string>
     <string name="albums_whatsapp_badge">💬 WhatsApp</string>
-    <string name="albums_whatsapp_excluded">💬 WhatsApp · not scanned</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
 </resources>
