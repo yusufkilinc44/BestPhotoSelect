@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.groupdetail
 
+import com.bestphotoselect.ui.theme.appTopBarColors
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.res.Configuration
@@ -295,6 +296,7 @@ fun GroupDetailScreen(
                 },
                 topBar = {
                     TopAppBar(
+                        colors = appTopBarColors(),
                         title = { Text(stringResource(R.string.group_title)) },
                         navigationIcon = {
                             IconButton(onClick = onBack) {

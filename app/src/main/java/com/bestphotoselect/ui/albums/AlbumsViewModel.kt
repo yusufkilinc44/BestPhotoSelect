@@ -1,5 +1,8 @@
 package com.bestphotoselect.ui.albums
 
+import kotlinx.coroutines.flow.first
+import com.bestphotoselect.ui.tips.Tips
+import com.bestphotoselect.ui.tips.Tip
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bestphotoselect.data.MediaStoreDataSource
@@ -36,6 +39,32 @@ class AlbumsViewModel @Inject constructor(
 
     val albumsAsList: StateFlow<Boolean> = settingsRepository.albumsAsList
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    private val _tips = MutableStateFlow<List<Tip>>(emptyList())
+
+    /** Bu açılışta gösterilecek ipuçları (boşsa ipucu yok). */
+    val tips: StateFlow<List<Tip>> = _tips.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val ids = Tips.selectIds(
+                orderedIds = Tips.ALL.map { it.id },
+                seen = settingsRepository.seenTips.first(),
+                lastShownAt = settingsRepository.tipsLastShownAt.first(),
+                now = System.currentTimeMillis()
+            )
+            _tips.value = Tips.ALL.filter { it.id in ids }
+        }
+    }
+
+    /** İpucu ekranda göründüğü an "görüldü" sayılır; bir daha gösterilmez. */
+    fun onTipShown(tip: Tip) {
+        viewModelScope.launch { settingsRepository.markTipShown(tip.id, System.currentTimeMillis()) }
+    }
+
+    fun dismissTips() {
+        _tips.value = emptyList()
+    }
 
     val themeMode: StateFlow<ThemeMode> = settingsRepository.themeMode
         .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeMode.SYSTEM)

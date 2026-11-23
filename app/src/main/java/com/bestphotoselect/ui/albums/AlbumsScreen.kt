@@ -1,5 +1,7 @@
 package com.bestphotoselect.ui.albums
 
+import com.bestphotoselect.ui.theme.accentFor
+import com.bestphotoselect.ui.theme.appTopBarColors
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -35,7 +37,9 @@ import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -72,6 +76,7 @@ import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.ThemeMode
 import com.bestphotoselect.ui.common.AppLanguage
 import com.bestphotoselect.ui.common.PermissionGate
+import com.bestphotoselect.ui.tips.TipsDialog
 import com.bestphotoselect.util.formatBytes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,6 +91,7 @@ fun AlbumsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(stringResource(R.string.albums_title)) },
                 actions = {
                     LanguageMenu()
@@ -128,6 +134,20 @@ private fun AlbumsContent(
 ) {
     LaunchedEffect(Unit) { viewModel.loadAlbums() }
     ManageMediaPrompt(viewModel)
+
+    // İpuçları, ilk açılıştaki "Medya yönetimi" sorusu kapandıktan sonra gelir.
+    val context = LocalContext.current
+    val mediaPromptPending = viewModel.manageMediaPrompted.collectAsState().value
+    val mediaPromptVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+        mediaPromptPending == false && !MediaStore.canManageMedia(context)
+    val tips by viewModel.tips.collectAsState()
+    if (!mediaPromptVisible && mediaPromptPending != null && tips.isNotEmpty()) {
+        TipsDialog(
+            tips = tips,
+            onShown = { viewModel.onTipShown(it) },
+            onDismiss = { viewModel.dismissTips() }
+        )
+    }
 
     val albums by viewModel.albums.collectAsState()
     val selected by viewModel.selectedBuckets.collectAsState()
@@ -217,6 +237,10 @@ private fun AlbumsContent(
                         onScanStarted()
                     },
                     enabled = selected.isNotEmpty(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -230,7 +254,11 @@ private fun AlbumsContent(
 
 @Composable
 private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
-    Card(modifier = Modifier.clickable(onClick = onClick)) {
+    val accent = accentFor(album.bucketId)
+    Card(
+        modifier = Modifier.clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
+    ) {
         Column {
             Box {
                 AsyncImage(
@@ -262,7 +290,7 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
                     text = stringResource(R.string.photos_count, album.photoCount) +
                         " · " + formatBytes(album.totalBytes),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = accent.content.copy(alpha = 0.75f)
                 )
                 if (album.isScreenshots) {
                     Text(
@@ -388,7 +416,11 @@ private fun WhatsAppToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit)
 /** Liste görünümünde albüm satırı: küçük kapak, ad, sayı/boyut, seçim işareti. */
 @Composable
 private fun AlbumRow(album: Album, selected: Boolean, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    val accent = accentFor(album.bucketId)
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
+    ) {
         Row(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -414,7 +446,7 @@ private fun AlbumRow(album: Album, selected: Boolean, onClick: () -> Unit) {
                     text = stringResource(R.string.photos_count, album.photoCount) +
                         " · " + formatBytes(album.totalBytes),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = accent.content.copy(alpha = 0.75f)
                 )
                 if (album.isScreenshots) {
                     Text(

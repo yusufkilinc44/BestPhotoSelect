@@ -1,5 +1,6 @@
 package com.bestphotoselect.data
 
+import androidx.datastore.preferences.core.longPreferencesKey
 import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -38,6 +39,8 @@ class SettingsRepository @Inject constructor(
         val albumsAsList = booleanPreferencesKey("albums_as_list")
         val includeWhatsApp = booleanPreferencesKey("include_whatsapp")
         val themeMode = stringPreferencesKey("theme_mode")
+        val seenTips = stringSetPreferencesKey("seen_tips")
+        val tipsLastShownAt = longPreferencesKey("tips_last_shown_at")
 
         // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
         val wFaceQuality = intPreferencesKey("w_face_quality")
@@ -91,6 +94,16 @@ class SettingsRepository @Inject constructor(
     /** Albümler ekranı: true = liste, false = ızgara (varsayılan). */
     val albumsAsList: Flow<Boolean> = context.dataStore.data.map { it[Keys.albumsAsList] ?: false }
 
+    /** Gösterilmiş ipuçlarının kimlikleri ve son ipucu gösterim zamanı (0 = hiç). */
+    val seenTips: Flow<Set<String>> = context.dataStore.data.map { it[Keys.seenTips] ?: emptySet() }
+    val tipsLastShownAt: Flow<Long> = context.dataStore.data.map { it[Keys.tipsLastShownAt] ?: 0L }
+
+    suspend fun markTipShown(id: String, now: Long) =
+        context.dataStore.edit {
+            it[Keys.seenTips] = (it[Keys.seenTips] ?: emptySet()) + id
+            it[Keys.tipsLastShownAt] = now
+        }
+
     val themeMode: Flow<ThemeMode> = context.dataStore.data.map { p ->
         p[Keys.themeMode]?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() } ?: ThemeMode.SYSTEM
     }
@@ -116,6 +129,22 @@ class SettingsRepository @Inject constructor(
         context.dataStore.edit { p ->
             if (p[Keys.timeWindowDefaultV2] == true) return@edit
             if (p[Keys.timeWindow] == OLD_DEFAULT_TIME_WINDOW_SEC) p[Keys.timeWindow] = DEFAULT_TIME_WINDOW_SEC
+            p[Keys.timeWindowDefaultV2] = true
+        }
+
+    /**
+     * Ayarları ve görünüm tercihlerini (tema, ızgara/liste, WhatsApp klasörleri)
+     * varsayılanlara döndürür. Seçili albümler, yoksayılan gruplar, görülen
+     * ipuçları ve dil (sistemde saklanır) korunur.
+     */
+    suspend fun resetToDefaults() =
+        context.dataStore.edit { p ->
+            listOf(
+                Keys.hamming, Keys.timeWindow, Keys.trashMode, Keys.autopilot, Keys.schedule,
+                Keys.autoScanMode, Keys.albumsAsList, Keys.includeWhatsApp, Keys.themeMode,
+                Keys.wFaceQuality, Keys.wSharpness, Keys.wExposure, Keys.wResolution, Keys.wEyesOpen,
+                Keys.wFrontal, Keys.wSmile, Keys.wMouthClosed, Keys.wTogetherness, Keys.wComposition
+            ).forEach { p.remove(it) }
             p[Keys.timeWindowDefaultV2] = true
         }
 

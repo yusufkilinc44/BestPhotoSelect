@@ -1,5 +1,11 @@
 package com.bestphotoselect.ui.settings
 
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
+import com.bestphotoselect.ui.theme.accentFor
+import androidx.compose.material3.CardDefaults
+import com.bestphotoselect.ui.theme.appTopBarColors
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
@@ -74,6 +80,12 @@ class SettingsViewModel @Inject constructor(
     val ignoredGroupsCount: StateFlow<Int> = ignoredGroupsRepository.ignoredCount
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    /** Tüm ayarları varsayılana döndürür; otomatik tarama da kapanır. */
+    fun resetAllSettings() = viewModelScope.launch {
+        settingsRepository.resetToDefaults()
+        autoPilotScheduler.cancel()
+    }
+
     fun resetIgnoredGroups() = viewModelScope.launch {
         ignoredGroupsRepository.clearAll()
     }
@@ -131,6 +143,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -259,7 +272,7 @@ fun SettingsScreen(
             // sistem onay diyaloğunu kaldırır.
             val canManage = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                 MediaStore.canManageMedia(context)
-            SectionCard {
+            SectionCard(accentKey = 4) {
                 Text(
                     text = stringResource(R.string.settings_manage_media_title),
                     style = MaterialTheme.typography.titleSmall
@@ -301,7 +314,7 @@ fun SettingsScreen(
                 onReset = viewModel::resetIgnoredGroups
             )
 
-            SectionCard {
+            SectionCard(accentKey = 5) {
                 Text(
                     text = stringResource(R.string.settings_how_it_works_desc),
                     style = MaterialTheme.typography.bodySmall,
@@ -316,16 +329,63 @@ fun SettingsScreen(
                     Text(stringResource(R.string.settings_how_it_works))
                 }
             }
+
+            ResetAllSection(onConfirm = viewModel::resetAllSettings)
         }
     }
 }
 
+/** En altta: tüm ayarları varsayılana döndürme (onaylı). */
 @Composable
-private fun SectionCard(content: @Composable ColumnScope.() -> Unit) {
+private fun ResetAllSection(onConfirm: () -> Unit) {
+    var confirm by remember { mutableStateOf(false) }
+    var done by remember { mutableStateOf(false) }
+    OutlinedButton(
+        onClick = { confirm = true },
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp, bottom = 16.dp)
+    ) {
+        Text(stringResource(R.string.settings_reset_all))
+    }
+    if (done) {
+        Text(
+            text = stringResource(R.string.settings_reset_all_done),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+    }
+    if (confirm) {
+        AlertDialog(
+            onDismissRequest = { confirm = false },
+            title = { Text(stringResource(R.string.settings_reset_all_confirm_title)) },
+            text = { Text(stringResource(R.string.settings_reset_all_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirm = false
+                    done = true
+                    onConfirm()
+                }) {
+                    Text(stringResource(R.string.settings_reset_all_confirm_positive))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirm = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SectionCard(accentKey: Long, content: @Composable ColumnScope.() -> Unit) {
+    val accent = accentFor(accentKey)
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp)
+            .padding(top = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
     ) {
         Column(Modifier.padding(12.dp), content = content)
     }
@@ -336,7 +396,7 @@ private fun WeightsSection(
     weights: ScoringWeights,
     onChange: (ScoringWeights) -> Unit
 ) {
-    SectionCard {
+    SectionCard(accentKey = 3) {
         Text(stringResource(R.string.settings_weights_title), style = MaterialTheme.typography.titleSmall)
         Text(
             text = stringResource(R.string.settings_weights_desc),
@@ -424,7 +484,7 @@ private fun WeightSlider(labelRes: Int, value: Int, groupSum: Int, onValueChange
 @Composable
 private fun IgnoredGroupsSection(count: Int, onReset: () -> Unit) {
     var resetDone by remember { mutableStateOf(false) }
-    SectionCard {
+    SectionCard(accentKey = 1) {
         Text(stringResource(R.string.settings_ignored_groups_title), style = MaterialTheme.typography.titleSmall)
         Text(
             text = stringResource(R.string.settings_ignored_groups_desc),

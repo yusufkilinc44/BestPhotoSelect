@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.8.0, versionCode 31). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.9.0, versionCode 32). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,18 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.9.0 (versionCode 32)
+- **Renkli görünüm:** ikonun diyafram paletinden (kırmızı, turuncu, sarı, yeşil, mavi, mor)
+  türetilmiş açık ve koyu temalar; renkli üst çubuklar, albüm/grup/ayar kartları her biri
+  kendi renginde, turuncu "Taramayı başlat" düğmesi. Duvar kâğıdından renk alan dinamik renk
+  kapatıldı.
+- **İpuçları:** ilk açılışta en önemli 4 ipucu art arda; sonra her açılışta (en az 20 saat
+  arayla) çoğunlukla bir, bazen iki yeni ipucu. Toplam 18 ipucu, önem sırasıyla; görülen
+  ipucu bir daha gösterilmez.
+- **Ayarlar > "Tüm ayarları varsayılana döndür"** (onaylı): benzerlik, zaman penceresi, çöp
+  kutusu, otomatik tarama, ağırlıklar, tema, ızgara/liste ve WhatsApp klasörleri sıfırlanır;
+  seçili albümler, yoksayılan gruplar, dil ve geçmiş korunur.
 
 ### v2.8.0 (versionCode 31)
 - Otomatik pilot **"Otomatik tarama"** oldu ve üç seçenekli: **Kapalı** (varsayılan),

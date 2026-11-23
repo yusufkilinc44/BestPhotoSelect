@@ -1,5 +1,8 @@
 package com.bestphotoselect.ui.about
 
+import com.bestphotoselect.ui.theme.accentFor
+import androidx.compose.material3.CardDefaults
+import com.bestphotoselect.ui.theme.appTopBarColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +34,7 @@ fun AboutAlgorithmScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(stringResource(R.string.about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -53,18 +57,22 @@ fun AboutAlgorithmScreen(onBack: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            InfoCard(R.string.about_model_title, R.string.about_model_body)
-            InfoCard(R.string.about_similarity_title, R.string.about_similarity_body)
-            InfoCard(R.string.about_scoring_title, R.string.about_scoring_body, R.string.about_scoring_note)
-            InfoCard(R.string.about_screenshots_title, R.string.about_screenshots_body)
-            InfoCard(R.string.about_privacy_title, R.string.about_privacy_body)
+            InfoCard(0, R.string.about_model_title, R.string.about_model_body)
+            InfoCard(4, R.string.about_similarity_title, R.string.about_similarity_body)
+            InfoCard(2, R.string.about_scoring_title, R.string.about_scoring_body, R.string.about_scoring_note)
+            InfoCard(1, R.string.about_screenshots_title, R.string.about_screenshots_body)
+            InfoCard(3, R.string.about_privacy_title, R.string.about_privacy_body)
         }
     }
 }
 
 @Composable
-private fun InfoCard(titleRes: Int, bodyRes: Int, noteRes: Int? = null) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+private fun InfoCard(accentKey: Long, titleRes: Int, bodyRes: Int, noteRes: Int? = null) {
+    val accent = accentFor(accentKey)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
+    ) {
         Column(Modifier.padding(14.dp)) {
             Text(stringResource(titleRes), style = MaterialTheme.typography.titleSmall)
             Text(

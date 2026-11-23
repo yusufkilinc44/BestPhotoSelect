@@ -1,5 +1,8 @@
 package com.bestphotoselect.ui.results
 
+import com.bestphotoselect.ui.theme.accentFor
+import androidx.compose.material3.CardDefaults
+import com.bestphotoselect.ui.theme.appTopBarColors
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -91,6 +94,7 @@ fun ResultsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(stringResource(R.string.results_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -229,7 +233,11 @@ private fun ResultsContent(
 
 @Composable
 private fun GroupCard(group: PhotoGroup, onClick: () -> Unit) {
-    Card(modifier = Modifier.clickable(onClick = onClick)) {
+    val accent = accentFor(group.id.toLong())
+    Card(
+        modifier = Modifier.clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
+    ) {
         Column(Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

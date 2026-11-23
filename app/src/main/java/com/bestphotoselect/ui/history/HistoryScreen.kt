@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.history
 
+import com.bestphotoselect.ui.theme.appTopBarColors
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -65,6 +66,7 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                colors = appTopBarColors(),
                 title = { Text(stringResource(R.string.history_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
