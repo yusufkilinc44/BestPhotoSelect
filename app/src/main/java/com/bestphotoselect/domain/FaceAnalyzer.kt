@@ -88,7 +88,16 @@ class FaceAnalyzer @Inject constructor() {
             frontal = (frontal / totalWeight).coerceIn(0f, 1f),
             smile = (smile / totalWeight).coerceIn(0f, 1f),
             mouthClosed = (mouthClosed / totalWeight).coerceIn(0f, 1f),
-            faceAreaRatio = min(1f, areaSum / imageArea)
+            faceAreaRatio = min(1f, areaSum / imageArea),
+            togetherness = GroupCohesion.score(
+                faces.map {
+                    GroupCohesion.FaceBox(
+                        centerX = it.boundingBox.exactCenterX(),
+                        centerY = it.boundingBox.exactCenterY(),
+                        width = it.boundingBox.width().toFloat()
+                    )
+                }
+            )
         )
     }
 

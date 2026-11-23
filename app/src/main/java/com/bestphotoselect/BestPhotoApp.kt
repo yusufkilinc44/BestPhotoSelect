@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.bestphotoselect.data.LegacyLiteMigration
+import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.di.ApplicationScope
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,9 @@ class BestPhotoApp : Application(), Configuration.Provider {
     lateinit var legacyLiteMigration: LegacyLiteMigration
 
     @Inject
+    lateinit var settingsRepository: SettingsRepository
+
+    @Inject
     @field:ApplicationScope
     lateinit var appScope: CoroutineScope
 
@@ -33,7 +37,10 @@ class BestPhotoApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
-        appScope.launch { runCatching { legacyLiteMigration.runIfNeeded() } }
+        appScope.launch {
+            runCatching { legacyLiteMigration.runIfNeeded() }
+            runCatching { settingsRepository.applyTimeWindowDefaultV2() }
+        }
     }
 
     private fun createNotificationChannels() {

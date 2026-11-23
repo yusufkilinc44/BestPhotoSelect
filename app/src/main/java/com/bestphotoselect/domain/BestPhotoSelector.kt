@@ -66,6 +66,10 @@ object BestPhotoSelector {
         val maxSharpness = members.maxOf { it.sharpness }.coerceAtLeast(1e-6)
         val maxPixels = members.maxOf { it.photo.width.toLong() * it.photo.height }.coerceAtLeast(1L)
         val anyFace = members.any { it.face != null }
+        // Bir aradalık yalnızca grupta birden fazla kişili kare varsa anlamlıdır.
+        val anyTogetherness = members.any { it.face?.togetherness != null }
+        // Kompozisyon temizliği yalnızca nesne etiketleri varsa hesaplanabilir.
+        val anyLabels = members.size > 1 && members.any { it.labels.isNotEmpty() }
 
         // Yüz kalitesi alt-ağırlıkları kendi içinde normalize edilir.
         val faceSubSum = (weights.eyesOpen + weights.frontal + weights.smile + weights.mouthClosed).coerceAtLeast(1)
@@ -74,32 +78,43 @@ object BestPhotoSelector {
         val wSmile = weights.smile.toFloat() / faceSubSum
         val wMouth = weights.mouthClosed.toFloat() / faceSubSum
 
-        // Üst düzey ağırlıklar: yüzlü grupta dördü birden, yüzsüz grupta yüz
-        // kalitesi hariç kalan üçü yeniden normalize edilerek kullanılır.
-        val topSum = if (anyFace) {
-            (weights.faceQuality + weights.sharpness + weights.exposure + weights.resolution).coerceAtLeast(1)
-        } else {
-            (weights.sharpness + weights.exposure + weights.resolution).coerceAtLeast(1)
-        }
+        // Üst düzey ağırlıklar: grupta uygulanamayan ölçütler (yüz, bir aradalık,
+        // kompozisyon) hesaptan çıkar, kalanlar kendi aralarında normalize edilir.
+        val topSum = (
+            (if (anyFace) weights.faceQuality else 0) +
+                weights.sharpness + weights.exposure + weights.resolution +
+                (if (anyTogetherness) weights.togetherness else 0) +
+                (if (anyLabels) weights.composition else 0)
+            ).coerceAtLeast(1)
         val wFace = if (anyFace) weights.faceQuality.toFloat() / topSum else 0f
         val wSharp = weights.sharpness.toFloat() / topSum
         val wExposure = weights.exposure.toFloat() / topSum
         val wRes = weights.resolution.toFloat() / topSum
+        val wTogether = if (anyTogetherness) weights.togetherness.toFloat() / topSum else 0f
+        val wComposition = if (anyLabels) weights.composition.toFloat() / topSum else 0f
 
         return members.map { m ->
             val relSharpness = (m.sharpness / maxSharpness).toFloat()
             val relResolution = (m.photo.width.toLong() * m.photo.height).toFloat() / maxPixels
-            val score = if (anyFace) {
+            var score = wSharp * relSharpness + wExposure * m.exposure + wRes * relResolution
+            if (anyFace) {
                 val faceScore = m.face?.let {
                     wEyes * it.eyesOpen + wFrontal * it.frontal + wSmile * it.smile + wMouth * it.mouthClosed
                 } ?: MISSING_FACE_SCORE
-                wFace * faceScore + wSharp * relSharpness + wExposure * m.exposure + wRes * relResolution
-            } else {
-                wSharp * relSharpness + wExposure * m.exposure + wRes * relResolution
+                score += wFace * faceScore
+            }
+            if (anyTogetherness) {
+                // Bu karede ölçülemediyse (ör. bir kişi tespit edilemedi) nötr değer.
+                score += wTogether * (m.face?.togetherness ?: NEUTRAL)
+            }
+            if (anyLabels) {
+                score += wComposition * CompositionAnalyzer.cleanliness(m, members.filter { it !== m })
             }
             m to score.coerceIn(0f, 1f)
         }
     }
+
+    private const val NEUTRAL = 0.5f
 
     /**
      * Grupta yüz varken bu karede yüz bulunamadıysa (ör. herkes arkasını dönmüş

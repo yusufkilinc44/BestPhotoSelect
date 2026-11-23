@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.3.0, versionCode 26). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.4.0, versionCode 27). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -99,8 +99,8 @@ Tek uygulama, tek sürüm: `app/` (v2.3.0, versionCode 26). APK yalnızca ARM
 Gereksinimler: JDK 17+, Android SDK Platform 35 ve Build-Tools 35
 (`local.properties` içinde `sdk.dir`).
 
-Birim testleri: 5 test sınıfı, 40 test (`DHash`, `PhotoGrouper`, `QualityScorer`,
-`BestPhotoSelector`, ekran görüntüsü tanıma/eşleştirme) — tümü geçiyor.
+Birim testleri: `DHash`, `PhotoGrouper`, `QualityScorer`, `BestPhotoSelector`, ekran görüntüsü
+tanıma/eşleştirme, bir aradalık ve kompozisyon temizliği ölçütleri.
 
 Release APK, eski lite APK'larla aynı anahtarla (`keystore/bestphoto.keystore`)
 imzalanır; telefonda kurulu eski sürümün üzerine güncelleme olarak kurulur.
@@ -122,6 +122,19 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.4.0 (versionCode 27)
+- **Yeni puan ölçütü — kompozisyon temizliği:** cihaz içi görüntü etiketleme (ML Kit
+  image-labeling 17.0.9) ile karedeki nesneler tanınır; grubun diğer karelerinde olmayan
+  ama bu karede beliren yabancı öğe (araya giren gemi, araba, kuş vb.) puanı düşürür.
+  Nesne düzeyinde karşılaştırıldığı için kadraj kayması sonucu etkilemez.
+- **Yeni puan ölçütü — kişilerin bir arada olması:** birden fazla kişili karelerde kişiler
+  birbirine yakınsa yüksek, bir ya da birkaç kişi gruptan kopuksa düşük puan.
+- İki ölçüt de Ayarlar > "En iyi seçim ağırlıkları"ndan ayarlanabilir (varsayılan 25 ve 20);
+  uygulanamadıkları gruplarda hesaptan çıkarılır.
+- Benzer fotoğraf zaman penceresi varsayılanı 60 saniyeden **3 dakikaya** çıktı
+  (kayıtlı değer eski varsayılan 60 sn ise bir kez yükseltilir).
+- Analiz önbelleği yeni alanlar için bir kez sıfırlanır; ilk tarama biraz uzun sürer.
 
 ### v2.3.0 (versionCode 26)
 - **Yatay mod için yeni grup ekranı:** başlık ve açıklama yazıları kalkar; fotoğraflar

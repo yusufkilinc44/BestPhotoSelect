@@ -8,8 +8,10 @@ import com.bestphotoselect.data.model.PhotoAnalysis
 import com.bestphotoselect.data.model.PhotoGroup
 import com.bestphotoselect.data.model.PhotoItem
 import com.bestphotoselect.domain.BestPhotoSelector
+import com.bestphotoselect.domain.CompositionAnalyzer
 import com.bestphotoselect.domain.DHash
 import com.bestphotoselect.domain.FaceAnalyzer
+import com.bestphotoselect.domain.ImageLabeler
 import com.bestphotoselect.domain.PhotoGrouper
 import com.bestphotoselect.domain.QualityScorer
 import com.bestphotoselect.domain.ScreenshotMatcher
@@ -35,6 +37,7 @@ class ScanEngine @Inject constructor(
     private val mediaStore: MediaStoreDataSource,
     private val cacheDao: PhotoCacheDao,
     private val faceAnalyzer: FaceAnalyzer,
+    private val imageLabeler: ImageLabeler,
     private val ignoredGroupsRepository: IgnoredGroupsRepository
 ) {
 
@@ -244,10 +247,14 @@ class ScanEngine @Inject constructor(
                     frontal = cached.frontal ?: 0.7f,
                     smile = cached.smile ?: 0.5f,
                     mouthClosed = cached.mouthClosed ?: 0.7f,
-                    faceAreaRatio = cached.faceAreaRatio ?: 0f
+                    faceAreaRatio = cached.faceAreaRatio ?: 0f,
+                    togetherness = cached.togetherness
                 )
             }
-            return PhotoAnalysis(photo, hash, cached.sharpness, cached.exposure, face)
+            return PhotoAnalysis(
+                photo, hash, cached.sharpness, cached.exposure, face,
+                labels = CompositionAnalyzer.decode(cached.labels)
+            )
         }
 
         val bitmap = mediaStore.loadThumbnail(photo.uri, SCORE_THUMB_SIZE) ?: return null
@@ -255,7 +262,9 @@ class ScanEngine @Inject constructor(
             val sharpness = QualityScorer.sharpness(bitmap)
             val exposure = QualityScorer.exposure(bitmap)
             val face = faceAnalyzer.analyze(bitmap)
-            PhotoAnalysis(photo, hash, sharpness, exposure, face)
+            // Ekran görüntüleri bu hatta gelmez; etiketler kompozisyon temizliği içindir.
+            val labels = imageLabeler.labels(bitmap)
+            PhotoAnalysis(photo, hash, sharpness, exposure, face, labels)
         } finally {
             bitmap.recycle()
         }
@@ -272,7 +281,9 @@ class ScanEngine @Inject constructor(
         frontal = face?.frontal,
         smile = face?.smile,
         mouthClosed = face?.mouthClosed,
-        faceAreaRatio = face?.faceAreaRatio
+        faceAreaRatio = face?.faceAreaRatio,
+        togetherness = face?.togetherness,
+        labels = CompositionAnalyzer.encode(this.labels)
     )
 
     private suspend fun loadCache(photos: List<PhotoItem>): Map<Long, PhotoCacheEntity> =

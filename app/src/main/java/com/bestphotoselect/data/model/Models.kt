@@ -37,7 +37,9 @@ data class FaceMetrics(
     val smile: Float,
     /** 1 = ağız doğal/kapalı duruyor, 0 = konuşma anı gibi tuhaf/geniş açık. */
     val mouthClosed: Float,
-    val faceAreaRatio: Float
+    val faceAreaRatio: Float,
+    /** Birden fazla kişide bir aradalık (bkz. GroupCohesion); tek kişide null. */
+    val togetherness: Float? = null
 )
 
 /** Bir fotoğrafın tüm analiz sonuçları. */
@@ -46,7 +48,9 @@ data class PhotoAnalysis(
     val hash: Long,
     val sharpness: Double,
     val exposure: Float,
-    val face: FaceMetrics?
+    val face: FaceMetrics?,
+    /** Cihaz içi görüntü etiketleri (etiket -> güven 0..1); bkz. CompositionAnalyzer. */
+    val labels: Map<String, Float> = emptyMap()
 )
 
 data class ScoredPhoto(
@@ -98,7 +102,13 @@ data class ScoringWeights(
     val eyesOpen: Int = 45,
     val frontal: Int = 15,
     val smile: Int = 15,
-    val mouthClosed: Int = 25
+    val mouthClosed: Int = 25,
+    // Birden fazla kişili gruplarda kişilerin bir arada durması (bkz. GroupCohesion);
+    // grupta hiç çok kişili kare yoksa devre dışı kalır, diğerleri yeniden normalize edilir.
+    val togetherness: Int = 20,
+    // Grubun diğer karelerinde olmayan yabancı öğe (araya giren gemi, araba vb.)
+    // içermeyen kare yüksek puan alır (bkz. CompositionAnalyzer).
+    val composition: Int = 25
 )
 
 data class AppSettings(

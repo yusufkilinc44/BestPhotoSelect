@@ -14,6 +14,7 @@ coil = "2.7.0"
 work = "2.9.1"
 datastore = "1.1.1"
 mlkitFace = "16.1.7"
+mlkitLabeling = "17.0.9"
 coroutines = "1.9.0"
 junit = "4.13.2"
 
@@ -49,6 +50,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 coil-video = { group = "io.coil-kt", name = "coil-video", version.ref = "coil" }
 
 mlkit-face-detection = { group = "com.google.mlkit", name = "face-detection", version.ref = "mlkitFace" }
+mlkit-image-labeling = { group = "com.google.mlkit", name = "image-labeling", version.ref = "mlkitLabeling" }
 
 coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }

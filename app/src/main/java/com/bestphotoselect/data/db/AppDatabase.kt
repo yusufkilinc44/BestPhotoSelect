@@ -26,7 +26,10 @@ data class PhotoCacheEntity(
     val frontal: Float?,
     val smile: Float?,
     val mouthClosed: Float?,
-    val faceAreaRatio: Float?
+    val faceAreaRatio: Float?,
+    val togetherness: Float? = null,
+    /** Görüntü etiketleri, CompositionAnalyzer.encode biçiminde. */
+    val labels: String? = null
 )
 
 @Entity(tableName = "history")
@@ -94,7 +97,7 @@ interface IgnoredGroupDao {
 
 @Database(
     entities = [PhotoCacheEntity::class, HistoryEntity::class, IgnoredGroupEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

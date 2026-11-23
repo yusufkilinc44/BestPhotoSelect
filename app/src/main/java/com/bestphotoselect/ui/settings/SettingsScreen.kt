@@ -331,7 +331,8 @@ private fun WeightsSection(
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(top = 12.dp)
         )
-        val topSum = weights.faceQuality + weights.sharpness + weights.exposure + weights.resolution
+        val topSum = weights.faceQuality + weights.sharpness + weights.exposure + weights.resolution +
+            weights.togetherness + weights.composition
         WeightSlider(R.string.settings_weights_face_quality, weights.faceQuality, topSum) {
             onChange(weights.copy(faceQuality = it))
         }
@@ -343,6 +344,12 @@ private fun WeightsSection(
         }
         WeightSlider(R.string.settings_weights_resolution, weights.resolution, topSum) {
             onChange(weights.copy(resolution = it))
+        }
+        WeightSlider(R.string.settings_weights_togetherness, weights.togetherness, topSum) {
+            onChange(weights.copy(togetherness = it))
+        }
+        WeightSlider(R.string.settings_weights_composition, weights.composition, topSum) {
+            onChange(weights.copy(composition = it))
         }
 
         Text(

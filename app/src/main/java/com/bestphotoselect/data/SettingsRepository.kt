@@ -31,6 +31,7 @@ class SettingsRepository @Inject constructor(
         val schedule = stringPreferencesKey("autopilot_schedule")
         val buckets = stringSetPreferencesKey("selected_buckets")
         val manageMediaPrompted = booleanPreferencesKey("manage_media_prompted")
+        val timeWindowDefaultV2 = booleanPreferencesKey("time_window_default_v2")
 
         // "En iyi" seçim ağırlıkları (bkz. ScoringWeights, BestPhotoSelector)
         val wFaceQuality = intPreferencesKey("w_face_quality")
@@ -41,6 +42,8 @@ class SettingsRepository @Inject constructor(
         val wFrontal = intPreferencesKey("w_frontal")
         val wSmile = intPreferencesKey("w_smile")
         val wMouthClosed = intPreferencesKey("w_mouth_closed")
+        val wTogetherness = intPreferencesKey("w_togetherness")
+        val wComposition = intPreferencesKey("w_composition")
     }
 
     private val defaultWeights = ScoringWeights()
@@ -63,7 +66,9 @@ class SettingsRepository @Inject constructor(
                 eyesOpen = p[Keys.wEyesOpen] ?: defaultWeights.eyesOpen,
                 frontal = p[Keys.wFrontal] ?: defaultWeights.frontal,
                 smile = p[Keys.wSmile] ?: defaultWeights.smile,
-                mouthClosed = p[Keys.wMouthClosed] ?: defaultWeights.mouthClosed
+                mouthClosed = p[Keys.wMouthClosed] ?: defaultWeights.mouthClosed,
+                togetherness = p[Keys.wTogetherness] ?: defaultWeights.togetherness,
+                composition = p[Keys.wComposition] ?: defaultWeights.composition
             )
         )
     }
@@ -72,6 +77,18 @@ class SettingsRepository @Inject constructor(
 
     /** "Medya yönetimi" izni kurulumdan sonra yalnızca bir kez sorulur. */
     val manageMediaPrompted: Flow<Boolean> = context.dataStore.data.map { it[Keys.manageMediaPrompted] ?: false }
+
+    /**
+     * Varsayılan zaman penceresi 60 sn'den 3 dk'ya çıktı. Kayıtlı değer tam eski
+     * varsayılansa (kullanıcı özellikle başka bir değer seçmemişse) bir kez yeni
+     * varsayılana yükseltilir; başka değerlere dokunulmaz.
+     */
+    suspend fun applyTimeWindowDefaultV2() =
+        context.dataStore.edit { p ->
+            if (p[Keys.timeWindowDefaultV2] == true) return@edit
+            if (p[Keys.timeWindow] == OLD_DEFAULT_TIME_WINDOW_SEC) p[Keys.timeWindow] = DEFAULT_TIME_WINDOW_SEC
+            p[Keys.timeWindowDefaultV2] = true
+        }
 
     suspend fun setManageMediaPrompted() =
         context.dataStore.edit { it[Keys.manageMediaPrompted] = true }
@@ -104,10 +121,13 @@ class SettingsRepository @Inject constructor(
             p[Keys.wFrontal] = weights.frontal.coerceIn(0, 100)
             p[Keys.wSmile] = weights.smile.coerceIn(0, 100)
             p[Keys.wMouthClosed] = weights.mouthClosed.coerceIn(0, 100)
+            p[Keys.wTogetherness] = weights.togetherness.coerceIn(0, 100)
+            p[Keys.wComposition] = weights.composition.coerceIn(0, 100)
         }
 
     companion object {
         const val DEFAULT_HAMMING = 10
-        const val DEFAULT_TIME_WINDOW_SEC = 60
+        const val DEFAULT_TIME_WINDOW_SEC = 180
+        private const val OLD_DEFAULT_TIME_WINDOW_SEC = 60
     }
 }
