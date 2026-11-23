@@ -206,4 +206,6 @@
     <string name="settings_reset_all_confirm_message">ستعود حساسية التشابه والفاصل الزمني وسلة المحذوفات والفحص التلقائي (سيتوقف) وأوزان «الأفضل» والمظهر وعرض الشبكة/القائمة ومجلدات WhatsApp إلى الوضع الافتراضي. تبقى الألبومات المحددة والمجموعات المتجاهلة واللغة والسجل كما هي.</string>
     <string name="settings_reset_all_confirm_positive">إعادة تعيين</string>
     <string name="settings_reset_all_done">✅ عادت كل الإعدادات إلى الوضع الافتراضي.</string>
+    <string name="settings_developer">المطوّر</string>
+    <string name="settings_developer_info">Yusuf Kılınç · نوفمبر 2026</string>
 </resources>

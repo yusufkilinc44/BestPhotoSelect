@@ -331,7 +331,31 @@ fun SettingsScreen(
             }
 
             ResetAllSection(onConfirm = viewModel::resetAllSettings)
+
+            DeveloperFooter()
         }
+    }
+}
+
+/** Sayfanın en altında geliştirici bilgisi. */
+@Composable
+private fun DeveloperFooter() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, bottom = 24.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.settings_developer),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = stringResource(R.string.settings_developer_info),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

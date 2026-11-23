@@ -206,4 +206,6 @@
     <string name="settings_reset_all_confirm_message">La sensibilité, l\'intervalle de temps, la corbeille, l\'analyse automatique (désactivée), les pondérations de la « meilleure », le thème, l\'affichage grille/liste et les dossiers WhatsApp reviennent à leurs valeurs par défaut. Les albums sélectionnés, les groupes ignorés, la langue et l\'historique sont conservés.</string>
     <string name="settings_reset_all_confirm_positive">Rétablir</string>
     <string name="settings_reset_all_done">✅ Tous les paramètres sont revenus à leurs valeurs par défaut.</string>
+    <string name="settings_developer">Développeur</string>
+    <string name="settings_developer_info">Yusuf Kılınç · novembre 2026</string>
 </resources>

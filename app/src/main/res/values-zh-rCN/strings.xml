@@ -206,4 +206,6 @@
     <string name="settings_reset_all_confirm_message">相似度灵敏度、时间范围、回收站模式、自动扫描（将关闭）、“最佳”权重、主题、网格/列表视图和 WhatsApp 文件夹都将恢复默认。已选相册、已忽略的组、语言和历史记录会保留。</string>
     <string name="settings_reset_all_confirm_positive">重置</string>
     <string name="settings_reset_all_done">✅ 所有设置已恢复默认。</string>
+    <string name="settings_developer">开发者</string>
+    <string name="settings_developer_info">Yusuf Kılınç · 2026年11月</string>
 </resources>

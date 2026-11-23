@@ -206,4 +206,6 @@
     <string name="settings_reset_all_confirm_message">समानता संवेदनशीलता, समय सीमा, ट्रैश मोड, अपने-आप स्कैन (बंद हो जाएगा), \"सबसे अच्छी\" के भार, थीम, ग्रिड/सूची दृश्य और WhatsApp फ़ोल्डर डिफ़ॉल्ट पर लौट आएंगे। चुने गए एल्बम, अनदेखे समूह, भाषा और इतिहास बने रहेंगे।</string>
     <string name="settings_reset_all_confirm_positive">रीसेट करें</string>
     <string name="settings_reset_all_done">✅ सभी सेटिंग्स डिफ़ॉल्ट पर लौट आईं।</string>
+    <string name="settings_developer">डेवलपर</string>
+    <string name="settings_developer_info">Yusuf Kılınç · नवंबर 2026</string>
 </resources>

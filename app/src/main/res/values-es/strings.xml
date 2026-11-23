@@ -206,4 +206,6 @@
     <string name="settings_reset_all_confirm_message">La sensibilidad, el intervalo de tiempo, la papelera, el análisis automático (se desactiva), los pesos de la \"mejor\", el tema, la vista de cuadrícula/lista y las carpetas de WhatsApp vuelven a sus valores predeterminados. Se conservan los álbumes seleccionados, los grupos ignorados, el idioma y el historial.</string>
     <string name="settings_reset_all_confirm_positive">Restablecer</string>
     <string name="settings_reset_all_done">✅ Todos los ajustes han vuelto a sus valores predeterminados.</string>
+    <string name="settings_developer">Desarrollador</string>
+    <string name="settings_developer_info">Yusuf Kılınç · noviembre de 2026</string>
 </resources>

@@ -225,4 +225,6 @@
     <string name="settings_reset_all_confirm_message">Similarity, time window, trash mode, automatic scan (turned off), \"best\" weights, theme, grid/list view and WhatsApp folders go back to their defaults. Your selected albums, ignored groups, language and history are kept.</string>
     <string name="settings_reset_all_confirm_positive">Reset</string>
     <string name="settings_reset_all_done">✅ All settings are back to their defaults.</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_developer_info">Yusuf Kılınç · November 2026</string>
 </resources>

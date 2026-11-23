@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.9.0, versionCode 32). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.9.1, versionCode 33). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,9 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.9.1 (versionCode 33)
+- Ayarlar sayfasının en altına geliştirici bilgisi: "Yusuf Kılınç · Kasım 2026" (7 dilde).
 
 ### v2.9.0 (versionCode 32)
 - **Renkli görünüm:** ikonun diyafram paletinden (kırmızı, turuncu, sarı, yeşil, mavi, mor)

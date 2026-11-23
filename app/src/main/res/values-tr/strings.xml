@@ -238,4 +238,6 @@
     <string name="settings_reset_all_confirm_message">Benzerlik hassasiyeti, zaman penceresi, çöp kutusu modu, otomatik tarama (kapatılır), \"en iyi\" ağırlıkları, tema, ızgara/liste görünümü ve WhatsApp klasörleri varsayılana döner. Seçili albümler, yoksayılan gruplar, dil ve geçmiş korunur.</string>
     <string name="settings_reset_all_confirm_positive">Sıfırla</string>
     <string name="settings_reset_all_done">✅ Tüm ayarlar varsayılana döndü.</string>
+    <string name="settings_developer">Geliştirici</string>
+    <string name="settings_developer_info">Yusuf Kılınç · Kasım 2026</string>
 </resources>
