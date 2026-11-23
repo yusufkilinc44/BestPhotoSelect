@@ -60,6 +60,17 @@ object PhotoGrouper {
     }
 
     /**
+     * Yüz sayısına bakılmadan, en az bir benzer komşusu olan fotoğraflar. Kişi
+     * sayısı yalnızca bunlar için gerekir; geri kalanı zaten hiçbir gruba giremez.
+     * Yüz kontrolü yalnızca kenar sildiği için sonuç, [group]'un yüz sayılarıyla
+     * bulacağı tüm grupların üst kümesidir.
+     */
+    fun candidateIds(photos: List<Input>, timeWindowMs: Long, maxHammingDistance: Int): Set<Long> =
+        group(photos.map { it.copy(faceCount = -1) }, timeWindowMs, maxHammingDistance)
+            .flatten()
+            .toSet()
+
+    /**
      * dHash, arka planı yoğun (deniz, gökyüzü, korkuluk vb.) sabit sahnelerde
      * kare içindeki kişi sayısını yeterince ayırt edemeyebilir — aynı yerde art
      * arda çekilmiş ama tamamen farklı kişileri gösteren kareleri yanlışlıkla

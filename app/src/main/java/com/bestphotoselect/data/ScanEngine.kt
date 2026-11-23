@@ -59,52 +59,24 @@ class ScanEngine @Inject constructor(
 
         val cache = loadCache(photos)
 
-        // 1) Hash + kaba yüz sayımı aşaması. dHash arka plan hakim sahnelerde
-        // farklı kişi sayısını ayırt edemeyebildiğinden, yüz sayısı gruplama
-        // aşamasında ek bir "gerçekten benzer mi" kontrolü sağlar (bkz.
-        // PhotoGrouper.faceCountsCompatible). İkisi de aynı küçük resimden
-        // hesaplanır; tek fotoğrafın hatası taramayı düşürmemeli.
+        // 1) Algısal parmak izi (dHash): önbellekte geçerli kaydı olmayan her
+        // fotoğraf için küçük resimden hesaplanır.
         val hashes = HashMap<Long, Long>(photos.size)
-        val faceCounts = HashMap<Long, Int>(photos.size)
-        val newCacheEntries = ArrayList<PhotoCacheEntity>()
+        val newEntries = HashMap<Long, PhotoCacheEntity>()
         val hashDone = AtomicInteger(0)
         coroutineScope {
             val semaphore = Semaphore(PARALLELISM)
             photos.map { photo ->
                 async(Dispatchers.Default) {
                     semaphore.withPermit {
-                        val cached = cache[photo.id]
-                        val hash = if (cached != null && cached.dateModified == photo.dateModified) {
-                            cached.hash
-                        } else {
+                        val cached = cache[photo.id]?.takeIf { it.dateModified == photo.dateModified }
+                        val hash = cached?.hash ?: run {
                             val bmp = mediaStore.loadThumbnail(photo.uri, HASH_THUMB_SIZE)
                             val h = bmp?.let { b ->
-                                try {
-                                    val computed = DHash.compute(b)
-                                    // Ekran görüntülerinde yüz sayısı anlamsız; analiz atlanır.
-                                    val count = if (photo.isScreenshot) -1 else {
-                                        try { faceAnalyzer.countFaces(b) } catch (t: Throwable) { -1 }
-                                    }
-                                    synchronized(faceCounts) { faceCounts[photo.id] = count }
-                                    computed
-                                } catch (t: Throwable) {
-                                    null
-                                } finally {
-                                    b.recycle()
-                                }
+                                try { DHash.compute(b) } catch (t: Throwable) { null } finally { b.recycle() }
                             }
                             if (h != null) {
-                                synchronized(newCacheEntries) {
-                                    newCacheEntries += PhotoCacheEntity(
-                                        mediaId = photo.id,
-                                        dateModified = photo.dateModified,
-                                        hash = h,
-                                        sharpness = null, exposure = null,
-                                        faceCount = null, eyesOpen = null,
-                                        frontal = null, smile = null, mouthClosed = null,
-                                        faceAreaRatio = null
-                                    )
-                                }
+                                synchronized(newEntries) { newEntries[photo.id] = emptyEntity(photo, h) }
                             }
                             h
                         }
@@ -114,25 +86,64 @@ class ScanEngine @Inject constructor(
                 }
             }.awaitAll()
         }
-        persistCache(newCacheEntries)
+        persistCache(newEntries.values.toList())
 
-        // 2) Gruplama — ekran görüntüleri normal fotoğraflarla asla karışmaz;
+        // 2) Kişi sayısı: dHash arka planı hakim sahnelerde farklı kişi sayısını
+        // ayırt edemeyebildiğinden gruplamada ek bir kontrol olarak kullanılır
+        // (bkz. PhotoGrouper.faceCountsCompatible). Yalnızca benzer komşusu olan
+        // kareler için gerekir; önbelleğe yazılır ki sonraki taramalarda da
+        // kontrol aynı şekilde uygulansın.
+        val photoById = photos.associateBy { it.id }
+        val inputs = photos.mapNotNull { p -> hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it) } }
+        val (screenshotInputs, plainInputs) = inputs.partition { photoById.getValue(it.id).isScreenshot }
+        val timeWindowMs = settings.timeWindowSec * 1000L
+        val candidates = PhotoGrouper.candidateIds(plainInputs, timeWindowMs, settings.hammingThreshold)
+        val faceCounts = HashMap<Long, Int>(candidates.size)
+        val toCount = ArrayList<Long>()
+        for (id in candidates) {
+            val known = (newEntries[id] ?: cache[id]?.takeIf { it.dateModified == photoById.getValue(id).dateModified })
+                ?.faceCount
+            if (known != null) faceCounts[id] = known else toCount += id
+        }
+        val countedEntries = ArrayList<PhotoCacheEntity>()
+        val countTotal = photos.size + toCount.size
+        coroutineScope {
+            val semaphore = Semaphore(PARALLELISM)
+            toCount.map { id ->
+                async(Dispatchers.Default) {
+                    semaphore.withPermit {
+                        val photo = photoById.getValue(id)
+                        val count = mediaStore.loadThumbnail(photo.uri, HASH_THUMB_SIZE)?.let { b ->
+                            try { faceAnalyzer.countFaces(b) } catch (t: Throwable) { -1 } finally { b.recycle() }
+                        } ?: -1
+                        if (count >= 0) {
+                            val base = newEntries[id]
+                                ?: cache[id]?.takeIf { it.dateModified == photo.dateModified }
+                                ?: emptyEntity(photo, hashes.getValue(id))
+                            synchronized(faceCounts) { faceCounts[id] = count }
+                            synchronized(countedEntries) { countedEntries += base.copy(faceCount = count) }
+                        }
+                        onProgress(Progress.Hashing(hashDone.incrementAndGet(), countTotal))
+                    }
+                }
+            }.awaitAll()
+        }
+        persistCache(countedEntries)
+
+        // 3) Gruplama — ekran görüntüleri normal fotoğraflarla asla karışmaz;
         // ayrı ve çok daha sıkı kurallarla gruplanır (bkz. groupScreenshots).
         onProgress(Progress.Grouping)
-        val photoById = photos.associateBy { it.id }
-        val inputs = photos.mapNotNull { p ->
-            hashes[p.id]?.let { PhotoGrouper.Input(p.id, p.dateTakenMs, it, faceCounts[p.id] ?: -1) }
-        }
-        val (screenshotInputs, photoInputs) = inputs.partition { photoById.getValue(it.id).isScreenshot }
+        val photoInputs = plainInputs.filter { it.id in candidates }
+            .map { it.copy(faceCount = faceCounts[it.id] ?: -1) }
         val idGroups = PhotoGrouper.group(
             photos = photoInputs,
-            timeWindowMs = settings.timeWindowSec * 1000L,
+            timeWindowMs = timeWindowMs,
             maxHammingDistance = settings.hammingThreshold
         )
-        val screenshotIdGroups = groupScreenshots(screenshotInputs, photoById, settings.timeWindowSec * 1000L)
+        val screenshotIdGroups = groupScreenshots(screenshotInputs, photoById, timeWindowMs)
         if (idGroups.isEmpty() && screenshotIdGroups.isEmpty()) return emptyList()
 
-        // 3) Puanlama (yalnızca normal fotoğraf grubu üyeleri)
+        // 4) Puanlama (yalnızca normal fotoğraf grubu üyeleri)
         val memberIds = idGroups.flatten()
         val scoreCache = loadCache(memberIds.mapNotNull { photoById[it] })
         val analyses = HashMap<Long, PhotoAnalysis>(memberIds.size)
@@ -164,7 +175,7 @@ class ScanEngine @Inject constructor(
         }
         persistCache(scoredCacheEntries)
 
-        // 4) En iyiyi seç, grupları kur — kullanıcının kalıcı olarak yoksaydığı
+        // 5) En iyiyi seç, grupları kur — kullanıcının kalıcı olarak yoksaydığı
         // (bkz. IgnoredGroupsRepository) gruplar sonuçlara asla girmez.
         val ignoredSignatures = ignoredGroupsRepository.ignoredSignatures()
         val photoGroups = idGroups.mapIndexedNotNull { index, ids ->
@@ -269,6 +280,17 @@ class ScanEngine @Inject constructor(
             bitmap.recycle()
         }
     }
+
+    /** Yalnızca parmak izi bilinen, henüz analiz edilmemiş kayıt. */
+    private fun emptyEntity(photo: PhotoItem, hash: Long) = PhotoCacheEntity(
+        mediaId = photo.id,
+        dateModified = photo.dateModified,
+        hash = hash,
+        sharpness = null, exposure = null,
+        faceCount = null, eyesOpen = null,
+        frontal = null, smile = null, mouthClosed = null,
+        faceAreaRatio = null
+    )
 
     private fun PhotoAnalysis.toCacheEntity() = PhotoCacheEntity(
         mediaId = photo.id,
