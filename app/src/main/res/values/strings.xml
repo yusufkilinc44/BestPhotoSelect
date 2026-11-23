@@ -230,4 +230,5 @@
     <string name="settings_developer_email" translatable="false">yusuf.kilinc@hotmail.com</string>
     <string name="albums_camera_badge">📷 Main gallery · camera photos</string>
     <string name="results_rescanning">⚙️ Settings changed — rescanning with the new settings…</string>
+    <string name="app_version">Version %1$s</string>
 </resources>

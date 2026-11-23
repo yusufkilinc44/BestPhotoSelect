@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.settings
 
+import com.bestphotoselect.util.rememberAppVersion
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AlertDialog
@@ -346,6 +347,12 @@ private fun DeveloperFooter() {
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 24.dp)
     ) {
+        Text(
+            text = stringResource(R.string.app_version, rememberAppVersion()),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.tertiary,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
         Text(
             text = stringResource(R.string.settings_developer),
             style = MaterialTheme.typography.labelMedium,

@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.about
 
+import com.bestphotoselect.util.rememberAppVersion
 import com.bestphotoselect.ui.theme.accentFor
 import androidx.compose.material3.CardDefaults
 import com.bestphotoselect.ui.theme.appTopBarColors
@@ -56,6 +57,12 @@ fun AboutAlgorithmScreen(onBack: () -> Unit) {
                 text = stringResource(R.string.about_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.app_name) + " · " +
+                    stringResource(R.string.app_version, rememberAppVersion()),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.tertiary
             )
             InfoCard(0, R.string.about_model_title, R.string.about_model_body)
             InfoCard(4, R.string.about_similarity_title, R.string.about_similarity_body)

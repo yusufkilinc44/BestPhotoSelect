@@ -210,4 +210,5 @@
     <string name="settings_developer_info">Yusuf Kılınç · noviembre de 2026</string>
     <string name="albums_camera_badge">📷 Galería principal · fotos de la cámara</string>
     <string name="results_rescanning">⚙️ Los ajustes cambiaron: analizando de nuevo con los nuevos ajustes…</string>
+    <string name="app_version">Versión %1$s</string>
 </resources>

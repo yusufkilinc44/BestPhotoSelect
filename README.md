@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.10.1, versionCode 36). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.2, versionCode 37). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,11 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.2 (versionCode 37)
+- Uygulama sürümü artık görünüyor: Ayarlar'ın en altında (geliştirici bilgisinin üstünde)
+  ve "Nasıl çalışır?" sayfasının başında, ör. "Sürüm 2.10.2 (37)". Kurulu uygulamadan
+  okunduğu için her güncellemede kendiliğinden doğru.
 
 ### v2.10.1 (versionCode 36)
 - Benzerlik hassasiyeti, zaman penceresi ya da "en iyi" ağırlıklarından biri değişince
