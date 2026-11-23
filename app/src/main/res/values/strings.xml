@@ -161,6 +161,7 @@
     <!-- Grup bazında silme -->
     <string name="group_delete_marked_now">🗑 İşaretlileri sil (%1$d · %2$s)</string>
     <string name="group_delete_confirm_message">Bu gruptaki %1$d fotoğraf silinecek (%2$s yer açılacak). Ardından sıradaki gruba geçilecek.</string>
+    <string name="group_previous">← Önceki grup</string>
     <string name="group_next">Sonraki grup →</string>
     <string name="group_deleting">Siliniyor…</string>
 

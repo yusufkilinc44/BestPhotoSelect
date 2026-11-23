@@ -147,6 +147,7 @@
     <!-- Grup bazında silme -->
     <string name="group_delete_marked_now">🗑 Delete marked (%1$d · %2$s)</string>
     <string name="group_delete_confirm_message">%1$d photos in this group will be deleted (%2$s freed). Then you\'ll move on to the next group.</string>
+    <string name="group_previous">← Previous group</string>
     <string name="group_next">Next group →</string>
     <string name="group_deleting">Deleting…</string>
 

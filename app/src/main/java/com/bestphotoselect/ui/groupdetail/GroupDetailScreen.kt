@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -135,6 +136,20 @@ class GroupDetailViewModel @Inject constructor(
         val index = groups.indexOfFirst { it.id == groupId }
         return groups.drop(index + 1).firstOrNull()?.id
             ?: groups.firstOrNull { it.id != groupId }?.id
+    }
+
+    /** Sonuç listesindeki sıraya göre bir önceki grup; baştaysa sondan ilk farklı grup. */
+    fun previousGroupId(): Int? {
+        val groups = scanRepository.currentGroups()
+        val index = groups.indexOfFirst { it.id == groupId }
+        return (if (index > 0) groups.getOrNull(index - 1) else null)?.id
+            ?: groups.lastOrNull { it.id != groupId }?.id
+    }
+
+    fun goToPreviousGroup() {
+        val previous = previousGroupId() ?: return
+        leaving = true
+        _events.tryEmit(Event.GoToGroup(previous, deletedCount = 0))
     }
 
     fun goToNextGroup() {
@@ -247,9 +262,10 @@ fun GroupDetailScreen(
                 GroupBottomBar(
                     markedCount = g.deletionCandidates.size,
                     markedBytes = g.bytesToFree,
-                    hasNext = viewModel.nextGroupId() != null,
+                    hasOtherGroups = viewModel.nextGroupId() != null,
                     deleting = deleting,
                     onDelete = { showDeleteConfirm = true },
+                    onPrevious = viewModel::goToPreviousGroup,
                     onNext = viewModel::goToNextGroup
                 )
             }
@@ -389,9 +405,10 @@ fun GroupDetailScreen(
 private fun GroupBottomBar(
     markedCount: Int,
     markedBytes: Long,
-    hasNext: Boolean,
+    hasOtherGroups: Boolean,
     deleting: Boolean,
     onDelete: () -> Unit,
+    onPrevious: () -> Unit,
     onNext: () -> Unit
 ) {
     Surface(tonalElevation = 3.dp) {
@@ -419,13 +436,15 @@ private fun GroupBottomBar(
             ) {
                 Text(stringResource(R.string.group_delete_marked_now, markedCount, formatBytes(markedBytes)))
             }
-            if (hasNext) {
-                TextButton(
-                    onClick = onNext,
-                    enabled = !deleting,
-                    modifier = Modifier.align(Alignment.End)
-                ) {
-                    Text(stringResource(R.string.group_next))
+            if (hasOtherGroups) {
+                Row(Modifier.fillMaxWidth()) {
+                    TextButton(onClick = onPrevious, enabled = !deleting) {
+                        Text(stringResource(R.string.group_previous))
+                    }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(onClick = onNext, enabled = !deleting) {
+                        Text(stringResource(R.string.group_next))
+                    }
                 }
             }
         }

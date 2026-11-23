@@ -86,7 +86,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.2.2, versionCode 23). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.2.3, versionCode 24). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -120,6 +120,10 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.2.3 (versionCode 24)
+- Grup ekranına **"← Önceki grup"** tuşu eklendi ("Sonraki grup →" ile aynı satırda).
+  Listenin başında/sonunda karşı uca geçer.
 
 ### v2.2.2 (versionCode 23)
 - Tam ekran görüntüleyicide alttaki puan ve "en iyi yap / sil işaretle" tuşları
