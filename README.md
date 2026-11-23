@@ -10,8 +10,9 @@ internet bağlantısı gerekmez.
 ## İndir
 
 📥 **[En son sürümü indir (GitHub Releases)](https://github.com/yusufkilinc44/BestPhotoSelect/releases/latest)**
-— güncel sürüm: [v2.1.1](https://github.com/yusufkilinc44/BestPhotoSelect/releases/tag/v2.1.1)
-(Android 11+, ARM). Sayfadaki **Assets** bölümünden `BestPhotoSelect-v2.1.1.apk` dosyasını indirin.
+(Android 11+, ARM). Bağlantı her zaman en son yayını açar; sayfadaki **Assets** bölümünden
+`BestPhotoSelect-v<sürüm>.apk` dosyasını indirin. Yeni sürümler ntfy'de
+`yusufkilinc-bestphotoselect` konusuna bildirilir.
 
 ## Kurulum
 
@@ -111,8 +112,9 @@ APK'lar repoda tutulmaz; yalnızca GitHub Releases üzerinden dağıtılır.
    (önce denemek için *dry_run* işaretlenebilir; APK yalnızca artifact olarak yüklenir).
 3. Workflow birim testlerini çalıştırır, APK'yı derleyip imzalar; paket adı, sürüm,
    ABI'ler ve imza parmak izi beklenenle eşleşmezse Release oluşturmaz.
-4. README'deki "güncel sürüm" satırını ve sürüm notlarını güncelleyin
-   (indirme bağlantısı her zaman en son Release'i açar).
+4. Sürüm notlarını güncelleyin (indirme bağlantısı her zaman en son Release'i açar).
+5. Bildirim telefona ulaşmadıysa Actions → **Bildirim gönder** ile yayınlanmış bir
+   sürümün ntfy bildirimi derleme yapmadan yeniden gönderilebilir.
 
 İmza anahtarı GitHub Secrets'tan okunur (`BESTPHOTO_KEYSTORE_BASE64`,
 `BESTPHOTO_KEYSTORE_PASSWORD`, `BESTPHOTO_KEY_ALIAS`, `BESTPHOTO_KEY_PASSWORD`);

@@ -1,0 +1,43 @@
+name: Bildirim gönder
+
+# Yayınlanmış bir sürümün ntfy bildirimini derleme yapmadan yeniden gönderir.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Yayınlanmış sürüm (örn. 2.2.3)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      # Girdi kabuğa doğrudan gömülmez; ortam değişkeniyle geçirilip doğrulanır.
+      - name: ntfy bildirimi gönder
+        env:
+          VERSION: ${{ inputs.version }}
+          NTFY_TOPIC: yusufkilinc-bestphotoselect
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Geçersiz sürüm: '$VERSION' (beklenen biçim: 2.2.3)"
+            exit 1
+          fi
+          URL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${VERSION}" \
+            --jq '[.assets[] | select(.name | endswith(".apk"))][0].browser_download_url // empty')
+          [ -n "$URL" ] || { echo "::error::v${VERSION} için yayınlanmış APK bulunamadı"; exit 1; }
+          echo "Link: $URL"
+          jq -n --arg topic "$NTFY_TOPIC" --arg title "BestPhotoSelect v${VERSION} hazır" \
+            --arg intro "Yeni sürüm yayınlandı. İndirmek için dokunun:" --arg url "$URL" '{
+            topic: $topic,
+            title: $title,
+            message: ($intro + "\n" + $url),
+            tags: ["package"],
+            click: $url,
+            actions: [{action: "view", label: "APK indir", url: $url}]
+          }' | curl -sS --fail --retry 3 -H "Content-Type: application/json" -d @- https://ntfy.sh/
