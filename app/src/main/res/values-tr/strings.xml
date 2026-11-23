@@ -240,4 +240,5 @@
     <string name="settings_reset_all_done">✅ Tüm ayarlar varsayılana döndü.</string>
     <string name="settings_developer">Geliştirici</string>
     <string name="settings_developer_info">Yusuf Kılınç · Kasım 2026</string>
+    <string name="albums_camera_badge">📷 Ana galeri · kamera fotoğrafları</string>
 </resources>

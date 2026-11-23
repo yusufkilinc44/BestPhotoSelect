@@ -21,8 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items as listItems
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.itemsIndexed as listItemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
@@ -205,10 +205,11 @@ private fun AlbumsContent(
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listItems(visibleAlbums!!, key = { it.bucketId }) { album ->
+                        listItemsIndexed(visibleAlbums!!, key = { _, album -> album.bucketId }) { index, album ->
                             AlbumRow(
                                 album = album,
                                 selected = album.bucketId in selected,
+                                colorIndex = index,
                                 onClick = { viewModel.toggleAlbum(album.bucketId) }
                             )
                         }
@@ -221,10 +222,11 @@ private fun AlbumsContent(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(visibleAlbums!!, key = { it.bucketId }) { album ->
+                        itemsIndexed(visibleAlbums!!, key = { _, album -> album.bucketId }) { index, album ->
                             AlbumCard(
                                 album = album,
                                 selected = album.bucketId in selected,
+                                colorIndex = index,
                                 onClick = { viewModel.toggleAlbum(album.bucketId) }
                             )
                         }
@@ -253,8 +255,8 @@ private fun AlbumsContent(
 }
 
 @Composable
-private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
-    val accent = accentFor(album.bucketId)
+private fun AlbumCard(album: Album, selected: Boolean, colorIndex: Int, onClick: () -> Unit) {
+    val accent = accentFor(colorIndex.toLong())
     Card(
         modifier = Modifier.clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
@@ -292,6 +294,15 @@ private fun AlbumCard(album: Album, selected: Boolean, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = accent.content.copy(alpha = 0.75f)
                 )
+                if (album.isCamera) {
+                    Text(
+                        text = stringResource(R.string.albums_camera_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 if (album.isScreenshots) {
                     Text(
                         text = stringResource(R.string.albums_screenshot_badge),
@@ -415,8 +426,8 @@ private fun WhatsAppToggle(checked: Boolean, onCheckedChange: (Boolean) -> Unit)
 
 /** Liste görünümünde albüm satırı: küçük kapak, ad, sayı/boyut, seçim işareti. */
 @Composable
-private fun AlbumRow(album: Album, selected: Boolean, onClick: () -> Unit) {
-    val accent = accentFor(album.bucketId)
+private fun AlbumRow(album: Album, selected: Boolean, colorIndex: Int, onClick: () -> Unit) {
+    val accent = accentFor(colorIndex.toLong())
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = accent.container, contentColor = accent.content)
@@ -448,6 +459,15 @@ private fun AlbumRow(album: Album, selected: Boolean, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = accent.content.copy(alpha = 0.75f)
                 )
+                if (album.isCamera) {
+                    Text(
+                        text = stringResource(R.string.albums_camera_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 if (album.isScreenshots) {
                     Text(
                         text = stringResource(R.string.albums_screenshot_badge),

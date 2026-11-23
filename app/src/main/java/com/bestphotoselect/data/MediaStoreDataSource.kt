@@ -10,6 +10,7 @@ import android.provider.MediaStore
 import android.util.Size
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.PhotoItem
+import com.bestphotoselect.domain.CameraAlbumDetector
 import com.bestphotoselect.domain.ScreenshotDetector
 import com.bestphotoselect.domain.WhatsAppDetector
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -41,7 +42,8 @@ class MediaStoreDataSource @Inject constructor(
     suspend fun queryAlbums(): List<Album> = withContext(Dispatchers.IO) {
         data class Acc(
             var count: Int, var bytes: Long, var coverId: Long, var coverDate: Long,
-            var name: String, var isScreenshots: Boolean, var isWhatsApp: Boolean
+            var name: String, var isScreenshots: Boolean, var isWhatsApp: Boolean,
+            var path: String?
         )
 
         val albums = LinkedHashMap<Long, Acc>()
@@ -65,7 +67,8 @@ class MediaStoreDataSource @Inject constructor(
                     Acc(
                         0, 0, id, date, name,
                         ScreenshotDetector.isScreenshot(name, path),
-                        WhatsAppDetector.isWhatsApp(name, path)
+                        WhatsAppDetector.isWhatsApp(name, path),
+                        path
                     )
                 }
                 acc.count++
@@ -76,6 +79,11 @@ class MediaStoreDataSource @Inject constructor(
                 }
             }
         }
+        val cameraBucket = CameraAlbumDetector.find(
+            albums.map { (id, acc) ->
+                CameraAlbumDetector.Candidate(id, acc.name, acc.path, acc.count, acc.isScreenshots)
+            }
+        )
         albums.map { (bucketId, acc) ->
             Album(
                 bucketId = bucketId,
@@ -84,9 +92,10 @@ class MediaStoreDataSource @Inject constructor(
                 coverUri = ContentUris.withAppendedId(collection, acc.coverId),
                 totalBytes = acc.bytes,
                 isScreenshots = acc.isScreenshots,
-                isWhatsApp = acc.isWhatsApp
+                isWhatsApp = acc.isWhatsApp,
+                isCamera = bucketId == cameraBucket
             )
-        }.sortedByDescending { it.photoCount }
+        }.sortedWith(compareByDescending<Album> { it.isCamera }.thenByDescending { it.photoCount })
     }
 
     suspend fun queryPhotos(bucketIds: Set<Long>): List<PhotoItem> = withContext(Dispatchers.IO) {

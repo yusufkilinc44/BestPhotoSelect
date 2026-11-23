@@ -208,4 +208,5 @@
     <string name="settings_reset_all_done">✅ Tous les paramètres sont revenus à leurs valeurs par défaut.</string>
     <string name="settings_developer">Développeur</string>
     <string name="settings_developer_info">Yusuf Kılınç · novembre 2026</string>
+    <string name="albums_camera_badge">📷 Galerie principale · photos de l\'appareil</string>
 </resources>

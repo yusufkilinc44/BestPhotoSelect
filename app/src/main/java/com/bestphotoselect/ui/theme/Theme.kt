@@ -89,28 +89,40 @@ private val DarkColors = darkColorScheme(
 @Immutable
 data class Accent(val container: Color, val content: Color)
 
-/** İkon paletinin altı rengi; kartlar sırayla/kimliğe göre bunlardan birini alır. */
+/**
+ * On renk; art arda gelen iki renk birbirinden belirgin şekilde farklı olacak
+ * sırada. Listelerde kartlar sıralarına göre renk alır: yan yana iki kart hiçbir
+ * zaman aynı renkte olmaz, ilk on kartın hepsi farklıdır.
+ */
 private val LightAccents = listOf(
     Accent(Color(0xFFFFE1E1), Color(0xFF7A1518)), // kırmızı
-    Accent(Color(0xFFFFE7D6), Color(0xFF7A3300)), // turuncu
-    Accent(Color(0xFFFFF1C2), Color(0xFF654A00)), // sarı
-    Accent(Color(0xFFDDF5C8), Color(0xFF2C5200)), // yeşil
     Accent(Color(0xFFD6ECFF), Color(0xFF0B4A75)), // mavi
-    Accent(Color(0xFFEADFFF), Color(0xFF3F2470))  // mor
+    Accent(Color(0xFFFFF1C2), Color(0xFF654A00)), // sarı
+    Accent(Color(0xFFEADFFF), Color(0xFF3F2470)), // mor
+    Accent(Color(0xFFDDF5C8), Color(0xFF2C5200)), // yeşil
+    Accent(Color(0xFFFFE7D6), Color(0xFF7A3300)), // turuncu
+    Accent(Color(0xFFCFF3EF), Color(0xFF00504A)), // turkuaz
+    Accent(Color(0xFFFFDCEF), Color(0xFF7A1650)), // pembe
+    Accent(Color(0xFFDCE1FF), Color(0xFF1F2F7A)), // lacivert
+    Accent(Color(0xFFEDF7C2), Color(0xFF4A5600))  // fıstık yeşili
 )
 
 private val DarkAccents = listOf(
     Accent(Color(0xFF4D2026), Color(0xFFFFD6D6)),
-    Accent(Color(0xFF4D2D16), Color(0xFFFFDCC2)),
-    Accent(Color(0xFF45390F), Color(0xFFFFEFB0)),
-    Accent(Color(0xFF24421B), Color(0xFFD4F5BC)),
     Accent(Color(0xFF133B59), Color(0xFFCDE8FF)),
-    Accent(Color(0xFF36275E), Color(0xFFE7DAFF))
+    Accent(Color(0xFF45390F), Color(0xFFFFEFB0)),
+    Accent(Color(0xFF36275E), Color(0xFFE7DAFF)),
+    Accent(Color(0xFF24421B), Color(0xFFD4F5BC)),
+    Accent(Color(0xFF4D2D16), Color(0xFFFFDCC2)),
+    Accent(Color(0xFF0E423E), Color(0xFFC4F2EC)),
+    Accent(Color(0xFF4D1F3A), Color(0xFFFFD3EA)),
+    Accent(Color(0xFF1F2A5C), Color(0xFFD8DEFF)),
+    Accent(Color(0xFF3A4310), Color(0xFFE8F5B8))
 )
 
 private val LocalAccents = staticCompositionLocalOf { LightAccents }
 
-/** [key] (ör. albüm ya da grup kimliği) her zaman aynı rengi verir. */
+/** [key] (ör. listedeki sıra ya da grup numarası) her zaman aynı rengi verir. */
 @Composable
 fun accentFor(key: Long): Accent {
     val accents = LocalAccents.current

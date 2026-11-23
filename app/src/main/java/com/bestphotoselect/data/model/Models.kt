@@ -11,7 +11,9 @@ data class Album(
     val coverUri: Uri,
     val totalBytes: Long,
     val isScreenshots: Boolean = false,
-    val isWhatsApp: Boolean = false
+    val isWhatsApp: Boolean = false,
+    /** Kameranın fotoğrafları kaydettiği ana galeri; listede hep en üstte. */
+    val isCamera: Boolean = false
 )
 
 data class PhotoItem(

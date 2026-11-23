@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.9.2, versionCode 34). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.0, versionCode 35). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,13 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.0 (versionCode 35)
+- **Ana galeri hep en üstte:** kameranın fotoğrafları kaydettiği albüm (DCIM/Camera; yoksa
+  DCIM altındaki en kalabalık albüm) listenin başında, "📷 Ana galeri" rozetiyle.
+- **Albüm renkleri:** artık listedeki sıraya göre ve 10 renkten veriliyor; yan yana iki albüm
+  hiç aynı renkte olmaz, ilk 10 albümün hepsi farklıdır. (Önceden albüm kimliğine göre 6
+  renkten rastgele denk geliyordu.)
 
 ### v2.9.2 (versionCode 34)
 - Geliştirici bilgisine e-posta adresi eklendi (yusuf.kilinc@hotmail.com); dokununca
