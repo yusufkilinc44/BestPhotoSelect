@@ -255,147 +255,151 @@ fun GroupDetailScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            val g = group
-            if (g != null) {
-                GroupBottomBar(
-                    markedCount = g.deletionCandidates.size,
-                    markedBytes = g.bytesToFree,
-                    hasOtherGroups = viewModel.nextGroupId() != null,
-                    deleting = deleting,
-                    onDelete = { showDeleteConfirm = true },
-                    onPrevious = viewModel::goToPreviousGroup,
-                    onNext = viewModel::goToNextGroup
+    // Tam ekran görüntüleyici Scaffold'un dışında, tüm ekranın üstünde çizilir.
+    Box(Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
+                val g = group
+                if (g != null) {
+                    GroupBottomBar(
+                        markedCount = g.deletionCandidates.size,
+                        markedBytes = g.bytesToFree,
+                        hasOtherGroups = viewModel.nextGroupId() != null,
+                        deleting = deleting,
+                        onDelete = { showDeleteConfirm = true },
+                        onPrevious = viewModel::goToPreviousGroup,
+                        onNext = viewModel::goToNextGroup
+                    )
+                }
+            },
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.group_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = { showIgnoreConfirm = true }) {
+                            Text(stringResource(R.string.group_skip))
+                        }
+                    }
                 )
             }
-        },
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.group_title)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                },
-                actions = {
-                    TextButton(onClick = { showIgnoreConfirm = true }) {
-                        Text(stringResource(R.string.group_skip))
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        val g = group ?: return@Scaffold
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Column {
-                    if (g.isScreenshots) {
+        ) { padding ->
+            val g = group ?: return@Scaffold
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Column {
+                        if (g.isScreenshots) {
+                            Text(
+                                text = stringResource(R.string.group_screenshot_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
+                        }
                         Text(
-                            text = stringResource(R.string.group_screenshot_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 4.dp)
+                            text = stringResource(R.string.group_tap_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
-                        text = stringResource(R.string.group_tap_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                }
+                itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
+                    PhotoCard(
+                        scored = scored,
+                        isBest = scored.photo.id == g.bestPhotoId,
+                        isScreenshotGroup = g.isScreenshots,
+                        onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
+                        onSetBest = { viewModel.setBest(scored.photo.id) },
+                        onOpenViewer = { viewerIndex = index }
                     )
                 }
             }
-            itemsIndexed(g.photos, key = { _, sp -> sp.photo.id }) { index, scored ->
-                PhotoCard(
-                    scored = scored,
-                    isBest = scored.photo.id == g.bestPhotoId,
-                    isScreenshotGroup = g.isScreenshots,
-                    onToggleDeletion = { viewModel.toggleDeletion(scored.photo.id) },
-                    onSetBest = { viewModel.setBest(scored.photo.id) },
-                    onOpenViewer = { viewerIndex = index }
+
+            if (showIgnoreConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showIgnoreConfirm = false },
+                    title = { Text(stringResource(R.string.group_ignore_confirm_title)) },
+                    text = { Text(stringResource(R.string.group_ignore_confirm_message, g.photos.size)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showIgnoreConfirm = false
+                            viewModel.skipGroup()
+                        }) {
+                            Text(stringResource(R.string.group_ignore_confirm_positive))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showIgnoreConfirm = false }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    }
+                )
+            }
+
+            if (showDeleteConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteConfirm = false },
+                    title = { Text(stringResource(R.string.confirm_delete_title)) },
+                    text = {
+                        Column {
+                            Text(
+                                stringResource(
+                                    R.string.group_delete_confirm_message,
+                                    g.deletionCandidates.size,
+                                    formatBytes(g.bytesToFree)
+                                )
+                            )
+                            Text(
+                                text = stringResource(
+                                    if (trashMode) R.string.confirm_delete_trash_note else R.string.confirm_delete_permanent_note
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (trashMode) {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showDeleteConfirm = false
+                            viewModel.deleteMarked()
+                        }) {
+                            Text(stringResource(R.string.delete))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteConfirm = false }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    }
                 )
             }
         }
 
+        val viewerGroup = group
         val vi = viewerIndex
-        if (vi != null) {
+        if (viewerGroup != null && vi != null) {
             PhotoViewerOverlay(
-                photos = g.photos,
-                bestPhotoId = g.bestPhotoId,
-                isScreenshotGroup = g.isScreenshots,
+                photos = viewerGroup.photos,
+                bestPhotoId = viewerGroup.bestPhotoId,
+                isScreenshotGroup = viewerGroup.isScreenshots,
                 initialIndex = vi,
                 onToggleDeletion = viewModel::toggleDeletion,
                 onSetBest = viewModel::setBest,
                 onDismiss = { viewerIndex = null }
-            )
-        }
-
-        if (showIgnoreConfirm) {
-            AlertDialog(
-                onDismissRequest = { showIgnoreConfirm = false },
-                title = { Text(stringResource(R.string.group_ignore_confirm_title)) },
-                text = { Text(stringResource(R.string.group_ignore_confirm_message, g.photos.size)) },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showIgnoreConfirm = false
-                        viewModel.skipGroup()
-                    }) {
-                        Text(stringResource(R.string.group_ignore_confirm_positive))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showIgnoreConfirm = false }) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                }
-            )
-        }
-
-        if (showDeleteConfirm) {
-            AlertDialog(
-                onDismissRequest = { showDeleteConfirm = false },
-                title = { Text(stringResource(R.string.confirm_delete_title)) },
-                text = {
-                    Column {
-                        Text(
-                            stringResource(
-                                R.string.group_delete_confirm_message,
-                                g.deletionCandidates.size,
-                                formatBytes(g.bytesToFree)
-                            )
-                        )
-                        Text(
-                            text = stringResource(
-                                if (trashMode) R.string.confirm_delete_trash_note else R.string.confirm_delete_permanent_note
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (trashMode) {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            } else {
-                                MaterialTheme.colorScheme.error
-                            },
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showDeleteConfirm = false
-                        viewModel.deleteMarked()
-                    }) {
-                        Text(stringResource(R.string.delete))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteConfirm = false }) {
-                        Text(stringResource(R.string.cancel))
-                    }
-                }
             )
         }
     }

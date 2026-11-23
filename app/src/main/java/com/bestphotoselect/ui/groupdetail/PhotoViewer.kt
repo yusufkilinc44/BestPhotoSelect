@@ -1,5 +1,6 @@
 package com.bestphotoselect.ui.groupdetail
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -41,8 +42,6 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.bestphotoselect.R
 import com.bestphotoselect.data.model.ScoredPhoto
@@ -72,70 +71,68 @@ fun PhotoViewerOverlay(
     val pagerState = rememberPagerState(initialPage = startPage) { photos.size }
     var pagerScrollEnabled by remember { mutableStateOf(true) }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        // Android 15 (targetSdk 35) pencereyi sistem çubuklarının arkasına uzatır.
-        // Fotoğraf tam ekran kalır; kontroller yalnızca güvenli alana yerleşir,
-        // gezinme çubuğuyla çakışmaz.
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)
+    // Ayrı bir Dialog penceresi sistem çubuğu boşluklarını her cihazda iletmiyordu;
+    // görüntüleyici ana pencerede tüm ekranı kaplayan bir katman olarak çizilir ve
+    // kontroller safeDrawing alanına (gezinme çubuğunun üstüne) yerleşir.
+    BackHandler(onBack = onDismiss)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            // Alttaki grup ekranına dokunuş geçmesin.
+            .pointerInput(Unit) { detectTapGestures { } }
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            HorizontalPager(
-                state = pagerState,
-                userScrollEnabled = pagerScrollEnabled,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                ZoomableImage(
-                    scored = photos[page],
-                    onZoomChanged = { zoomed -> pagerScrollEnabled = !zoomed }
-                )
-            }
-
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .safeDrawingPadding()
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.back),
-                    tint = Color.White
-                )
-            }
-
-            val current = photos[pagerState.currentPage.coerceIn(0, photos.size - 1)]
-            val isBest = current.photo.id == bestPhotoId
-
-            Text(
-                text = stringResource(R.string.viewer_counter, pagerState.currentPage + 1, photos.size),
-                color = Color.White,
-                style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .safeDrawingPadding()
-                    .padding(16.dp)
-            )
-
-            ViewerBottomBar(
-                scored = current,
-                isBest = isBest,
-                isScreenshotGroup = isScreenshotGroup,
-                onSetBest = { onSetBest(current.photo.id) },
-                onToggleDeletion = { onToggleDeletion(current.photo.id) },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(Color(0x99000000))
-                    .safeDrawingPadding()
-                    .padding(16.dp)
+        HorizontalPager(
+            state = pagerState,
+            userScrollEnabled = pagerScrollEnabled,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            ZoomableImage(
+                scored = photos[page],
+                onZoomChanged = { zoomed -> pagerScrollEnabled = !zoomed }
             )
         }
+
+        IconButton(
+            onClick = onDismiss,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .safeDrawingPadding()
+                .padding(8.dp)
+        ) {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.back),
+                tint = Color.White
+            )
+        }
+
+        val current = photos[pagerState.currentPage.coerceIn(0, photos.size - 1)]
+        val isBest = current.photo.id == bestPhotoId
+
+        Text(
+            text = stringResource(R.string.viewer_counter, pagerState.currentPage + 1, photos.size),
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .safeDrawingPadding()
+                .padding(16.dp)
+        )
+
+        ViewerBottomBar(
+            scored = current,
+            isBest = isBest,
+            isScreenshotGroup = isScreenshotGroup,
+            onSetBest = { onSetBest(current.photo.id) },
+            onToggleDeletion = { onToggleDeletion(current.photo.id) },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color(0x99000000))
+                .safeDrawingPadding()
+                .padding(16.dp)
+        )
     }
 }
 

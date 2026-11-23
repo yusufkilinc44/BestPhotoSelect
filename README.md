@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.2.3, versionCode 24). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.2.4, versionCode 25). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,12 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.2.4 (versionCode 25)
+- Tam ekran görüntüleyicinin alt tuşları v2.2.2 düzeltmesine rağmen gezinme
+  çubuğuyla çakışmaya devam ediyordu: ayrı Dialog penceresi sistem çubuğu
+  boşluklarını iletmiyordu. Görüntüleyici artık ana pencerede tüm ekranı kaplayan
+  bir katman; alt tuşlar gezinme çubuğunun hemen üstünde.
 
 ### v2.2.3 (versionCode 24)
 - Grup ekranına **"← Önceki grup"** tuşu eklendi ("Sonraki grup →" ile aynı satırda).
