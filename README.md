@@ -87,7 +87,7 @@ Gereksinim: Android 11 (API 30) veya üzeri, ARM işlemcili telefon.
 
 ## Derleme ve sürüm
 
-Tek uygulama, tek sürüm: `app/` (v2.10.5, versionCode 40). APK yalnızca ARM
+Tek uygulama, tek sürüm: `app/` (v2.10.6, versionCode 41). APK yalnızca ARM
 (arm64-v8a, armeabi-v7a) içerir.
 
 ```bash
@@ -122,6 +122,11 @@ tanımlı değilse repodaki `keystore/bestphoto.keystore` kullanılır. Yerel de
 aynı adlı ortam değişkenleri verilebilir.
 
 ## Sürüm notları
+
+### v2.10.6 (versionCode 41)
+- **Albüm listesi güncel kalır:** liste uygulamaya her dönüşte galeriden yeniden okunur;
+  uygulama açıkken galeride bir şey değişirse (albüm/fotoğraf silindi ya da eklendi) de
+  kendiliğinden yenilenir. Galeride artık olmayan albümler listeden ve seçimden çıkar.
 
 ### v2.10.5 (versionCode 40)
 - **Yarıda kalan tarama boşa gitmez:** analiz sonuçları her 100 fotoğrafta bir önbelleğe

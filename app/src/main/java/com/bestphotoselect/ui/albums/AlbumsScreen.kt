@@ -1,7 +1,5 @@
 package com.bestphotoselect.ui.albums
 
-import com.bestphotoselect.ui.theme.accentFor
-import com.bestphotoselect.ui.theme.appTopBarColors
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -16,9 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -27,12 +25,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.BrightnessAuto
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -54,7 +52,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,12 +67,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil.compose.AsyncImage
 import com.bestphotoselect.R
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.ThemeMode
 import com.bestphotoselect.ui.common.AppLanguage
 import com.bestphotoselect.ui.common.PermissionGate
+import com.bestphotoselect.ui.theme.accentFor
+import com.bestphotoselect.ui.theme.appTopBarColors
 import com.bestphotoselect.ui.tips.TipsDialog
 import com.bestphotoselect.util.formatBytes
 
@@ -132,7 +133,8 @@ private fun AlbumsContent(
     viewModel: AlbumsViewModel,
     onScanStarted: () -> Unit
 ) {
-    LaunchedEffect(Unit) { viewModel.loadAlbums() }
+    // Ekran her göründüğünde (ör. galeri uygulamasından dönünce) liste yenilenir.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.loadAlbums() }
     ManageMediaPrompt(viewModel)
 
     // İpuçları, ilk açılıştaki "Medya yönetimi" sorusu kapandıktan sonra gelir.

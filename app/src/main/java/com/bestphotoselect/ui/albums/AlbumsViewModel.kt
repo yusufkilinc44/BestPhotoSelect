@@ -1,8 +1,10 @@
 package com.bestphotoselect.ui.albums
 
-import kotlinx.coroutines.flow.first
-import com.bestphotoselect.ui.tips.Tips
-import com.bestphotoselect.ui.tips.Tip
+import android.content.Context
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
+import android.provider.MediaStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bestphotoselect.data.MediaStoreDataSource
@@ -10,18 +12,26 @@ import com.bestphotoselect.data.ScanRepository
 import com.bestphotoselect.data.SettingsRepository
 import com.bestphotoselect.data.model.Album
 import com.bestphotoselect.data.model.ThemeMode
+import com.bestphotoselect.ui.tips.Tip
+import com.bestphotoselect.ui.tips.Tips
+import com.bestphotoselect.util.GalleryAccess
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltViewModel
 class AlbumsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val mediaStore: MediaStoreDataSource,
     private val settingsRepository: SettingsRepository,
     private val scanRepository: ScanRepository
@@ -97,9 +107,46 @@ class AlbumsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setManageMediaPrompted() }
     }
 
-    fun loadAlbums() {
-        viewModelScope.launch {
-            _albums.value = mediaStore.queryAlbums()
+    private var loadJob: Job? = null
+
+    /**
+     * Galeri değişince (fotoğraf/albüm silindi, eklendi) liste kendiliğinden
+     * yenilenir. Silme sırasında çok sayıda bildirim gelebildiği için kısa bir
+     * bekleme ile tek yenilemeye indirgenir.
+     */
+    private val galleryObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) = loadAlbums(debounceMs = 500)
+    }
+
+    init {
+        context.contentResolver.registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true, galleryObserver
+        )
+    }
+
+    override fun onCleared() {
+        context.contentResolver.unregisterContentObserver(galleryObserver)
+    }
+
+    /**
+     * Albümleri galeriden yeniden okur (ekran her göründüğünde ve galeri
+     * değiştiğinde çağrılır). Galeride artık olmayan albümler seçimden de çıkarılır;
+     * kısmi erişimde (Android 14+) yalnızca seçilen fotoğraflar görünür, o yüzden
+     * seçime yalnızca tam erişimde dokunulur.
+     */
+    fun loadAlbums(debounceMs: Long = 0) {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            if (debounceMs > 0) delay(debounceMs)
+            val albums = mediaStore.queryAlbums()
+            _albums.value = albums
+            if (GalleryAccess.current(context) == GalleryAccess.Access.FULL) {
+                val existing = albums.map { it.bucketId }.toSet()
+                val selected = settingsRepository.current().selectedBucketIds
+                if (!existing.containsAll(selected)) {
+                    settingsRepository.setSelectedBuckets(selected intersect existing)
+                }
+            }
         }
     }
 
